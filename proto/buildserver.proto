@@ -1,0 +1,22 @@
+syntax = "proto3";
+
+package buildserver;
+
+import "github.com/brotherlogic/gobuildslave/proto/slave.proto";
+
+message Version {
+  gobuildslave.Job job = 1;
+  string version = 2;
+}
+
+message VersionRequest {
+  bool just_latest = 1;
+}
+
+message VersionResponse {
+  repeated Version versions = 1;
+}
+
+service BuildService {
+  rpc GetVersions(VersionRequest) returns (VersionResponse) {};
+}
