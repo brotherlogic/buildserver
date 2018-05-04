@@ -59,6 +59,6 @@ func main() {
 	server.PrepServer()
 	server.Register = server
 
-	server.RegisterServer("recordmover", false)
+	server.RegisterServer("buildserver", false)
 	fmt.Printf("%v\n", server.Serve())
 }
