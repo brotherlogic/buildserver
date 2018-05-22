@@ -29,6 +29,11 @@ type rCommand struct {
 }
 
 func (s *Scheduler) build(job *pbgbs.Job) string {
+
+	if s.dir == "" {
+		return "built"
+	}
+
 	// Prep the mutex
 	s.masterMutex.Lock()
 	if _, ok := s.mMap[job.Name]; !ok {
