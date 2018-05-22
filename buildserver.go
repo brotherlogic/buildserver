@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"log"
+	"sync"
 
 	"github.com/brotherlogic/goserver"
 	"github.com/brotherlogic/keystore/client"
@@ -17,11 +18,17 @@ import (
 //Server main server type
 type Server struct {
 	*goserver.GoServer
+	scheduler *Scheduler
 }
 
 // Init builds the server
 func Init() *Server {
 	s := &Server{GoServer: &goserver.GoServer{}}
+	s.scheduler = &Scheduler{
+		dir:         "/media/scratch/buildserver",
+		masterMutex: &sync.Mutex{},
+		mMap:        make(map[string]*sync.Mutex),
+	}
 	return s
 }
 
