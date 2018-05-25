@@ -91,7 +91,7 @@ func TestBuidlRun(t *testing.T) {
 
 	hash := s.build(&pbgbs.Job{Name: "crasher", GoPath: "github.com/brotherlogic/crasher"})
 
-	f, err := os.Open(wd + "/buildtest/builds/github.com/brotherlogic/crasher-" + hash)
+	f, err := os.Open(wd + "/buildtest/builds/github.com/brotherlogic/crasher/crasher-" + hash)
 	if err != nil {
 		t.Fatalf("Can't open file: %v", err)
 	}
