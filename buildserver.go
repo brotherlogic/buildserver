@@ -13,6 +13,7 @@ import (
 	"google.golang.org/grpc"
 
 	pb "github.com/brotherlogic/buildserver/proto"
+	pbgbs "github.com/brotherlogic/gobuildslave/proto"
 	pbg "github.com/brotherlogic/goserver/proto"
 )
 
@@ -21,6 +22,30 @@ type Server struct {
 	*goserver.GoServer
 	scheduler *Scheduler
 	builds    map[string]time.Time
+	dir       string
+	lister    lister
+}
+
+type lister interface {
+	listFiles(job *pbgbs.Job) []string
+}
+
+type prodLister struct {
+	dir string
+}
+
+func (p *prodLister) listFiles(job *pbgbs.Job) []string {
+	vals := make([]string, 0)
+	files, err := ioutil.ReadDir(p.dir + "/builds/" + job.GoPath + "/")
+	if err != nil {
+		return vals
+	}
+
+	for _, f := range files {
+		vals = append(vals, f.Name())
+	}
+
+	return vals
 }
 
 // Init builds the server
@@ -33,6 +58,8 @@ func Init() *Server {
 			mMap:        make(map[string]*sync.Mutex),
 		},
 		make(map[string]time.Time),
+		"/media/scratch/buildserver",
+		&prodLister{dir: "/media/scratch/buildserver"},
 	}
 
 	return s
