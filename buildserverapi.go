@@ -1,13 +1,22 @@
 package main
 
 import (
-	"fmt"
+	"log"
+	"strings"
 	"time"
 
 	"golang.org/x/net/context"
 
 	pb "github.com/brotherlogic/buildserver/proto"
 )
+
+func getVersion(f string) string {
+	fs := strings.Split(f, "-")
+	if len(fs) == 2 {
+		return fs[1]
+	}
+	return "NO VERSION FOUND"
+}
 
 //GetVersions gets the versions
 func (s *Server) GetVersions(ctx context.Context, req *pb.VersionRequest) (*pb.VersionResponse, error) {
@@ -20,8 +29,21 @@ func (s *Server) GetVersions(ctx context.Context, req *pb.VersionRequest) (*pb.V
 	} else {
 		buildNeeded = true
 	}
+	log.Printf("BUILD NEEDED: %v", buildNeeded)
 	if buildNeeded {
 		go s.scheduler.build(req.GetJob())
 	}
-	return nil, fmt.Errorf("Not implemented")
+
+	files := s.lister.listFiles(req.GetJob())
+
+	resp := &pb.VersionResponse{}
+	for _, f := range files {
+		resp.Versions = append(resp.Versions,
+			&pb.Version{
+				Job:     req.GetJob(),
+				Version: getVersion(f),
+			})
+	}
+
+	return resp, nil
 }
