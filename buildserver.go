@@ -10,6 +10,7 @@ import (
 
 	"github.com/brotherlogic/goserver"
 	"github.com/brotherlogic/keystore/client"
+	"golang.org/x/net/context"
 	"google.golang.org/grpc"
 
 	pb "github.com/brotherlogic/buildserver/proto"
@@ -24,6 +25,7 @@ type Server struct {
 	builds    map[string]time.Time
 	dir       string
 	lister    lister
+	jobs      map[string]*pbgbs.Job
 }
 
 type lister interface {
@@ -32,6 +34,12 @@ type lister interface {
 
 type prodLister struct {
 	dir string
+}
+
+func (s *Server) backgroundBuilder(ctx context.Context) {
+	for _, j := range s.jobs {
+		go s.scheduler.build(j)
+	}
 }
 
 func (p *prodLister) listFiles(job *pbgbs.Job) []string {
@@ -60,6 +68,7 @@ func Init() *Server {
 		make(map[string]time.Time),
 		"/media/scratch/buildserver",
 		&prodLister{dir: "/media/scratch/buildserver"},
+		make(map[string]*pbgbs.Job),
 	}
 
 	return s
@@ -100,5 +109,8 @@ func main() {
 	server.Register = server
 
 	server.RegisterServer("buildserver", false)
+
+	server.RegisterRepeatingTask(server.backgroundBuilder, time.Hour)
+
 	fmt.Printf("%v\n", server.Serve())
 }

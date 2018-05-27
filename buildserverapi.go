@@ -1,7 +1,6 @@
 package main
 
 import (
-	"log"
 	"strings"
 	"time"
 
@@ -20,6 +19,8 @@ func getVersion(f string) string {
 
 //GetVersions gets the versions
 func (s *Server) GetVersions(ctx context.Context, req *pb.VersionRequest) (*pb.VersionResponse, error) {
+	s.jobs[req.GetJob().Name] = req.GetJob()
+
 	// Schedule a build if it's been 1 hour since the last call
 	buildNeeded := false
 	if val, ok := s.builds[req.GetJob().Name]; ok {
@@ -29,7 +30,6 @@ func (s *Server) GetVersions(ctx context.Context, req *pb.VersionRequest) (*pb.V
 	} else {
 		buildNeeded = true
 	}
-	log.Printf("BUILD NEEDED: %v", buildNeeded)
 	if buildNeeded {
 		go s.scheduler.build(req.GetJob())
 	}
