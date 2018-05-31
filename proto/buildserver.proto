@@ -7,6 +7,7 @@ import "github.com/brotherlogic/gobuildslave/proto/slave.proto";
 message Version {
   gobuildslave.Job job = 1;
   string version = 2;
+  string path = 3;
 }
 
 message VersionRequest {
