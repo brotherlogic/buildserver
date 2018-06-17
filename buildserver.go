@@ -46,6 +46,7 @@ func (p *prodLister) listFiles(job *pbgbs.Job) []string {
 	vals := make([]string, 0)
 	files, err := ioutil.ReadDir(p.dir + "/builds/" + job.GoPath + "/")
 	if err != nil {
+		panic(err)
 		return vals
 	}
 
