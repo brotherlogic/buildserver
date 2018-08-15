@@ -34,7 +34,10 @@ func (s *Server) GetVersions(ctx context.Context, req *pb.VersionRequest) (*pb.V
 		go s.scheduler.build(req.GetJob())
 	}
 
-	files := s.lister.listFiles(req.GetJob())
+	files, err := s.lister.listFiles(req.GetJob())
+	if err != nil {
+		return &pb.VersionResponse{}, err
+	}
 
 	resp := &pb.VersionResponse{}
 	for _, f := range files {
@@ -42,6 +45,7 @@ func (s *Server) GetVersions(ctx context.Context, req *pb.VersionRequest) (*pb.V
 			&pb.Version{
 				Job:     req.GetJob(),
 				Version: getVersion(f),
+				Path:    s.dir + "/" + f,
 			})
 	}
 

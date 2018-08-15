@@ -29,7 +29,7 @@ type Server struct {
 }
 
 type lister interface {
-	listFiles(job *pbgbs.Job) []string
+	listFiles(job *pbgbs.Job) ([]string, error)
 }
 
 type prodLister struct {
@@ -42,18 +42,18 @@ func (s *Server) backgroundBuilder(ctx context.Context) {
 	}
 }
 
-func (p *prodLister) listFiles(job *pbgbs.Job) []string {
+func (p *prodLister) listFiles(job *pbgbs.Job) ([]string, error) {
 	vals := make([]string, 0)
 	files, err := ioutil.ReadDir(p.dir + "/builds/" + job.GoPath + "/")
 	if err != nil {
-		return vals
+		return vals, err
 	}
 
 	for _, f := range files {
 		vals = append(vals, f.Name())
 	}
 
-	return vals
+	return vals, nil
 }
 
 // Init builds the server
