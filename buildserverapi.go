@@ -34,6 +34,7 @@ func (s *Server) GetVersions(ctx context.Context, req *pb.VersionRequest) (*pb.V
 	if buildNeeded {
 		s.Log(fmt.Sprintf("Build needed for %v", req.GetJob().Name))
 		go s.scheduler.build(req.GetJob())
+		s.builds[req.GetJob().Name] = time.Now()
 	}
 
 	files, err := s.lister.listFiles(req.GetJob())
