@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"strings"
 	"time"
 
@@ -31,6 +32,7 @@ func (s *Server) GetVersions(ctx context.Context, req *pb.VersionRequest) (*pb.V
 		buildNeeded = true
 	}
 	if buildNeeded {
+		s.Log(fmt.Sprintf("Build needed for %v", req.GetJob().Name))
 		go s.scheduler.build(req.GetJob())
 	}
 
