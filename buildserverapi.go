@@ -32,7 +32,7 @@ func (s *Server) GetVersions(ctx context.Context, req *pb.VersionRequest) (*pb.V
 		buildNeeded = true
 	}
 	if buildNeeded {
-		s.Log(fmt.Sprintf("Build needed for %v", req.GetJob().Name))
+		s.Log(fmt.Sprintf("Build needed for %v with path %v", req.GetJob().Name, req.GetJob().GoPath))
 		go s.scheduler.build(req.GetJob())
 		s.builds[req.GetJob().Name] = time.Now()
 	}
