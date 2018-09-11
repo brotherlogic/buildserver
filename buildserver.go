@@ -21,11 +21,12 @@ import (
 //Server main server type
 type Server struct {
 	*goserver.GoServer
-	scheduler *Scheduler
-	builds    map[string]time.Time
-	dir       string
-	lister    lister
-	jobs      map[string]*pbgbs.Job
+	scheduler    *Scheduler
+	builds       map[string]time.Time
+	dir          string
+	lister       lister
+	jobs         map[string]*pbgbs.Job
+	buildRequest int
 }
 
 type lister interface {
@@ -69,6 +70,7 @@ func Init() *Server {
 		"/media/scratch/buildserver",
 		&prodLister{dir: "/media/scratch/buildserver"},
 		make(map[string]*pbgbs.Job),
+		0,
 	}
 
 	return s
@@ -93,6 +95,7 @@ func (s *Server) Mote(ctx context.Context, master bool) error {
 func (s *Server) GetState() []*pbg.State {
 	return []*pbg.State{
 		&pbg.State{Key: "builds", Text: fmt.Sprintf("%v", s.builds)},
+		&pbg.State{Key: "buildc", Value: int64(s.buildRequest)},
 	}
 }
 
