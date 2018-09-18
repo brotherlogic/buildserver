@@ -57,14 +57,19 @@ func (p *prodLister) listFiles(job *pbgbs.Job) ([]string, error) {
 	return vals, nil
 }
 
+func (s *Server) log(st string) {
+	s.Log(st)
+}
+
 // Init builds the server
 func Init() *Server {
 	s := &Server{
 		&goserver.GoServer{},
 		&Scheduler{
-			dir:         "/media/scratch/buildserver",
-			masterMutex: &sync.Mutex{},
-			mMap:        make(map[string]*sync.Mutex),
+			"/media/scratch/buildserver",
+			&sync.Mutex{},
+			make(map[string]*sync.Mutex),
+			nil,
 		},
 		make(map[string]time.Time),
 		"/media/scratch/buildserver",
@@ -72,6 +77,8 @@ func Init() *Server {
 		make(map[string]*pbgbs.Job),
 		0,
 	}
+
+	s.scheduler.log = s.log
 
 	return s
 }

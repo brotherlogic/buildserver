@@ -17,6 +17,7 @@ type Scheduler struct {
 	dir         string
 	masterMutex *sync.Mutex
 	mMap        map[string]*sync.Mutex
+	log         func(s string)
 }
 
 type rCommand struct {
@@ -37,6 +38,8 @@ func (s *Scheduler) wait() {
 }
 
 func (s *Scheduler) build(job *pbgbs.Job) string {
+	s.log(fmt.Sprintf("BUILDING %v", job.Name))
+
 	// Prep the mutex
 	s.masterMutex.Lock()
 	if _, ok := s.mMap[job.Name]; !ok {
