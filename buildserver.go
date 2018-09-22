@@ -122,7 +122,7 @@ func main() {
 
 	server.RegisterServer("buildserver", false)
 
-	server.RegisterRepeatingTask(server.backgroundBuilder, time.Hour)
+	server.RegisterRepeatingTask(server.backgroundBuilder, "background_builder", time.Hour)
 
 	fmt.Printf("%v\n", server.Serve())
 }
