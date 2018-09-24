@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"log"
+	"os"
 	"sync"
 	"time"
 
@@ -34,7 +35,8 @@ type lister interface {
 }
 
 type prodLister struct {
-	dir string
+	dir  string
+	fail bool
 }
 
 func (s *Server) backgroundBuilder(ctx context.Context) {
@@ -45,6 +47,17 @@ func (s *Server) backgroundBuilder(ctx context.Context) {
 
 func (p *prodLister) listFiles(job *pbgbs.Job) ([]string, error) {
 	vals := make([]string, 0)
+	if p.fail {
+		return vals, fmt.Errorf("Built to fail")
+	}
+
+	// If there's no such directory, return no versions
+	directory := p.dir + "/builds/" + job.GoPath + "/"
+	_, err := os.Stat(directory)
+	if err != nil && os.IsNotExist(err) {
+		return vals, nil
+	}
+
 	files, err := ioutil.ReadDir(p.dir + "/builds/" + job.GoPath + "/")
 	if err != nil {
 		return vals, err

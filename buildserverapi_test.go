@@ -28,11 +28,11 @@ func InitTestServer(f string) *Server {
 	s.scheduler.dir = wd + "/" + f
 	s.dir = wd + "/" + f
 	s.lister = &prodLister{dir: wd + "/" + f}
+	s.SkipLog = true
 	return s
 }
 
 func TestBuildWithHour(t *testing.T) {
-	log.Printf("BUILDWITH HOUR")
 	s := InitTestServer("buildwithhour")
 	s.builds["crasher"] = time.Now().AddDate(-1, 0, 0)
 
@@ -75,5 +75,14 @@ func TestList(t *testing.T) {
 	}
 	if len(resp.Versions) != 1 {
 		t.Errorf("Not enough versions: %v", resp)
+	}
+}
+
+func TestListFail(t *testing.T) {
+	s := InitTestServer("testlistfail")
+	s.lister = &prodLister{fail: true}
+	resp, err := s.GetVersions(context.Background(), &pb.VersionRequest{Job: &pbgbs.Job{Name: "crasher", GoPath: "github.com/brotherlogic/crasher"}})
+	if err == nil {
+		t.Errorf("Should have failed: %v", resp)
 	}
 }
