@@ -59,6 +59,9 @@ func (s *Scheduler) build(job *pbgbs.Job) (string, error) {
 	// Sometimes go get takes a while to run
 	time.Sleep(time.Second * 10)
 
+	getCommand := &rCommand{command: exec.Command("go", "get", "-u", job.GoPath)}
+	s.runAndWait(getCommand)
+
 	buildCommand := &rCommand{command: exec.Command("go", "get", job.GoPath)}
 	s.runAndWait(buildCommand)
 
