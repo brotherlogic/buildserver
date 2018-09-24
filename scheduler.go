@@ -69,7 +69,7 @@ func (s *Scheduler) build(job *pbgbs.Job) (string, error) {
 	s.runAndWait(hashCommand)
 
 	os.MkdirAll(s.dir+"/builds/"+job.GoPath, 0755)
-	log.Printf("HERE %v", hashCommand.output)
+	log.Printf("OUTPUT %v AND %v", hashCommand.output, hashCommand.erroutput)
 	copyCommand := &rCommand{command: exec.Command("cp", s.dir+"/bin/"+job.Name, s.dir+"/builds/"+job.GoPath+"/"+job.Name+"-"+strings.Fields(hashCommand.output)[0])}
 	s.runAndWait(copyCommand)
 
