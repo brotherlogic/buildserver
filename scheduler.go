@@ -3,6 +3,7 @@ package main
 import (
 	"bufio"
 	"fmt"
+	"log"
 	"os"
 	"os/exec"
 	"strings"
@@ -37,8 +38,12 @@ func (s *Scheduler) wait() {
 	}
 }
 
-func (s *Scheduler) build(job *pbgbs.Job) string {
+func (s *Scheduler) build(job *pbgbs.Job) (string, error) {
 	s.log(fmt.Sprintf("BUILDING %v", job.Name))
+
+	if job.Name == "" {
+		return "", fmt.Errorf("Job is not specified correctly (has no name)")
+	}
 
 	// Prep the mutex
 	s.masterMutex.Lock()
@@ -64,10 +69,11 @@ func (s *Scheduler) build(job *pbgbs.Job) string {
 	s.runAndWait(hashCommand)
 
 	os.MkdirAll(s.dir+"/builds/"+job.GoPath, 0755)
+	log.Printf("HERE %v", hashCommand.output)
 	copyCommand := &rCommand{command: exec.Command("cp", s.dir+"/bin/"+job.Name, s.dir+"/builds/"+job.GoPath+"/"+job.Name+"-"+strings.Fields(hashCommand.output)[0])}
 	s.runAndWait(copyCommand)
 
-	return strings.Fields(hashCommand.output)[0]
+	return strings.Fields(hashCommand.output)[0], nil
 }
 
 func (s *Scheduler) runAndWait(c *rCommand) {
@@ -126,6 +132,7 @@ func (s *Scheduler) run(c *rCommand) error {
 		}()
 	}
 
+	log.Printf("RUNNING %v", c.command)
 	err := c.command.Start()
 	if err != nil {
 		return err
