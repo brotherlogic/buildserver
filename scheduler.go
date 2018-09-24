@@ -62,6 +62,8 @@ func (s *Scheduler) build(job *pbgbs.Job) (string, error) {
 	buildCommand := &rCommand{command: exec.Command("go", "get", job.GoPath)}
 	s.runAndWait(buildCommand)
 
+	log.Printf("BUILD OUT %v and %v", buildCommand.output, buildCommand.erroutput)
+
 	// Sometimes go get takes a while to run
 	time.Sleep(time.Second * 10)
 
