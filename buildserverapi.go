@@ -53,6 +53,7 @@ func (s *Server) GetVersions(ctx context.Context, req *pb.VersionRequest) (*pb.V
 				Job:     req.GetJob(),
 				Version: getVersion(f),
 				Path:    s.dir + "/" + f,
+				Server:  s.Registry.Identifier,
 			})
 	}
 
