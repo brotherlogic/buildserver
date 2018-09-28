@@ -64,7 +64,7 @@ func (p *prodLister) listFiles(job *pbgbs.Job) ([]string, error) {
 	}
 
 	for _, f := range files {
-		vals = append(vals, f.Name())
+		vals = append(vals, p.dir+"/builds/"+job.GoPath+"/"+f.Name())
 	}
 
 	return vals, nil
