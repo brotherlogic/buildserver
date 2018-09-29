@@ -65,7 +65,10 @@ func (s *Scheduler) build(job *pbgbs.Job) (string, error) {
 	buildCommand := &rCommand{command: exec.Command("go", "get", job.GoPath)}
 	s.runAndWait(buildCommand)
 
-	log.Printf("BUILD OUT %v and %v", buildCommand.output, buildCommand.erroutput)
+	// If the build has failed, there will be no file output
+	if _, err := os.Stat(s.dir + "/bin/" + job.Name); os.IsNotExist(err) {
+		return "", fmt.Errorf("Build failed: %v and %v", buildCommand.output, buildCommand.erroutput)
+	}
 
 	// Sometimes go get takes a while to run
 	time.Sleep(time.Second * 10)
@@ -75,7 +78,7 @@ func (s *Scheduler) build(job *pbgbs.Job) (string, error) {
 
 	os.MkdirAll(s.dir+"/builds/"+job.GoPath, 0755)
 	log.Printf("OUTPUT %v AND %v", hashCommand.output, hashCommand.erroutput)
-	copyCommand := &rCommand{command: exec.Command("cp", s.dir+"/bin/"+job.Name, s.dir+"/builds/"+job.GoPath+"/"+job.Name+"-"+strings.Fields(hashCommand.output)[0])}
+	copyCommand := &rCommand{command: exec.Command("mv", s.dir+"/bin/"+job.Name, s.dir+"/builds/"+job.GoPath+"/"+job.Name+"-"+strings.Fields(hashCommand.output)[0])}
 	s.runAndWait(copyCommand)
 
 	return strings.Fields(hashCommand.output)[0], nil

@@ -17,3 +17,7 @@
 apitest
 buildserver
 buildwithhour/
+
+buildtest/
+testlist/
+testlistfail/

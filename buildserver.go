@@ -41,7 +41,13 @@ type prodLister struct {
 
 func (s *Server) backgroundBuilder(ctx context.Context) {
 	for _, j := range s.jobs {
-		go s.scheduler.build(j)
+		go func(ictx context.Context) {
+			_, err := s.scheduler.build(j)
+			if err != nil {
+				s.RaiseIssue(ictx, "Build Failure", fmt.Sprintf("Build failed: %v", err), false)
+			}
+
+		}(ctx)
 	}
 }
 

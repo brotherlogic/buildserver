@@ -10,6 +10,7 @@ import (
 	"github.com/brotherlogic/keystore/client"
 
 	pb "github.com/brotherlogic/buildserver/proto"
+	pbd "github.com/brotherlogic/discovery/proto"
 	pbgbs "github.com/brotherlogic/gobuildslave/proto"
 )
 
@@ -29,6 +30,7 @@ func InitTestServer(f string) *Server {
 	s.dir = wd + "/" + f
 	s.lister = &prodLister{dir: wd + "/" + f}
 	s.SkipLog = true
+	s.Registry = &pbd.RegistryEntry{Identifier: "blah"}
 	return s
 }
 
@@ -54,6 +56,32 @@ func TestBuildWithHour(t *testing.T) {
 	}
 
 	if len(resp.Versions) != 1 {
+		t.Errorf("Get versions did not fail: %v", resp)
+	}
+
+}
+
+func TestBuildWithFailure(t *testing.T) {
+	s := InitTestServer("buildwithhour")
+
+	resp, err := s.GetVersions(context.Background(), &pb.VersionRequest{Job: &pbgbs.Job{Name: "blahblahblah", GoPath: "github.com/brotherlogic/blahblahblah"}})
+
+	if err != nil {
+		t.Fatalf("Error in get versions: %v", err)
+	}
+	time.Sleep(time.Second)
+	s.scheduler.wait()
+
+	if len(resp.Versions) != 0 {
+		t.Errorf("Get versions did not fail: %v", resp)
+	}
+
+	resp, err = s.GetVersions(context.Background(), &pb.VersionRequest{Job: &pbgbs.Job{Name: "crasher", GoPath: "github.com/brotherlogic/crasher"}})
+	if err != nil {
+		t.Fatalf("Error in get versions: %v", err)
+	}
+
+	if len(resp.Versions) != 0 {
 		t.Errorf("Get versions did not fail: %v", resp)
 	}
 
