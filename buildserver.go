@@ -30,8 +30,13 @@ type Server struct {
 	buildRequest int
 }
 
+type fileDetails struct {
+	path string
+	date int64
+}
+
 type lister interface {
-	listFiles(job *pbgbs.Job) ([]string, error)
+	listFiles(job *pbgbs.Job) ([]fileDetails, error)
 }
 
 type prodLister struct {
@@ -51,8 +56,8 @@ func (s *Server) backgroundBuilder(ctx context.Context) {
 	}
 }
 
-func (p *prodLister) listFiles(job *pbgbs.Job) ([]string, error) {
-	vals := make([]string, 0)
+func (p *prodLister) listFiles(job *pbgbs.Job) ([]fileDetails, error) {
+	vals := make([]fileDetails, 0)
 	if p.fail {
 		return vals, fmt.Errorf("Built to fail")
 	}
@@ -70,7 +75,12 @@ func (p *prodLister) listFiles(job *pbgbs.Job) ([]string, error) {
 	}
 
 	for _, f := range files {
-		vals = append(vals, p.dir+"/builds/"+job.GoPath+"/"+f.Name())
+		fpath := p.dir + "/builds/" + job.GoPath + "/" + f.Name()
+		info, _ := os.Stat(fpath)
+		vals = append(vals, fileDetails{
+			path: fpath,
+			date: info.ModTime().Unix(),
+		})
 	}
 
 	return vals, nil

@@ -55,10 +55,11 @@ func (s *Server) GetVersions(ctx context.Context, req *pb.VersionRequest) (*pb.V
 	for _, f := range files {
 		resp.Versions = append(resp.Versions,
 			&pb.Version{
-				Job:     req.GetJob(),
-				Version: getVersion(f),
-				Path:    f,
-				Server:  s.Registry.Identifier,
+				Job:         req.GetJob(),
+				Version:     getVersion(f.path),
+				Path:        f.path,
+				Server:      s.Registry.Identifier,
+				VersionDate: f.date,
 			})
 	}
 

@@ -9,6 +9,7 @@ message Version {
   string version = 2;
   string path = 3;
   string server = 4;
+  int64 version_date = 5;
 }
 
 message VersionRequest {
