@@ -38,7 +38,7 @@ func (s *Server) GetVersions(ctx context.Context, req *pb.VersionRequest) (*pb.V
 		go func(ictx context.Context) {
 			_, err := s.scheduler.build(req.GetJob())
 			if err != nil {
-				s.RaiseIssue(ictx, "Build Failure", fmt.Sprintf("Build failed: %v", err), false)
+				s.RaiseIssue(ictx, "Build Failure", fmt.Sprintf("Build failed for %v: %v", req.GetJob().Name, err), false)
 			}
 		}(ctx)
 		s.builds[req.GetJob().Name] = time.Now()
