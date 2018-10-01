@@ -52,15 +52,25 @@ func (s *Server) GetVersions(ctx context.Context, req *pb.VersionRequest) (*pb.V
 	}
 
 	resp := &pb.VersionResponse{}
+	var latest *pb.Version
+	bestTime := int64(0)
 	for _, f := range files {
-		resp.Versions = append(resp.Versions,
-			&pb.Version{
-				Job:         req.GetJob(),
-				Version:     getVersion(f.path),
-				Path:        f.path,
-				Server:      s.Registry.Identifier,
-				VersionDate: f.date,
-			})
+		ver := &pb.Version{
+			Job:         req.GetJob(),
+			Version:     getVersion(f.path),
+			Path:        f.path,
+			Server:      s.Registry.Identifier,
+			VersionDate: f.date,
+		}
+		resp.Versions = append(resp.Versions, ver)
+		if ver.VersionDate > bestTime {
+			latest = ver
+			bestTime = ver.VersionDate
+		}
+	}
+
+	if req.JustLatest {
+		return &pb.VersionResponse{Versions: []*pb.Version{latest}}, nil
 	}
 
 	return resp, nil
