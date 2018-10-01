@@ -2,7 +2,6 @@ package main
 
 import (
 	"fmt"
-	"log"
 	"strings"
 	"time"
 
@@ -45,9 +44,7 @@ func (s *Server) GetVersions(ctx context.Context, req *pb.VersionRequest) (*pb.V
 	}
 
 	files, err := s.lister.listFiles(req.GetJob())
-	log.Printf("HERE %v and %v", files, err)
 	if err != nil {
-		log.Printf("HERE")
 		return &pb.VersionResponse{}, err
 	}
 
@@ -69,7 +66,7 @@ func (s *Server) GetVersions(ctx context.Context, req *pb.VersionRequest) (*pb.V
 		}
 	}
 
-	if req.JustLatest {
+	if req.JustLatest && latest != nil {
 		return &pb.VersionResponse{Versions: []*pb.Version{latest}}, nil
 	}
 
