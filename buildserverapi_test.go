@@ -106,6 +106,24 @@ func TestList(t *testing.T) {
 	}
 }
 
+func TestListSingle(t *testing.T) {
+	s := InitTestServer("testlistsingle")
+	resp, err := s.GetVersions(context.Background(), &pb.VersionRequest{Job: &pbgbs.Job{Name: "crasher", GoPath: "github.com/brotherlogic/crasher"}, JustLatest: true})
+	if len(resp.Versions) != 0 {
+		t.Fatalf("Get versions did not fail: %v (%v)", resp, len(resp.Versions))
+	}
+	time.Sleep(time.Second)
+	s.scheduler.wait()
+
+	resp, err = s.GetVersions(context.Background(), &pb.VersionRequest{Job: &pbgbs.Job{Name: "crasher", GoPath: "github.com/brotherlogic/crasher"}, JustLatest: true})
+	if err != nil {
+		t.Fatalf("Get version failed: %v", err)
+	}
+	if len(resp.Versions) != 1 {
+		t.Errorf("Not enough versions: %v", resp)
+	}
+}
+
 func TestListFail(t *testing.T) {
 	s := InitTestServer("testlistfail")
 	s.lister = &prodLister{fail: true}
