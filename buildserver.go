@@ -99,6 +99,7 @@ func Init() *Server {
 			&sync.Mutex{},
 			make(map[string]*sync.Mutex),
 			nil,
+			"md5sum",
 		},
 		make(map[string]time.Time),
 		"/media/scratch/buildserver",

@@ -18,6 +18,7 @@ type Scheduler struct {
 	masterMutex *sync.Mutex
 	mMap        map[string]*sync.Mutex
 	log         func(s string)
+	md5command  string
 }
 
 type rCommand struct {
@@ -72,8 +73,12 @@ func (s *Scheduler) build(job *pbgbs.Job) (string, error) {
 	// Sometimes go get takes a while to run
 	time.Sleep(time.Second * 10)
 
-	hashCommand := &rCommand{command: exec.Command("md5sum", s.dir+"/bin/"+job.Name)}
+	hashCommand := &rCommand{command: exec.Command(s.md5command, s.dir+"/bin/"+job.Name)}
 	s.runAndWait(hashCommand)
+
+	if len(strings.Fields(hashCommand.output)) == 0 {
+		return "", fmt.Errorf("Build failed on hash step: %v, %v", hashCommand.output, hashCommand.erroutput)
+	}
 
 	os.MkdirAll(s.dir+"/builds/"+job.GoPath, 0755)
 	copyCommand := &rCommand{command: exec.Command("mv", s.dir+"/bin/"+job.Name, s.dir+"/builds/"+job.GoPath+"/"+job.Name+"-"+strings.Fields(hashCommand.output)[0])}
