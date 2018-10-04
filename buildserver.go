@@ -28,6 +28,7 @@ type Server struct {
 	lister       lister
 	jobs         map[string]*pbgbs.Job
 	buildRequest int
+	runBuild     bool
 }
 
 type fileDetails struct {
@@ -47,11 +48,12 @@ type prodLister struct {
 func (s *Server) backgroundBuilder(ctx context.Context) {
 	for _, j := range s.jobs {
 		go func(ictx context.Context) {
-			_, err := s.scheduler.build(j)
-			if err != nil {
-				s.RaiseIssue(ictx, "Build Failure", fmt.Sprintf("Build failed for %v: %v", j.Name, err), false)
+			if s.runBuild {
+				_, err := s.scheduler.build(j)
+				if err != nil {
+					s.RaiseIssue(ictx, "Build Failure", fmt.Sprintf("Build failed for %v: %v", j.Name, err), false)
+				}
 			}
-
 		}(ctx)
 	}
 }
@@ -106,6 +108,7 @@ func Init() *Server {
 		&prodLister{dir: "/media/scratch/buildserver"},
 		make(map[string]*pbgbs.Job),
 		0,
+		false,
 	}
 
 	s.scheduler.log = s.log

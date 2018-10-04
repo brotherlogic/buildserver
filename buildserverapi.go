@@ -35,9 +35,11 @@ func (s *Server) GetVersions(ctx context.Context, req *pb.VersionRequest) (*pb.V
 	if buildNeeded {
 		s.Log(fmt.Sprintf("Build needed for %v with path %v", req.GetJob().Name, req.GetJob().GoPath))
 		go func(ictx context.Context) {
-			_, err := s.scheduler.build(req.GetJob())
-			if err != nil {
-				s.RaiseIssue(ictx, "Build Failure", fmt.Sprintf("Build failed for %v: %v", req.GetJob().Name, err), false)
+			if s.runBuild {
+				_, err := s.scheduler.build(req.GetJob())
+				if err != nil {
+					s.RaiseIssue(ictx, "Build Failure", fmt.Sprintf("Build failed for %v: %v", req.GetJob().Name, err), false)
+				}
 			}
 		}(ctx)
 		s.builds[req.GetJob().Name] = time.Now()
