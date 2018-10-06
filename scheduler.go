@@ -30,14 +30,6 @@ type rCommand struct {
 	err       error
 }
 
-func (s *Scheduler) wait() {
-	//Waits for all tasks to finish
-	for _, m := range s.mMap {
-		m.Lock()
-		m.Unlock()
-	}
-}
-
 func (s *Scheduler) build(job *pbgbs.Job) (string, error) {
 	s.log(fmt.Sprintf("BUILDING %v", job.Name))
 
