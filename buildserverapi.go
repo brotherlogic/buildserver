@@ -36,7 +36,14 @@ func (s *Server) GetVersions(ctx context.Context, req *pb.VersionRequest) (*pb.V
 		s.Log(fmt.Sprintf("Build needed for %v with path %v", req.GetJob().Name, req.GetJob().GoPath))
 		go func(ictx context.Context) {
 			if s.runBuild {
+				s.currentBuildMutex.Lock()
+				s.currentBuilds++
+				s.currentBuildMutex.Unlock()
 				_, err := s.scheduler.build(req.GetJob())
+				s.currentBuildMutex.Lock()
+				s.currentBuilds--
+				s.currentBuildMutex.Unlock()
+
 				if err != nil {
 					s.RaiseIssue(ictx, "Build Failure", fmt.Sprintf("Build failed for %v: %v", req.GetJob().Name, err), false)
 				}

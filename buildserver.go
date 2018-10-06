@@ -22,13 +22,15 @@ import (
 //Server main server type
 type Server struct {
 	*goserver.GoServer
-	scheduler    *Scheduler
-	builds       map[string]time.Time
-	dir          string
-	lister       lister
-	jobs         map[string]*pbgbs.Job
-	buildRequest int
-	runBuild     bool
+	scheduler         *Scheduler
+	builds            map[string]time.Time
+	dir               string
+	lister            lister
+	jobs              map[string]*pbgbs.Job
+	buildRequest      int
+	runBuild          bool
+	currentBuilds     int
+	currentBuildMutex *sync.Mutex
 }
 
 type fileDetails struct {
@@ -49,7 +51,14 @@ func (s *Server) backgroundBuilder(ctx context.Context) {
 	for _, j := range s.jobs {
 		go func(ictx context.Context) {
 			if s.runBuild {
+				s.currentBuildMutex.Lock()
+				s.currentBuilds++
+				s.currentBuildMutex.Unlock()
 				_, err := s.scheduler.build(j)
+				s.currentBuildMutex.Lock()
+				s.currentBuilds--
+				s.currentBuildMutex.Unlock()
+
 				if err != nil {
 					s.RaiseIssue(ictx, "Build Failure", fmt.Sprintf("Build failed for %v: %v", j.Name, err), false)
 				}
@@ -109,6 +118,8 @@ func Init() *Server {
 		make(map[string]*pbgbs.Job),
 		0,
 		false,
+		0,
+		&sync.Mutex{},
 	}
 
 	s.scheduler.log = s.log
