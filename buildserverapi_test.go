@@ -31,6 +31,7 @@ func InitTestServer(f string) *Server {
 	s.lister = &prodLister{dir: wd + "/" + f}
 	s.SkipLog = true
 	s.Registry = &pbd.RegistryEntry{Identifier: "blah"}
+	s.runBuild = true
 	return s
 }
 
