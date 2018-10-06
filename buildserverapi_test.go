@@ -45,7 +45,7 @@ func TestBuildWithHour(t *testing.T) {
 		t.Fatalf("Error in get versions: %v", err)
 	}
 	time.Sleep(time.Second)
-	s.scheduler.wait()
+	s.drainQueue(context.Background())
 
 	if len(resp.Versions) != 0 {
 		t.Errorf("Get versions did not fail: %v", resp)
@@ -71,7 +71,7 @@ func TestBuildWithFailure(t *testing.T) {
 		t.Fatalf("Error in get versions: %v", err)
 	}
 	time.Sleep(time.Second)
-	s.scheduler.wait()
+	s.drainQueue(context.Background())
 
 	if len(resp.Versions) != 0 {
 		t.Errorf("Get versions did not fail: %v", resp)
@@ -96,7 +96,7 @@ func TestList(t *testing.T) {
 		t.Fatalf("Get versions did not fail: %v", resp)
 	}
 	time.Sleep(time.Second)
-	s.scheduler.wait()
+	s.drainQueue(context.Background())
 
 	resp, err = s.GetVersions(context.Background(), &pb.VersionRequest{Job: &pbgbs.Job{Name: "crasher", GoPath: "github.com/brotherlogic/crasher"}})
 	if err != nil {
@@ -114,7 +114,7 @@ func TestListSingle(t *testing.T) {
 		t.Fatalf("Get versions did not fail: %v (%v)", resp, len(resp.Versions))
 	}
 	time.Sleep(time.Second)
-	s.scheduler.wait()
+	s.drainQueue(context.Background())
 
 	resp, err = s.GetVersions(context.Background(), &pb.VersionRequest{Job: &pbgbs.Job{Name: "crasher", GoPath: "github.com/brotherlogic/crasher"}, JustLatest: true})
 	if err != nil {

@@ -48,22 +48,35 @@ type prodLister struct {
 	fail bool
 }
 
+func (s *Server) enqueue(job *pbgbs.Job) {
+	s.buildQueue = append(s.buildQueue, job)
+}
+
+func (s *Server) dequeue(ctx context.Context) {
+	if len(s.buildQueue) > 0 && s.currentBuilds == 0 {
+		s.currentBuilds++
+		if s.runBuild {
+			_, err := s.scheduler.build(s.buildQueue[0])
+			if err != nil {
+				s.RaiseIssue(ctx, "Build Failure", fmt.Sprintf("Build failed for %v: %v", s.buildQueue[0].Name, err), false)
+			}
+		}
+		s.buildQueue = s.buildQueue[1:]
+		s.currentBuilds--
+	}
+}
+
+func (s *Server) drainQueue(ctx context.Context) {
+	for len(s.buildQueue) > 0 {
+		s.dequeue(ctx)
+		time.Sleep(time.Second)
+	}
+}
+
 func (s *Server) backgroundBuilder(ctx context.Context) {
 	for _, j := range s.jobs {
 		go func(ictx context.Context) {
-			if s.runBuild {
-				s.currentBuildMutex.Lock()
-				s.currentBuilds++
-				s.currentBuildMutex.Unlock()
-				_, err := s.scheduler.build(j)
-				s.currentBuildMutex.Lock()
-				s.currentBuilds--
-				s.currentBuildMutex.Unlock()
-
-				if err != nil {
-					s.RaiseIssue(ictx, "Build Failure", fmt.Sprintf("Build failed for %v: %v", j.Name, err), false)
-				}
-			}
+			s.enqueue(j)
 		}(ctx)
 	}
 }
@@ -172,6 +185,7 @@ func main() {
 	server.RegisterServer("buildserver", false)
 
 	server.RegisterRepeatingTask(server.backgroundBuilder, "background_builder", time.Hour)
+	server.RegisterRepeatingTask(server.dequeue, "dequeue", time.Second)
 
 	fmt.Printf("%v\n", server.Serve())
 }
