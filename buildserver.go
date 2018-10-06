@@ -32,6 +32,7 @@ type Server struct {
 	currentBuilds     int
 	currentBuildMutex *sync.Mutex
 	buildQueue        []*pbgbs.Job
+	blacklist         []string
 }
 
 type fileDetails struct {
@@ -135,6 +136,7 @@ func Init() *Server {
 		0,
 		&sync.Mutex{},
 		[]*pbgbs.Job{},
+		[]string{"led"},
 	}
 
 	s.scheduler.log = s.log

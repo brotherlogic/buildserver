@@ -21,6 +21,14 @@ func getVersion(f string) string {
 //GetVersions gets the versions
 func (s *Server) GetVersions(ctx context.Context, req *pb.VersionRequest) (*pb.VersionResponse, error) {
 	s.buildRequest++
+
+	//Don't build blacklisted jobs
+	for _, blacklist := range s.blacklist {
+		if blacklist == req.GetJob().Name {
+			return &pb.VersionResponse{}, fmt.Errorf("Can't build %v due to blacklist", blacklist)
+		}
+	}
+
 	s.jobs[req.GetJob().Name] = req.GetJob()
 
 	// Schedule a build if it's been 1 hour since the last call
