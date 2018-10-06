@@ -31,6 +31,7 @@ type Server struct {
 	runBuild          bool
 	currentBuilds     int
 	currentBuildMutex *sync.Mutex
+	buildQueue        []*pbgbs.Job
 }
 
 type fileDetails struct {
@@ -120,6 +121,7 @@ func Init() *Server {
 		false,
 		0,
 		&sync.Mutex{},
+		[]*pbgbs.Job{},
 	}
 
 	s.scheduler.log = s.log
@@ -149,6 +151,7 @@ func (s *Server) GetState() []*pbg.State {
 		&pbg.State{Key: "enabled", Text: fmt.Sprintf("%v", s.runBuild)},
 		&pbg.State{Key: "buildc", Value: int64(s.buildRequest)},
 		&pbg.State{Key: "concurrent_builds", Value: int64(s.currentBuilds)},
+		&pbg.State{Key: "build_queue_length", Value: int64(len(s.buildQueue))},
 	}
 }
 
