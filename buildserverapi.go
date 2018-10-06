@@ -34,7 +34,7 @@ func (s *Server) GetVersions(ctx context.Context, req *pb.VersionRequest) (*pb.V
 	// Schedule a build if it's been 1 hour since the last call
 	buildNeeded := false
 	if val, ok := s.builds[req.GetJob().Name]; ok {
-		if time.Now().Sub(val) > time.Hour {
+		if time.Now().Sub(val) > time.Minute*5 {
 			buildNeeded = true
 		}
 	} else {
