@@ -117,7 +117,7 @@ func Init() *Server {
 		&prodLister{dir: "/media/scratch/buildserver"},
 		make(map[string]*pbgbs.Job),
 		0,
-		false,
+		true,
 		0,
 		&sync.Mutex{},
 	}
@@ -146,6 +146,7 @@ func (s *Server) Mote(ctx context.Context, master bool) error {
 func (s *Server) GetState() []*pbg.State {
 	return []*pbg.State{
 		&pbg.State{Key: "builds", Text: fmt.Sprintf("%v", s.builds)},
+		&pbg.State{Key: "enabled", Text: fmt.Sprintf("%v", s.runBuild)},
 		&pbg.State{Key: "buildc", Value: int64(s.buildRequest)},
 		&pbg.State{Key: "concurrent_builds", Value: int64(s.currentBuilds)},
 	}
