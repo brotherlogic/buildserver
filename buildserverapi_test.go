@@ -133,3 +133,11 @@ func TestListFail(t *testing.T) {
 		t.Errorf("Should have failed: %v", resp)
 	}
 }
+
+func TestBlacklist(t *testing.T) {
+	s := InitTestServer("testlistfail")
+	resp, err := s.GetVersions(context.Background(), &pb.VersionRequest{Job: &pbgbs.Job{Name: "led", GoPath: "github.com/brotherlogic/crasher"}})
+	if err == nil {
+		t.Errorf("Should have failed: %v", resp)
+	}
+}
