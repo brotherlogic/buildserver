@@ -117,7 +117,7 @@ func Init() *Server {
 		&prodLister{dir: "/media/scratch/buildserver"},
 		make(map[string]*pbgbs.Job),
 		0,
-		true,
+		false,
 		0,
 		&sync.Mutex{},
 	}
