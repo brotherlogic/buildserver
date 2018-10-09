@@ -36,7 +36,7 @@ func main() {
 
 	switch os.Args[1] {
 	case "build":
-		res, err := client.GetVersions(ctx, &pb.VersionRequest{Job: &pbgbs.Job{Name: "alerter", GoPath: "github.com/brotherlogic/alerter"}, JustLatest: true})
+		res, err := client.GetVersions(ctx, &pb.VersionRequest{Job: &pbgbs.Job{Name: "recordalerting", GoPath: "github.com/brotherlogic/recordalerting"}, JustLatest: true})
 		if err != nil {
 			log.Fatalf("Error on build: %v", err)
 		}

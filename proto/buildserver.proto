@@ -4,12 +4,17 @@ package buildserver;
 
 import "github.com/brotherlogic/gobuildslave/proto/slave.proto";
 
+message Crash {
+  string error_message = 1;
+}
+
 message Version {
   gobuildslave.Job job = 1;
   string version = 2;
   string path = 3;
   string server = 4;
   int64 version_date = 5;
+  repeated Crash crashes = 6;
 }
 
 message VersionRequest {
