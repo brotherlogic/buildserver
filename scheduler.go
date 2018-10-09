@@ -59,7 +59,7 @@ func (s *Scheduler) build(job *pbgbs.Job) (string, error) {
 
 	// If the build has failed, there will be no file output
 	if _, err := os.Stat(s.dir + "/bin/" + job.Name); os.IsNotExist(err) {
-		return "", fmt.Errorf("Build failed: %v and %v", buildCommand.output, buildCommand.erroutput)
+		return "", fmt.Errorf("Build failed: %v and %v -> %v", buildCommand.output, buildCommand.erroutput, buildCommand.err)
 	}
 
 	// Sometimes go get takes a while to run
@@ -80,8 +80,8 @@ func (s *Scheduler) build(job *pbgbs.Job) (string, error) {
 }
 
 func (s *Scheduler) runAndWait(c *rCommand) {
-	err := s.run(c)
-	if err == nil {
+	c.err = s.run(c)
+	if c.err == nil {
 		for c.endTime == 0 {
 			time.Sleep(time.Second)
 		}
