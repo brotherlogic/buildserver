@@ -26,6 +26,14 @@ message VersionResponse {
   repeated Version versions = 1;
 }
 
+message CrashRequest {
+  gobuildslave.Job job = 1;
+  Crash crash = 2;
+}
+
+message CrashResponse {}
+
 service BuildService {
   rpc GetVersions(VersionRequest) returns (VersionResponse) {};
+  rpc ReportCrash(CrashRequest) returns (CrashResposne) {}:
 }
