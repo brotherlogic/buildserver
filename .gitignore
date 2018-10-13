@@ -23,3 +23,5 @@ testlist/
 testlistfail/
 src/
 cli/cli
+
+testlistsingle/
