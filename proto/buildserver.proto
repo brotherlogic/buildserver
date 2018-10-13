@@ -35,5 +35,5 @@ message CrashResponse {}
 
 service BuildService {
   rpc GetVersions(VersionRequest) returns (VersionResponse) {};
-  rpc ReportCrash(CrashRequest) returns (CrashResposne) {}:
+  rpc ReportCrash(CrashRequest) returns (CrashResponse) {};
 }
