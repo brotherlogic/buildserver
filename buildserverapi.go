@@ -18,6 +18,11 @@ func getVersion(f string) string {
 	return "NO VERSION FOUND"
 }
 
+//ReportCrash reports a crash
+func (s *Server) ReportCrash(ctx context.Context, req *pb.CrashRequest) (*pb.CrashResponse, error) {
+	return &pb.CrashResponse{}, fmt.Errorf("Not implemented yet!")
+}
+
 //GetVersions gets the versions
 func (s *Server) GetVersions(ctx context.Context, req *pb.VersionRequest) (*pb.VersionResponse, error) {
 	s.buildRequest++
