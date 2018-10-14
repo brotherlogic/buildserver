@@ -1,7 +1,6 @@
 package main
 
 import (
-	"context"
 	"fmt"
 	"log"
 	"os"
@@ -13,12 +12,17 @@ import (
 
 	pb "github.com/brotherlogic/buildserver/proto"
 	pbgbs "github.com/brotherlogic/gobuildslave/proto"
+	pbgs "github.com/brotherlogic/goserver/proto"
+	pbt "github.com/brotherlogic/tracer/proto"
 
 	//Needed to pull in gzip encoding init
 	_ "google.golang.org/grpc/encoding/gzip"
 )
 
 func main() {
+	ctx, cancel := utils.BuildContext("buildserver-"+os.Args[1], "buildserver", pbgs.ContextType_MEDIUM)
+	defer cancel()
+
 	host, port, err := utils.Resolve("buildserver")
 	if err != nil {
 		log.Fatalf("Unable to reach organiser: %v", err)
@@ -31,8 +35,6 @@ func main() {
 	}
 
 	client := pb.NewBuildServiceClient(conn)
-	ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
-	defer cancel()
 
 	switch os.Args[1] {
 	case "build":
@@ -43,5 +45,5 @@ func main() {
 
 		fmt.Printf("Versions: %v\n", res)
 	}
-
+	utils.SendTrace(ctx, "builserver-"+os.Args[1], time.Now(), pbt.Milestone_END, "buildserver")
 }

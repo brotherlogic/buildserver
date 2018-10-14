@@ -19,6 +19,19 @@ func getVersion(f string) string {
 	return "NO VERSION FOUND"
 }
 
+//ReportCrash reports a crash
+func (s *Server) ReportCrash(ctx context.Context, req *pb.CrashRequest) (*pb.CrashResponse, error) {
+	for _, val := range s.pathMap {
+		if val.Version == req.Version && val.Job.Name == req.Job.Name {
+			val.Crashes = append(val.Crashes, req.Crash)
+			s.scheduler.saveVersionFile(val)
+			return &pb.CrashResponse{}, nil
+		}
+	}
+
+	return &pb.CrashResponse{}, fmt.Errorf("Version not found")
+}
+
 //GetVersions gets the versions
 func (s *Server) GetVersions(ctx context.Context, req *pb.VersionRequest) (*pb.VersionResponse, error) {
 	ctx = s.LogTrace(ctx, "GetVersions", time.Now(), pbt.Milestone_START_FUNCTION)
@@ -58,17 +71,19 @@ func (s *Server) GetVersions(ctx context.Context, req *pb.VersionRequest) (*pb.V
 	var latest *pb.Version
 	bestTime := int64(0)
 	for _, f := range files {
-		ver := &pb.Version{
-			Job:         req.GetJob(),
-			Version:     getVersion(f.path),
-			Path:        f.path,
-			Server:      s.Registry.Identifier,
-			VersionDate: f.date,
-		}
-		resp.Versions = append(resp.Versions, ver)
-		if ver.VersionDate > bestTime {
-			latest = ver
-			bestTime = ver.VersionDate
+		if !strings.HasSuffix(f.path, ".version") {
+			ver := &pb.Version{
+				Job:         req.GetJob(),
+				Version:     getVersion(f.path),
+				Path:        f.path,
+				Server:      s.Registry.Identifier,
+				VersionDate: f.date,
+			}
+			resp.Versions = append(resp.Versions, ver)
+			if ver.VersionDate > bestTime {
+				latest = ver
+				bestTime = ver.VersionDate
+			}
 		}
 	}
 
