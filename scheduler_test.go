@@ -102,7 +102,7 @@ func TestBuidlRun(t *testing.T) {
 		"md5sum",
 	}
 
-	hash, err := s.build(&pbgbs.Job{Name: "crasher", GoPath: "github.com/brotherlogic/crasher"})
+	hash, err := s.build(&pbgbs.Job{Name: "crasher", GoPath: "github.com/brotherlogic/crasher"}, "madeup")
 
 	f, err := os.Open(wd + "/buildtest/builds/github.com/brotherlogic/crasher/crasher-" + hash)
 	if err != nil {
@@ -128,7 +128,7 @@ func TestEmptyJobName(t *testing.T) {
 		LogTest,
 		"md5sum",
 	}
-	hash, err := s.build(&pbgbs.Job{GoPath: "github.com/brotherlogic/crasher"})
+	hash, err := s.build(&pbgbs.Job{GoPath: "github.com/brotherlogic/crasher"}, "madeup")
 	if err == nil {
 		t.Errorf("Empty job name did not fail build: %v", hash)
 	}
@@ -150,7 +150,7 @@ func TestBuildHashFail(t *testing.T) {
 		"blahblahblah",
 	}
 
-	hash, err := s.build(&pbgbs.Job{Name: "crasher", GoPath: "github.com/brotherlogic/crasher"})
+	hash, err := s.build(&pbgbs.Job{Name: "crasher", GoPath: "github.com/brotherlogic/crasher"}, "madeup")
 	if err == nil {
 		t.Errorf("Got a decent hash: %v", hash)
 	}

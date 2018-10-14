@@ -57,7 +57,7 @@ func (s *Server) dequeue(ctx context.Context) {
 	if len(s.buildQueue) > 0 && s.currentBuilds == 0 {
 		s.currentBuilds++
 		if s.runBuild {
-			_, err := s.scheduler.build(s.buildQueue[0])
+			_, err := s.scheduler.build(s.buildQueue[0], s.Registry.Identifier)
 			if err != nil {
 				s.RaiseIssue(ctx, "Build Failure", fmt.Sprintf("Build failed for %v: %v", s.buildQueue[0].Name, err), false)
 			}
