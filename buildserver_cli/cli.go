@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"io/ioutil"
 	"log"
 	"os"
 	"strconv"
@@ -44,6 +45,16 @@ func main() {
 		}
 
 		fmt.Printf("Versions: %v\n", res)
+	case "crash":
+		file, err := ioutil.ReadFile(os.Args[4])
+		if err != nil {
+			log.Fatalf("Error reading file: %v", err)
+		}
+
+		_, err = client.ReportCrash(ctx, &pb.CrashRequest{Job: &pbgbs.Job{Name: os.Args[2]}, Version: os.Args[3], Crash: &pb.Crash{ErrorMessage: string(file)}})
+		if err != nil {
+			log.Fatalf("Error reporting: %v", err)
+		}
 	}
 	utils.SendTrace(ctx, "builserver-"+os.Args[1], time.Now(), pbt.Milestone_END, "buildserver")
 }
