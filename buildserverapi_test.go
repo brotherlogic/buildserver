@@ -40,6 +40,16 @@ func TestCrashReport(t *testing.T) {
 	s.ReportCrash(context.Background(), &pb.CrashRequest{})
 }
 
+func TestCrashReportWithUpdate(t *testing.T) {
+	s := InitTestServer("testcrashreport")
+	s.pathMap["blah"] = &pb.Version{Version: "1234", Job: &pbgbs.Job{Name: "testing"}}
+	s.ReportCrash(context.Background(), &pb.CrashRequest{Job: &pbgbs.Job{Name: "testing"}, Version: "1234", Crash: &pb.Crash{ErrorMessage: "help"}})
+
+	if len(s.pathMap["blah"].Crashes) != 1 {
+		t.Errorf("Crash was not added")
+	}
+}
+
 func TestBuildWithHour(t *testing.T) {
 	s := InitTestServer("buildwithhour")
 	s.builds["crasher"] = time.Now().AddDate(-1, 0, 0)

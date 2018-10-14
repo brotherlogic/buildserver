@@ -28,6 +28,7 @@ message VersionResponse {
 
 message CrashRequest {
   gobuildslave.Job job = 1;
+  string version = 3;
   Crash crash = 2;
 }
 

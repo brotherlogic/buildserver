@@ -43,8 +43,12 @@ func (s *Scheduler) saveVersionInfo(j *pbgbs.Job, path string, server string) {
 		VersionDate: f.ModTime().Unix(),
 	}
 
-	nfile := path + ".version"
-	data, _ := proto.Marshal(ver)
+	s.saveVersionFile(ver)
+}
+
+func (s *Scheduler) saveVersionFile(v *pb.Version) {
+	nfile := v.Path + ".version"
+	data, _ := proto.Marshal(v)
 	err := ioutil.WriteFile(nfile, data, 0644)
 	s.log(fmt.Sprintf("Error writing file: %v", err))
 }
