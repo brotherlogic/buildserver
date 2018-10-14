@@ -35,6 +35,11 @@ func InitTestServer(f string) *Server {
 	return s
 }
 
+func TestCrashReport(t *testing.T) {
+	s := InitTestServer("testcrashreport")
+	s.ReportCrash(context.Background(), &pb.CrashRequest{})
+}
+
 func TestBuildWithHour(t *testing.T) {
 	s := InitTestServer("buildwithhour")
 	s.builds["crasher"] = time.Now().AddDate(-1, 0, 0)
@@ -48,7 +53,7 @@ func TestBuildWithHour(t *testing.T) {
 	s.drainQueue(context.Background())
 
 	if len(resp.Versions) != 0 {
-		t.Errorf("Get versions did not fail: %v", resp)
+		t.Errorf("Get versions did not fail first pass: %v", resp)
 	}
 
 	resp, err = s.GetVersions(context.Background(), &pb.VersionRequest{Job: &pbgbs.Job{Name: "crasher", GoPath: "github.com/brotherlogic/crasher"}})
@@ -57,7 +62,7 @@ func TestBuildWithHour(t *testing.T) {
 	}
 
 	if len(resp.Versions) != 1 {
-		t.Errorf("Get versions did not fail: %v", resp)
+		t.Errorf("Get versions did not fail second pass: %v", resp)
 	}
 
 }

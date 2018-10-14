@@ -3,13 +3,16 @@ package main
 import (
 	"bufio"
 	"fmt"
+	"io/ioutil"
 	"os"
 	"os/exec"
 	"strings"
 	"sync"
 	"time"
 
+	pb "github.com/brotherlogic/buildserver/proto"
 	pbgbs "github.com/brotherlogic/gobuildslave/proto"
+	"github.com/golang/protobuf/proto"
 )
 
 // Scheduler for doing builds
@@ -30,7 +33,23 @@ type rCommand struct {
 	err       error
 }
 
-func (s *Scheduler) build(job *pbgbs.Job) (string, error) {
+func (s *Scheduler) saveVersionInfo(j *pbgbs.Job, path string, server string) {
+	f, _ := os.Stat(path)
+	ver := &pb.Version{
+		Job:         j,
+		Version:     getVersion(path),
+		Path:        path,
+		Server:      server,
+		VersionDate: f.ModTime().Unix(),
+	}
+
+	nfile := path + ".version"
+	data, _ := proto.Marshal(ver)
+	err := ioutil.WriteFile(nfile, data, 0644)
+	s.log(fmt.Sprintf("Error writing file: %v", err))
+}
+
+func (s *Scheduler) build(job *pbgbs.Job, server string) (string, error) {
 	s.log(fmt.Sprintf("BUILDING %v", job.Name))
 
 	if job.Name == "" {
@@ -75,6 +94,8 @@ func (s *Scheduler) build(job *pbgbs.Job) (string, error) {
 	os.MkdirAll(s.dir+"/builds/"+job.GoPath, 0755)
 	copyCommand := &rCommand{command: exec.Command("mv", s.dir+"/bin/"+job.Name, s.dir+"/builds/"+job.GoPath+"/"+job.Name+"-"+strings.Fields(hashCommand.output)[0])}
 	s.runAndWait(copyCommand)
+
+	s.saveVersionInfo(job, s.dir+"/builds/"+job.GoPath+"/"+job.Name+"-"+strings.Fields(hashCommand.output)[0], server)
 
 	return strings.Fields(hashCommand.output)[0], nil
 }
