@@ -34,6 +34,7 @@ type Server struct {
 	buildQueue        []*pbgbs.Job
 	blacklist         []string
 	pathMap           map[string]*pb.Version
+	crashes           int64
 }
 
 type fileDetails struct {
@@ -139,6 +140,7 @@ func Init() *Server {
 		[]*pbgbs.Job{},
 		[]string{"led"},
 		make(map[string]*pb.Version),
+		int64(0),
 	}
 
 	s.scheduler.log = s.log
@@ -169,6 +171,7 @@ func (s *Server) GetState() []*pbg.State {
 		&pbg.State{Key: "buildc", Value: int64(s.buildRequest)},
 		&pbg.State{Key: "concurrent_builds", Value: int64(s.currentBuilds)},
 		&pbg.State{Key: "build_queue_length", Value: int64(len(s.buildQueue))},
+		&pbg.State{Key: "crashes", Value: s.crashes},
 	}
 }
 
