@@ -21,6 +21,7 @@ func getVersion(f string) string {
 
 //ReportCrash reports a crash
 func (s *Server) ReportCrash(ctx context.Context, req *pb.CrashRequest) (*pb.CrashResponse, error) {
+	s.crashes++
 	for _, val := range s.pathMap {
 		if val.Version == req.Version && val.Job.Name == req.Job.Name {
 			val.Crashes = append(val.Crashes, req.Crash)
