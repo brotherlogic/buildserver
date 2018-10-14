@@ -8,6 +8,7 @@ import (
 	"golang.org/x/net/context"
 
 	pb "github.com/brotherlogic/buildserver/proto"
+	pbt "github.com/brotherlogic/tracer/proto"
 )
 
 func getVersion(f string) string {
@@ -20,11 +21,13 @@ func getVersion(f string) string {
 
 //GetVersions gets the versions
 func (s *Server) GetVersions(ctx context.Context, req *pb.VersionRequest) (*pb.VersionResponse, error) {
+	ctx = s.LogTrace(ctx, "GetVersions", time.Now(), pbt.Milestone_START_FUNCTION)
 	s.buildRequest++
 
 	//Don't build blacklisted jobs
 	for _, blacklist := range s.blacklist {
 		if blacklist == req.GetJob().Name {
+			s.LogTrace(ctx, "GetVersions", time.Now(), pbt.Milestone_END_FUNCTION)
 			return &pb.VersionResponse{}, fmt.Errorf("Can't build %v due to blacklist", blacklist)
 		}
 	}
@@ -70,8 +73,10 @@ func (s *Server) GetVersions(ctx context.Context, req *pb.VersionRequest) (*pb.V
 	}
 
 	if req.JustLatest && latest != nil {
+		s.LogTrace(ctx, "GetVersions", time.Now(), pbt.Milestone_END_FUNCTION)
 		return &pb.VersionResponse{Versions: []*pb.Version{latest}}, nil
 	}
 
+	s.LogTrace(ctx, "GetVersions", time.Now(), pbt.Milestone_END_FUNCTION)
 	return resp, nil
 }
