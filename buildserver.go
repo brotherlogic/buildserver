@@ -194,5 +194,7 @@ func main() {
 	server.RegisterRepeatingTask(server.backgroundBuilder, "background_builder", time.Hour)
 	server.RegisterRepeatingTask(server.dequeue, "dequeue", time.Second)
 
+	server.preloadInfo()
+
 	fmt.Printf("%v\n", server.Serve())
 }
