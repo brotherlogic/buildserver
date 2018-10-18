@@ -22,9 +22,15 @@ func TestGetVersion(t *testing.T) {
 }
 
 func InitTestServer(f string) *Server {
+	return CloneTestServer(f, true)
+}
+
+func CloneTestServer(f string, delete bool) *Server {
 	wd, _ := os.Getwd()
 	s := Init()
-	os.RemoveAll(wd + "/" + f)
+	if delete {
+		os.RemoveAll(wd + "/" + f)
+	}
 	s.GoServer.KSclient = *keystoreclient.GetTestClient("./testing")
 	s.scheduler.dir = wd + "/" + f
 	s.dir = wd + "/" + f

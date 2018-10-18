@@ -25,3 +25,6 @@ src/
 buildserver_cli/buildserver_cli
 
 testlistsingle/
+testloadversion/
+
+.version
