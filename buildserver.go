@@ -172,6 +172,7 @@ func (s *Server) GetState() []*pbg.State {
 		&pbg.State{Key: "concurrent_builds", Value: int64(s.currentBuilds)},
 		&pbg.State{Key: "build_queue_length", Value: int64(len(s.buildQueue))},
 		&pbg.State{Key: "crashes", Value: s.crashes},
+		&pbg.State{Key: "paths_read", Value :int64(len(s.pathMap))},
 	}
 }
 
