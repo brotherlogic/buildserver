@@ -146,14 +146,6 @@ func TestListSingle(t *testing.T) {
 	}
 }
 
-func TestListFail(t *testing.T) {
-	s := InitTestServer("testlistfail")
-	s.lister = &prodLister{fail: true}
-	resp, err := s.GetVersions(context.Background(), &pb.VersionRequest{Job: &pbgbs.Job{Name: "crasher", GoPath: "github.com/brotherlogic/crasher"}})
-	if err == nil {
-		t.Errorf("Should have failed: %v", resp)
-	}
-}
 
 func TestBlacklist(t *testing.T) {
 	s := InitTestServer("testlistfail")

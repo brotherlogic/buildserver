@@ -22,6 +22,7 @@ type Scheduler struct {
 	mMap        map[string]*sync.Mutex
 	log         func(s string)
 	md5command  string
+	load      func(v *pb.Version)
 }
 
 type rCommand struct {
@@ -51,6 +52,7 @@ func (s *Scheduler) saveVersionFile(v *pb.Version) {
 	data, _ := proto.Marshal(v)
 	err := ioutil.WriteFile(nfile, data, 0644)
 	s.log(fmt.Sprintf("Error writing file: %v", err))
+	s.load(v)
 }
 
 func (s *Scheduler) build(job *pbgbs.Job, server string) (string, error) {
