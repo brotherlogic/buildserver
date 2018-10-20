@@ -8,11 +8,16 @@ import (
 	"testing"
 	"time"
 
+	pb "github.com/brotherlogic/buildserver/proto"
 	pbgbs "github.com/brotherlogic/gobuildslave/proto"
 )
 
 func LogTest(text string) {
 	log.Printf(text)
+}
+
+func load(v *pb.Version) {
+	//Pass
 }
 
 func TestAppendRun(t *testing.T) {
@@ -28,6 +33,7 @@ func TestAppendRun(t *testing.T) {
 		make(map[string]*sync.Mutex),
 		LogTest,
 		"md5sum",
+		load,
 	}
 
 	rc := &rCommand{command: exec.Command("ls")}
@@ -48,6 +54,7 @@ func TestRunNoCommand(t *testing.T) {
 		make(map[string]*sync.Mutex),
 		LogTest,
 		"md5sum",
+		load,
 	}
 
 	rc := &rCommand{
@@ -72,6 +79,7 @@ func TestRunBadCommand(t *testing.T) {
 		make(map[string]*sync.Mutex),
 		LogTest,
 		"md5sum",
+		load,
 	}
 
 	rc := &rCommand{
@@ -100,6 +108,7 @@ func TestBuidlRun(t *testing.T) {
 		make(map[string]*sync.Mutex),
 		LogTest,
 		"md5sum",
+		load,
 	}
 
 	hash, err := s.build(&pbgbs.Job{Name: "crasher", GoPath: "github.com/brotherlogic/crasher"}, "madeup")
@@ -127,6 +136,7 @@ func TestEmptyJobName(t *testing.T) {
 		make(map[string]*sync.Mutex),
 		LogTest,
 		"md5sum",
+		load,
 	}
 	hash, err := s.build(&pbgbs.Job{GoPath: "github.com/brotherlogic/crasher"}, "madeup")
 	if err == nil {
@@ -148,6 +158,7 @@ func TestBuildHashFail(t *testing.T) {
 		make(map[string]*sync.Mutex),
 		LogTest,
 		"blahblahblah",
+		load,
 	}
 
 	hash, err := s.build(&pbgbs.Job{Name: "crasher", GoPath: "github.com/brotherlogic/crasher"}, "madeup")

@@ -76,6 +76,10 @@ func (s *Server) drainQueue(ctx context.Context) {
 	}
 }
 
+func (s *Server) load(v *pb.Version) {
+	s.pathMap[v.Path] = v
+}
+
 func (s *Server) backgroundBuilder(ctx context.Context) {
 	for _, j := range s.jobs {
 		go func(ictx context.Context) {
@@ -128,6 +132,7 @@ func Init() *Server {
 			make(map[string]*sync.Mutex),
 			nil,
 			"md5sum",
+			nil,
 		},
 		make(map[string]time.Time),
 		"/media/scratch/buildserver",
@@ -144,6 +149,7 @@ func Init() *Server {
 	}
 
 	s.scheduler.log = s.log
+	s.scheduler.load = s.load
 
 	return s
 }
