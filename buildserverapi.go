@@ -63,15 +63,16 @@ func (s *Server) GetVersions(ctx context.Context, req *pb.VersionRequest) (*pb.V
 		s.builds[req.GetJob().Name] = time.Now()
 	}
 
-
 	resp := &pb.VersionResponse{}
 	var latest *pb.Version
 	bestTime := int64(0)
 	for _, v := range s.pathMap {
-		resp.Versions = append(resp.Versions, v)
-		if v.VersionDate > bestTime {
-			latest = v
-			bestTime = v.VersionDate
+		if v.Job.Name == req.GetJob().Name {
+			resp.Versions = append(resp.Versions, v)
+			if v.VersionDate > bestTime {
+				latest = v
+				bestTime = v.VersionDate
+			}
 		}
 	}
 
