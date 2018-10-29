@@ -24,14 +24,14 @@ func (s *Server) ReportCrash(ctx context.Context, req *pb.CrashRequest) (*pb.Cra
 	s.crashes++
 	for _, val := range s.pathMap {
 		if val.Version == req.Version && val.Job.Name == req.Job.Name {
-			s.RaiseIssue(ctx, "Crash for "+val.Job.Name, fmt.Sprintf("Error: %v", len(req.Crash.ErrorMessage)), false)
+			s.RaiseIssue(ctx, "Crash for "+val.Job.Name, fmt.Sprintf("Error"), false)
 			val.Crashes = append(val.Crashes, req.Crash)
 			s.scheduler.saveVersionFile(val)
 			return &pb.CrashResponse{}, nil
 		}
 	}
 
-	s.RaiseIssue(ctx, fmt.Sprintf("Could not find version for %v", req.Job.Name), fmt.Sprintf("Error : %v", len(req.Crash.ErrorMessage)), false)
+	s.RaiseIssue(ctx, fmt.Sprintf("Could not find version for %v", req.Job.Name), fmt.Sprintf("Error"), false)
 	return &pb.CrashResponse{}, fmt.Errorf("Version not found")
 }
 
