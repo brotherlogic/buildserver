@@ -43,7 +43,7 @@ func CloneTestServer(f string, delete bool) *Server {
 
 func TestCrashReport(t *testing.T) {
 	s := InitTestServer("testcrashreport")
-	s.ReportCrash(context.Background(), &pb.CrashRequest{})
+	s.ReportCrash(context.Background(), &pb.CrashRequest{Job: &pbgbs.Job{Name: "testing"}, Crash: &pb.Crash{ErrorMessage: "help"}})
 }
 
 func TestCrashReportWithUpdate(t *testing.T) {
