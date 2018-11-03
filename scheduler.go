@@ -22,7 +22,7 @@ type Scheduler struct {
 	mMap        map[string]*sync.Mutex
 	log         func(s string)
 	md5command  string
-	load      func(v *pb.Version)
+	load        func(v *pb.Version)
 }
 
 type rCommand struct {
@@ -92,6 +92,9 @@ func (s *Scheduler) build(job *pbgbs.Job, server string) (string, error) {
 
 	hashCommand := &rCommand{command: exec.Command(s.md5command, s.dir+"/bin/"+job.Name)}
 	s.runAndWait(hashCommand)
+
+	// Sometimes go get takes a while to run
+	time.Sleep(time.Second * 10)
 
 	if len(strings.Fields(hashCommand.output)) == 0 {
 		return "", fmt.Errorf("Build failed on hash step: %v, %v", hashCommand.output, hashCommand.erroutput)
