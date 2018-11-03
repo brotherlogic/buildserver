@@ -31,7 +31,7 @@ func (s *Server) ReportCrash(ctx context.Context, req *pb.CrashRequest) (*pb.Cra
 		}
 	}
 
-	s.RaiseIssue(ctx, fmt.Sprintf("Could not find version for %v", req.Job.Name), fmt.Sprintf("Error: %v", req.Crash.ErrorMessage), false)
+	s.BounceIssue(ctx, fmt.Sprintf("Crash for %v", req.Job.Name), fmt.Sprintf("%v", req.Crash.ErrorMessage), req.Job.Name)
 	return &pb.CrashResponse{}, fmt.Errorf("Version not found")
 }
 
