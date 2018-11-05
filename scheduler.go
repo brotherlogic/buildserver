@@ -2,6 +2,7 @@ package main
 
 import (
 	"bufio"
+	"crypto/md5"
 	"fmt"
 	"io/ioutil"
 	"os"
@@ -101,17 +102,16 @@ func (s *Scheduler) build(job *pbgbs.Job, server string) (string, error) {
 	// Sometimes go get takes a while to run
 	time.Sleep(time.Second * 10)
 
-	if len(strings.Fields(hashCommand.output)) == 0 {
-		return "", fmt.Errorf("Build failed on hash step: %v, %v", hashCommand.output, hashCommand.erroutput)
-	}
+	data, _ := ioutil.ReadFile(s.dir + "/bin/" + job.Name)
+	hash := fmt.Sprintf("%x", md5.Sum(data))
 
 	os.MkdirAll(s.dir+"/builds/"+job.GoPath, 0755)
-	copyCommand := &rCommand{command: exec.Command("mv", s.dir+"/bin/"+job.Name, s.dir+"/builds/"+job.GoPath+"/"+job.Name+"-"+strings.Fields(hashCommand.output)[0])}
+	copyCommand := &rCommand{command: exec.Command("mv", s.dir+"/bin/"+job.Name, s.dir+"/builds/"+job.GoPath+"/"+job.Name+"-"+hash)}
 	s.runAndWait(copyCommand)
 
-	s.saveVersionInfo(job, s.dir+"/builds/"+job.GoPath+"/"+job.Name+"-"+strings.Fields(hashCommand.output)[0], server)
+	s.saveVersionInfo(job, s.dir+"/builds/"+job.GoPath+"/"+job.Name+"-"+hash, server)
 
-	return strings.Fields(hashCommand.output)[0], nil
+	return hash, nil
 }
 
 func (s *Scheduler) runAndWait(c *rCommand) {
