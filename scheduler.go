@@ -23,6 +23,7 @@ type Scheduler struct {
 	log         func(s string)
 	md5command  string
 	load        func(v *pb.Version)
+	lastBuild   map[string]time.Time
 }
 
 type rCommand struct {
@@ -56,6 +57,10 @@ func (s *Scheduler) saveVersionFile(v *pb.Version) {
 }
 
 func (s *Scheduler) build(job *pbgbs.Job, server string) (string, error) {
+	if val, ok := s.lastBuild[job.Name]; ok && time.Now().Sub(val) < time.Minute*10 {
+		return "", fmt.Errorf("Skipping build for %v since we have a recent one", job.Name)
+	}
+	s.lastBuild[job.Name] = time.Now()
 	s.log(fmt.Sprintf("BUILDING %v", job.Name))
 
 	if job.Name == "" {
