@@ -173,27 +173,3 @@ func TestEmptyJobName(t *testing.T) {
 		t.Errorf("Empty job name did not fail build: %v", hash)
 	}
 }
-
-func TestBuildHashFail(t *testing.T) {
-	os.Setenv("GOBIN", "blah")
-	os.Setenv("GOPATH", "wha")
-
-	wd, err := os.Getwd()
-	if err != nil {
-		t.Fatalf("Pah, %v", err)
-	}
-	s := &Scheduler{
-		wd + "/buildtest",
-		&sync.Mutex{},
-		make(map[string]*sync.Mutex),
-		LogTest,
-		"blahblahblah",
-		load,
-		make(map[string]time.Time),
-	}
-
-	hash, err := s.build(&pbgbs.Job{Name: "crasher", GoPath: "github.com/brotherlogic/crasher"}, "madeup")
-	if err == nil {
-		t.Errorf("Got a decent hash: %v", hash)
-	}
-}
