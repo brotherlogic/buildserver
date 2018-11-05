@@ -133,6 +133,7 @@ func Init() *Server {
 			nil,
 			"md5sum",
 			nil,
+			make(map[string]time.Time),
 		},
 		make(map[string]time.Time),
 		"/media/scratch/buildserver",
