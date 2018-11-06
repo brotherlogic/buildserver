@@ -13,6 +13,8 @@ import (
 	"github.com/brotherlogic/keystore/client"
 	"golang.org/x/net/context"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 
 	pb "github.com/brotherlogic/buildserver/proto"
 	pbgbs "github.com/brotherlogic/gobuildslave/proto"
@@ -61,7 +63,10 @@ func (s *Server) dequeue(ctx context.Context) {
 		if s.runBuild {
 			_, err := s.scheduler.build(s.buildQueue[0], s.Registry.Identifier)
 			if err != nil {
-				s.RaiseIssue(ctx, "Build Failure", fmt.Sprintf("Build failed for %v: %v", s.buildQueue[0].Name, err), false)
+				e, ok := status.FromError(err)
+				if ok && e.Code() != codes.AlreadyExists {
+					s.RaiseIssue(ctx, "Build Failure", fmt.Sprintf("Build failed for %v: %v", s.buildQueue[0].Name, err), false)
+				}
 			}
 		}
 		s.buildQueue = s.buildQueue[1:]

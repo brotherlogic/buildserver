@@ -11,9 +11,12 @@ import (
 	"sync"
 	"time"
 
+	"github.com/golang/protobuf/proto"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
+
 	pb "github.com/brotherlogic/buildserver/proto"
 	pbgbs "github.com/brotherlogic/gobuildslave/proto"
-	"github.com/golang/protobuf/proto"
 )
 
 // Scheduler for doing builds
@@ -59,7 +62,7 @@ func (s *Scheduler) saveVersionFile(v *pb.Version) {
 
 func (s *Scheduler) build(job *pbgbs.Job, server string) (string, error) {
 	if val, ok := s.lastBuild[job.Name]; ok && time.Now().Sub(val) < time.Minute*10 {
-		return "", fmt.Errorf("Skipping build for %v since we have a recent one", job.Name)
+		return "", status.Error(codes.AlreadyExists, fmt.Sprintf("Skipping build for %v since we have a recent one", job.Name))
 	}
 	s.lastBuild[job.Name] = time.Now()
 	s.log(fmt.Sprintf("BUILDING %v", job.Name))
