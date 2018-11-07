@@ -54,7 +54,17 @@ type prodLister struct {
 }
 
 func (s *Server) enqueue(job *pbgbs.Job) {
-	s.buildQueue = append(s.buildQueue, job)
+	//Only enqueue if the job isn't already there
+	found := false
+	for _, j := range s.buildQueue {
+		if j.Name == job.Name {
+			found = true
+		}
+	}
+
+	if !found {
+		s.buildQueue = append(s.buildQueue, job)
+	}
 }
 
 func (s *Server) dequeue(ctx context.Context) {
