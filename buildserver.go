@@ -149,6 +149,7 @@ func Init() *Server {
 			"md5sum",
 			nil,
 			make(map[string]time.Time),
+			"",
 		},
 		make(map[string]time.Time),
 		"/media/scratch/buildserver",
@@ -195,6 +196,7 @@ func (s *Server) GetState() []*pbg.State {
 		&pbg.State{Key: "crashes", Value: s.crashes},
 		&pbg.State{Key: "paths_read", Value: int64(len(s.pathMap))},
 		&pbg.State{Key: "last_build", Text: fmt.Sprintf("%v", s.scheduler.lastBuild)},
+		&pbg.State{Key: "current_build", Text: s.scheduler.cbuild},
 	}
 }
 
