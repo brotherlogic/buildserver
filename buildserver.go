@@ -29,6 +29,7 @@ type Server struct {
 	dir               string
 	lister            lister
 	jobs              map[string]*pbgbs.Job
+	jobsMutex         *sync.Mutex
 	buildRequest      int
 	runBuild          bool
 	currentBuilds     int
@@ -155,6 +156,7 @@ func Init() *Server {
 		"/media/scratch/buildserver",
 		&prodLister{dir: "/media/scratch/buildserver"},
 		make(map[string]*pbgbs.Job),
+		&sync.Mutex{},
 		0,
 		true,
 		0,

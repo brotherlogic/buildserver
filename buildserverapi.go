@@ -48,7 +48,9 @@ func (s *Server) GetVersions(ctx context.Context, req *pb.VersionRequest) (*pb.V
 		}
 	}
 
+	s.jobsMutex.Lock()
 	s.jobs[req.GetJob().Name] = req.GetJob()
+	s.jobsMutex.Unlock()
 
 	// Schedule a build if it's been 1 hour since the last call
 	buildNeeded := false
