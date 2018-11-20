@@ -61,60 +61,60 @@ func (s *Scheduler) saveVersionFile(v *pb.Version) {
 	s.load(v)
 }
 
-func (s *Scheduler) build(job *pbgbs.Job, server string) (string, error) {
-	s.cbuild = fmt.Sprintf("%v @ %v", job.Name, time.Now())
-	if val, ok := s.lastBuild[job.Name]; ok && time.Now().Sub(val) < time.Minute*10 {
-		return "", status.Error(codes.AlreadyExists, fmt.Sprintf("Skipping build for %v since we have a recent one", job.Name))
+func (s *Scheduler) build(queEnt queueEntry, server string) (string, error) {
+	s.cbuild = fmt.Sprintf("%v @ %v", queEnt.job.Name, time.Now())
+	if val, ok := s.lastBuild[queEnt.job.Name]; ok && time.Now().Sub(val) < time.Minute*10 {
+		return "", status.Error(codes.AlreadyExists, fmt.Sprintf("Skipping build for %v since we have a recent one", queEnt.job.Name))
 	}
-	s.lastBuild[job.Name] = time.Now()
-	s.log(fmt.Sprintf("BUILDING %v", job.Name))
+	s.lastBuild[queEnt.job.Name] = time.Now()
+	s.log(fmt.Sprintf("BUILDING %v {%v}", queEnt.job.Name, time.Now().Sub(queEnt.timeIn)))
 
-	if job.Name == "" {
+	if queEnt.job.Name == "" {
 		return "", fmt.Errorf("Job is not specified correctly (has no name)")
 	}
 
 	// Prep the mutex
 	s.masterMutex.Lock()
-	if _, ok := s.mMap[job.Name]; !ok {
-		s.mMap[job.Name] = &sync.Mutex{}
+	if _, ok := s.mMap[queEnt.job.Name]; !ok {
+		s.mMap[queEnt.job.Name] = &sync.Mutex{}
 	}
 	s.masterMutex.Unlock()
 
 	// Lock the job for the duration of the build
-	s.mMap[job.Name].Lock()
-	defer s.mMap[job.Name].Unlock()
+	s.mMap[queEnt.job.Name].Lock()
+	defer s.mMap[queEnt.job.Name].Unlock()
 
 	// Sometimes go get takes a while to run
 	time.Sleep(time.Second * 10)
 
-	getCommand := &rCommand{command: exec.Command("go", "get", "-u", job.GoPath)}
+	getCommand := &rCommand{command: exec.Command("go", "get", "-u", queEnt.job.GoPath)}
 	s.runAndWait(getCommand)
 
-	buildCommand := &rCommand{command: exec.Command("go", "get", job.GoPath)}
+	buildCommand := &rCommand{command: exec.Command("go", "get", queEnt.job.GoPath)}
 	s.runAndWait(buildCommand)
 
 	// If the build has failed, there will be no file output
-	if _, err := os.Stat(s.dir + "/bin/" + job.Name); os.IsNotExist(err) {
+	if _, err := os.Stat(s.dir + "/bin/" + queEnt.job.Name); os.IsNotExist(err) {
 		return "", fmt.Errorf("Build failed: %v and %v -> %v", buildCommand.output, buildCommand.erroutput, buildCommand.err)
 	}
 
 	// Sometimes go get takes a while to run
 	time.Sleep(time.Second * 10)
 
-	hashCommand := &rCommand{command: exec.Command(s.md5command, s.dir+"/bin/"+job.Name)}
+	hashCommand := &rCommand{command: exec.Command(s.md5command, s.dir+"/bin/"+queEnt.job.Name)}
 	s.runAndWait(hashCommand)
 
 	// Sometimes go get takes a while to run
 	time.Sleep(time.Second * 10)
 
-	data, _ := ioutil.ReadFile(s.dir + "/bin/" + job.Name)
+	data, _ := ioutil.ReadFile(s.dir + "/bin/" + queEnt.job.Name)
 	hash := fmt.Sprintf("%x", md5.Sum(data))
 
-	os.MkdirAll(s.dir+"/builds/"+job.GoPath, 0755)
-	copyCommand := &rCommand{command: exec.Command("mv", s.dir+"/bin/"+job.Name, s.dir+"/builds/"+job.GoPath+"/"+job.Name+"-"+hash)}
+	os.MkdirAll(s.dir+"/builds/"+queEnt.job.GoPath, 0755)
+	copyCommand := &rCommand{command: exec.Command("mv", s.dir+"/bin/"+queEnt.job.Name, s.dir+"/builds/"+queEnt.job.GoPath+"/"+queEnt.job.Name+"-"+hash)}
 	s.runAndWait(copyCommand)
 
-	s.saveVersionInfo(job, s.dir+"/builds/"+job.GoPath+"/"+job.Name+"-"+hash, server)
+	s.saveVersionInfo(queEnt.job, s.dir+"/builds/"+queEnt.job.GoPath+"/"+queEnt.job.Name+"-"+hash, server)
 
 	return hash, nil
 }

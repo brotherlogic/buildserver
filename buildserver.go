@@ -21,6 +21,11 @@ import (
 	pbg "github.com/brotherlogic/goserver/proto"
 )
 
+type queueEntry struct {
+	job    *pbgbs.Job
+	timeIn time.Time
+}
+
 //Server main server type
 type Server struct {
 	*goserver.GoServer
@@ -34,7 +39,7 @@ type Server struct {
 	runBuild          bool
 	currentBuilds     int
 	currentBuildMutex *sync.Mutex
-	buildQueue        []*pbgbs.Job
+	buildQueue        []queueEntry
 	blacklist         []string
 	pathMap           map[string]*pb.Version
 	crashes           int64
@@ -58,13 +63,13 @@ func (s *Server) enqueue(job *pbgbs.Job) {
 	//Only enqueue if the job isn't already there
 	found := false
 	for _, j := range s.buildQueue {
-		if j.Name == job.Name {
+		if j.job.Name == job.Name {
 			found = true
 		}
 	}
 
 	if !found {
-		s.buildQueue = append(s.buildQueue, job)
+		s.buildQueue = append(s.buildQueue, queueEntry{job: job, timeIn: time.Now()})
 	}
 }
 
@@ -76,7 +81,7 @@ func (s *Server) dequeue(ctx context.Context) {
 			if err != nil {
 				e, ok := status.FromError(err)
 				if ok && e.Code() != codes.AlreadyExists {
-					s.RaiseIssue(ctx, "Build Failure", fmt.Sprintf("Build failed for %v: %v", s.buildQueue[0].Name, err), false)
+					s.RaiseIssue(ctx, "Build Failure", fmt.Sprintf("Build failed for %v: %v", s.buildQueue[0].job.Name, err), false)
 				}
 			}
 		}
@@ -161,7 +166,7 @@ func Init() *Server {
 		true,
 		0,
 		&sync.Mutex{},
-		[]*pbgbs.Job{},
+		[]queueEntry{},
 		[]string{"led"},
 		make(map[string]*pb.Version),
 		int64(0),
