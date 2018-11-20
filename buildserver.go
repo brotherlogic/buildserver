@@ -77,6 +77,9 @@ func (s *Server) dequeue(ctx context.Context) {
 	if len(s.buildQueue) > 0 && s.currentBuilds == 0 {
 		s.currentBuilds++
 		if s.runBuild {
+			if time.Now().Sub(s.buildQueue[0].timeIn) > time.Minute*10 {
+				s.RaiseIssue(ctx, "Long Build", fmt.Sprintf("%v took %v to get to the front of the queue", s.buildQueue[0].job.Name, time.Now().Sub(s.buildQueue[0].timeIn)), false)
+			}
 			_, err := s.scheduler.build(s.buildQueue[0], s.Registry.Identifier)
 			if err != nil {
 				e, ok := status.FromError(err)
