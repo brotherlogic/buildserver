@@ -93,11 +93,11 @@ func TestBuildWithHour(t *testing.T) {
 		t.Fatalf("Error in get versions: %v", err)
 	}
 	time.Sleep(time.Second)
-	s.drainQueue(context.Background())
-
 	if len(resp.Versions) != 0 {
 		t.Errorf("Get versions did not fail first pass: %v", resp)
 	}
+
+	s.drainQueue(context.Background())
 
 	resp, err = s.GetVersions(context.Background(), &pb.VersionRequest{Job: &pbgbs.Job{Name: "crasher", GoPath: "github.com/brotherlogic/crasher"}})
 	if err != nil {
