@@ -57,7 +57,6 @@ func (s *Scheduler) saveVersionFile(v *pb.Version) {
 	nfile := v.Path + ".version"
 	data, _ := proto.Marshal(v)
 	err := ioutil.WriteFile(nfile, data, 0644)
-	s.log(fmt.Sprintf("Error writing file: %v", err))
 	s.load(v)
 }
 
