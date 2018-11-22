@@ -22,8 +22,9 @@ import (
 )
 
 type queueEntry struct {
-	job    *pbgbs.Job
-	timeIn time.Time
+	job       *pbgbs.Job
+	timeIn    time.Time
+	fullBuild bool
 }
 
 //Server main server type

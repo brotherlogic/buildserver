@@ -83,11 +83,10 @@ func (s *Scheduler) build(queEnt queueEntry, server string) (string, error) {
 	s.mMap[queEnt.job.Name].Lock()
 	defer s.mMap[queEnt.job.Name].Unlock()
 
-	// Sometimes go get takes a while to run
-	time.Sleep(time.Second * 10)
-
-	getCommand := &rCommand{command: exec.Command("go", "get", "-u", queEnt.job.GoPath)}
-	s.runAndWait(getCommand)
+	if queEnt.fullBuild {
+		getCommand := &rCommand{command: exec.Command("go", "get", "-u", queEnt.job.GoPath)}
+		s.runAndWait(getCommand)
+	}
 
 	buildCommand := &rCommand{command: exec.Command("go", "get", queEnt.job.GoPath)}
 	s.runAndWait(buildCommand)
@@ -97,14 +96,8 @@ func (s *Scheduler) build(queEnt queueEntry, server string) (string, error) {
 		return "", fmt.Errorf("Build failed: %v and %v -> %v", buildCommand.output, buildCommand.erroutput, buildCommand.err)
 	}
 
-	// Sometimes go get takes a while to run
-	time.Sleep(time.Second * 10)
-
 	hashCommand := &rCommand{command: exec.Command(s.md5command, s.dir+"/bin/"+queEnt.job.Name)}
 	s.runAndWait(hashCommand)
-
-	// Sometimes go get takes a while to run
-	time.Sleep(time.Second * 10)
 
 	data, _ := ioutil.ReadFile(s.dir + "/bin/" + queEnt.job.Name)
 	hash := fmt.Sprintf("%x", md5.Sum(data))
