@@ -90,7 +90,7 @@ func (s *Scheduler) build(queEnt queueEntry, server string) (string, error) {
 		s.runAndWait(getCommand)
 	}
 
-	buildCommand := &rCommand{command: exec.Command("go", "install", queEnt.job.GoPath)}
+	buildCommand := &rCommand{command: exec.Command("go", "get", queEnt.job.GoPath)}
 	s.runAndWait(buildCommand)
 
 	// If the build has failed, there will be no file output
