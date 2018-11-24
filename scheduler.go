@@ -92,6 +92,7 @@ func (s *Scheduler) build(queEnt queueEntry, server string) (string, error) {
 
 	buildCommand := &rCommand{command: exec.Command("go", "install", queEnt.job.GoPath)}
 	s.runAndWait(buildCommand)
+	s.log(fmt.Sprintf("BUILDING: (%v) -> %v and %v", queEnt.job.Name, buildCommand.output, buildCommand.erroutput))
 
 	// If the build has failed, there will be no file output
 	if _, err := os.Stat(s.dir + "/bin/" + queEnt.job.Name); os.IsNotExist(err) {
