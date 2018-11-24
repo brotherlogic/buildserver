@@ -5,6 +5,7 @@ import (
 	"crypto/md5"
 	"fmt"
 	"io/ioutil"
+	"math/rand"
 	"os"
 	"os/exec"
 	"strings"
@@ -66,7 +67,8 @@ func (s *Scheduler) build(queEnt queueEntry, server string) (string, error) {
 		return "", status.Error(codes.AlreadyExists, fmt.Sprintf("Skipping build for %v since we have a recent one", queEnt.job.Name))
 	}
 	s.lastBuild[queEnt.job.Name] = time.Now()
-	s.log(fmt.Sprintf("BUILDING %v {%v}", queEnt.job.Name, time.Now().Sub(queEnt.timeIn)))
+	fb := rand.Float32() < 0.1
+	s.log(fmt.Sprintf("BUILDING [%v] %v {%v}", fb, queEnt.job.Name, time.Now().Sub(queEnt.timeIn)))
 
 	if queEnt.job.Name == "" {
 		return "", fmt.Errorf("Job is not specified correctly (has no name)")
@@ -83,7 +85,7 @@ func (s *Scheduler) build(queEnt queueEntry, server string) (string, error) {
 	s.mMap[queEnt.job.Name].Lock()
 	defer s.mMap[queEnt.job.Name].Unlock()
 
-	if queEnt.fullBuild {
+	if queEnt.fullBuild || fb {
 		getCommand := &rCommand{command: exec.Command("go", "get", "-u", queEnt.job.GoPath)}
 		s.runAndWait(getCommand)
 	}
