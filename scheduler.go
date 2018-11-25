@@ -85,6 +85,11 @@ func (s *Scheduler) build(queEnt queueEntry, server string) (string, error) {
 	s.mMap[queEnt.job.Name].Lock()
 	defer s.mMap[queEnt.job.Name].Unlock()
 
+	//Refresh the project
+	fetchCommand := &rCommand{command: exec.Command("git", "-C", s.dir+"/src/"+queEnt.job.GoPath, "fetch", "-p")}
+	s.runAndWait(fetchCommand)
+	s.log(fmt.Sprintf("BUILDING FETCH: %v and %v", fetchCommand.output, fetchCommand.erroutput))
+
 	buildCommand := &rCommand{command: exec.Command("go", "get", queEnt.job.GoPath)}
 	s.runAndWait(buildCommand)
 
