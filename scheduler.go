@@ -85,9 +85,6 @@ func (s *Scheduler) build(queEnt queueEntry, server string) (string, error) {
 	s.mMap[queEnt.job.Name].Lock()
 	defer s.mMap[queEnt.job.Name].Unlock()
 
-	getCommand := &rCommand{command: exec.Command("go", "get", "-d", "-u", queEnt.job.GoPath)}
-	s.runAndWait(getCommand)
-
 	buildCommand := &rCommand{command: exec.Command("go", "get", queEnt.job.GoPath)}
 	s.runAndWait(buildCommand)
 
