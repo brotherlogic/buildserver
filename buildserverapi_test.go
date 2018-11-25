@@ -83,49 +83,13 @@ func TestBuildWithMadeupSecondPull(t *testing.T) {
 
 }
 
-func TestBuildWithHour(t *testing.T) {
-	s := InitTestServer("buildwithhour")
-	s.builds["crasher"] = time.Now().AddDate(-1, 0, 0)
-
-	resp, err := s.GetVersions(context.Background(), &pb.VersionRequest{Job: &pbgbs.Job{Name: "crasher", GoPath: "github.com/brotherlogic/crasher"}})
-
-	if err != nil {
-		t.Fatalf("Error in get versions: %v", err)
-	}
-	time.Sleep(time.Second)
-	if len(resp.Versions) != 0 {
-		t.Errorf("Get versions did not fail first pass: %v", resp)
-	}
-
-	s.drainQueue(context.Background())
-
-	resp, err = s.GetVersions(context.Background(), &pb.VersionRequest{Job: &pbgbs.Job{Name: "crasher", GoPath: "github.com/brotherlogic/crasher"}})
-	if err != nil {
-		t.Fatalf("Error in get versions: %v", err)
-	}
-
-	if len(resp.Versions) != 1 {
-		t.Errorf("Get versions did not fail second pass: %v", resp)
-	}
-
-}
-
 func TestBuildWithFailure(t *testing.T) {
 	s := InitTestServer("buildwithhour")
 
-	resp, err := s.GetVersions(context.Background(), &pb.VersionRequest{Job: &pbgbs.Job{Name: "blahblahblah", GoPath: "github.com/brotherlogic/blahblahblah"}})
-
-	if err != nil {
-		t.Fatalf("Error in get versions: %v", err)
-	}
-	time.Sleep(time.Second)
+	_, err := s.Build(context.Background(), &pb.BuildRequest{Job: &pbgbs.Job{Name: "blahblahblah", GoPath: "github.com/brotherlogic/blahblahblah"}})
 	s.drainQueue(context.Background())
 
-	if len(resp.Versions) != 0 {
-		t.Errorf("Get versions did not fail: %v", resp)
-	}
-
-	resp, err = s.GetVersions(context.Background(), &pb.VersionRequest{Job: &pbgbs.Job{Name: "crasher", GoPath: "github.com/brotherlogic/crasher"}})
+	resp, err := s.GetVersions(context.Background(), &pb.VersionRequest{Job: &pbgbs.Job{Name: "crasher", GoPath: "github.com/brotherlogic/blahblahblah"}})
 	if err != nil {
 		t.Fatalf("Error in get versions: %v", err)
 	}
@@ -139,14 +103,10 @@ func TestBuildWithFailure(t *testing.T) {
 func TestList(t *testing.T) {
 	log.Printf("TEST LIST")
 	s := InitTestServer("testlist")
-	resp, err := s.GetVersions(context.Background(), &pb.VersionRequest{Job: &pbgbs.Job{Name: "crasher", GoPath: "github.com/brotherlogic/crasher"}})
-	if len(resp.Versions) != 0 {
-		t.Fatalf("Get versions did not fail: %v", resp)
-	}
-	time.Sleep(time.Second)
+	_, err := s.Build(context.Background(), &pb.BuildRequest{Job: &pbgbs.Job{Name: "crasher", GoPath: "github.com/brotherlogic/crasher"}})
 	s.drainQueue(context.Background())
 
-	resp, err = s.GetVersions(context.Background(), &pb.VersionRequest{Job: &pbgbs.Job{Name: "crasher", GoPath: "github.com/brotherlogic/crasher"}})
+	resp, err := s.GetVersions(context.Background(), &pb.VersionRequest{Job: &pbgbs.Job{Name: "crasher", GoPath: "github.com/brotherlogic/crasher"}})
 	if err != nil {
 		t.Fatalf("Get version failed: %v", err)
 	}
@@ -157,14 +117,10 @@ func TestList(t *testing.T) {
 
 func TestListSingle(t *testing.T) {
 	s := InitTestServer("testlistsingle")
-	resp, err := s.GetVersions(context.Background(), &pb.VersionRequest{Job: &pbgbs.Job{Name: "crasher", GoPath: "github.com/brotherlogic/crasher"}, JustLatest: true})
-	if len(resp.Versions) != 0 {
-		t.Fatalf("Get versions did not fail: %v (%v)", resp, len(resp.Versions))
-	}
-	time.Sleep(time.Second)
+	_, err := s.Build(context.Background(), &pb.BuildRequest{Job: &pbgbs.Job{Name: "crasher", GoPath: "github.com/brotherlogic/crasher"}})
 	s.drainQueue(context.Background())
 
-	resp, err = s.GetVersions(context.Background(), &pb.VersionRequest{Job: &pbgbs.Job{Name: "crasher", GoPath: "github.com/brotherlogic/crasher"}, JustLatest: true})
+	resp, err := s.GetVersions(context.Background(), &pb.VersionRequest{Job: &pbgbs.Job{Name: "crasher", GoPath: "github.com/brotherlogic/crasher"}, JustLatest: true})
 	if err != nil {
 		t.Fatalf("Get version failed: %v", err)
 	}
@@ -175,7 +131,7 @@ func TestListSingle(t *testing.T) {
 
 func TestBlacklist(t *testing.T) {
 	s := InitTestServer("testlistfail")
-	resp, err := s.GetVersions(context.Background(), &pb.VersionRequest{Job: &pbgbs.Job{Name: "led", GoPath: "github.com/brotherlogic/crasher"}})
+	resp, err := s.Build(context.Background(), &pb.BuildRequest{Job: &pbgbs.Job{Name: "led", GoPath: "github.com/brotherlogic/crasher"}})
 	if err == nil {
 		t.Errorf("Should have failed: %v", resp)
 	}

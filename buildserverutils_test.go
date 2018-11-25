@@ -13,12 +13,11 @@ func TestLoadVersion(t *testing.T) {
 	s := InitTestServer("testloadversion")
 	s.builds["crasher"] = time.Now().AddDate(-1, 0, 0)
 
-	_, err := s.GetVersions(context.Background(), &pb.VersionRequest{Job: &pbgbs.Job{Name: "crasher", GoPath: "github.com/brotherlogic/crasher"}})
+	_, err := s.Build(context.Background(), &pb.BuildRequest{Job: &pbgbs.Job{Name: "crasher", GoPath: "github.com/brotherlogic/crasher"}})
 
 	if err != nil {
 		t.Fatalf("Error in get versions: %v", err)
 	}
-	time.Sleep(time.Second)
 	s.drainQueue(context.Background())
 
 	s2 := CloneTestServer("testloadversion", false)

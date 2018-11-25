@@ -70,6 +70,7 @@ func (s *Server) enqueue(job *pbgbs.Job) {
 	}
 
 	if !found {
+		s.builds[job.Name] = time.Now()
 		s.buildQueue = append(s.buildQueue, queueEntry{job: job, timeIn: time.Now()})
 	}
 }
