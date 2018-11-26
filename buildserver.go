@@ -108,9 +108,7 @@ func (s *Server) load(v *pb.Version) {
 
 func (s *Server) backgroundBuilder(ctx context.Context) {
 	for _, j := range s.jobs {
-		go func(ictx context.Context) {
-			s.enqueue(j)
-		}(ctx)
+		s.enqueue(j)
 	}
 }
 
@@ -227,7 +225,7 @@ func main() {
 
 	server.RegisterServer("buildserver", false)
 
-	server.RegisterRepeatingTask(server.backgroundBuilder, "background_builder", time.Hour)
+	server.RegisterRepeatingTask(server.backgroundBuilder, "background_builder", time.Minute*5)
 	server.RegisterRepeatingTask(server.dequeue, "dequeue", time.Second)
 
 	server.preloadInfo()
