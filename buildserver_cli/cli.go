@@ -39,12 +39,12 @@ func main() {
 
 	switch os.Args[1] {
 	case "build":
-		res, err := client.GetVersions(ctx, &pb.VersionRequest{Job: &pbgbs.Job{Name: os.Args[2], GoPath: "github.com/brotherlogic/" + os.Args[2]}, JustLatest: true})
+		res, err := client.Build(ctx, &pb.BuildRequest{Job: &pbgbs.Job{Name: os.Args[2], GoPath: "github.com/brotherlogic/" + os.Args[2]}})
 		if err != nil {
 			log.Fatalf("Error on build: %v", err)
 		}
 
-		fmt.Printf("Versions: %v\n", res)
+		fmt.Printf("Response: %v\n", res)
 	case "crash":
 		file, err := ioutil.ReadFile(os.Args[4])
 		if err != nil {
