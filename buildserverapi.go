@@ -62,21 +62,29 @@ func (s *Server) GetVersions(ctx context.Context, req *pb.VersionRequest) (*pb.V
 	s.jobsMutex.Unlock()
 
 	resp := &pb.VersionResponse{}
-	var latest *pb.Version
-	bestTime := int64(0)
+	latest := make(map[string]*pb.Version)
+	bestTime := make(map[string]int64)
 	for _, v := range s.pathMap {
-		if v.Job.Name == req.GetJob().Name {
+		if req.GetJob().Name == "" || v.Job.Name == req.GetJob().Name {
+			_, ok := bestTime[v.Job.Name]
+			if !ok {
+				bestTime[v.Job.Name] = 0
+			}
 			resp.Versions = append(resp.Versions, v)
-			if v.VersionDate > bestTime {
-				latest = v
-				bestTime = v.VersionDate
+			if v.VersionDate > bestTime[v.Job.Name] {
+				latest[v.Job.Name] = v
+				bestTime[v.Job.Name] = v.VersionDate
 			}
 		}
 	}
 
-	if req.JustLatest && latest != nil {
+	if req.JustLatest {
+		versions := []*pb.Version{}
+		for _, l := range latest {
+			versions = append(versions, l)
+		}
 		s.LogTrace(ctx, "GetVersions", time.Now(), pbt.Milestone_END_FUNCTION)
-		return &pb.VersionResponse{Versions: []*pb.Version{latest}}, nil
+		return &pb.VersionResponse{Versions: versions}, nil
 	}
 
 	s.LogTrace(ctx, "GetVersions", time.Now(), pbt.Milestone_END_FUNCTION)
