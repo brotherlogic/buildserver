@@ -41,6 +41,15 @@ func CloneTestServer(f string, delete bool) *Server {
 	return s
 }
 
+func TestEmptyJob(t *testing.T) {
+	s := InitTestServer("testcrashreport")
+	_, err := s.GetVersions(context.Background(), &pb.VersionRequest{})
+
+	if err == nil {
+		t.Errorf("Empty request should be rejected")
+	}
+}
+
 func TestCrashReport(t *testing.T) {
 	s := InitTestServer("testcrashreport")
 	s.ReportCrash(context.Background(), &pb.CrashRequest{Job: &pbgbs.Job{Name: "testing"}, Crash: &pb.Crash{ErrorMessage: "help"}})

@@ -57,6 +57,10 @@ func (s *Server) ReportCrash(ctx context.Context, req *pb.CrashRequest) (*pb.Cra
 func (s *Server) GetVersions(ctx context.Context, req *pb.VersionRequest) (*pb.VersionResponse, error) {
 	ctx = s.LogTrace(ctx, "GetVersions", time.Now(), pbt.Milestone_START_FUNCTION)
 
+	if req.GetJob() == nil {
+		return &pb.VersionResponse{}, fmt.Errorf("You sent an empty job for some reason")
+	}
+
 	s.jobsMutex.Lock()
 	s.jobs[req.GetJob().Name] = req.GetJob()
 	s.jobsMutex.Unlock()
