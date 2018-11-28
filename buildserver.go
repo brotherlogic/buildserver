@@ -44,6 +44,7 @@ type Server struct {
 	blacklist         []string
 	pathMap           map[string]*pb.Version
 	crashes           int64
+	maxBuilds         int
 }
 
 type fileDetails struct {
@@ -76,7 +77,7 @@ func (s *Server) enqueue(job *pbgbs.Job) {
 }
 
 func (s *Server) dequeue(ctx context.Context) {
-	if len(s.buildQueue) > 0 && s.currentBuilds == 0 {
+	if len(s.buildQueue) > 0 && s.currentBuilds < s.maxBuilds {
 		s.currentBuilds++
 		if s.runBuild {
 			if time.Now().Sub(s.buildQueue[0].timeIn) > time.Minute*10 {
@@ -173,6 +174,7 @@ func Init() *Server {
 		[]string{"led"},
 		make(map[string]*pb.Version),
 		int64(0),
+		2,
 	}
 
 	s.scheduler.log = s.log
