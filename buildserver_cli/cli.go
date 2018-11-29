@@ -45,6 +45,14 @@ func main() {
 		}
 
 		fmt.Printf("Response: %v\n", res)
+	case "latest":
+		res, err := client.GetVersions(ctx, &pb.VersionRequest{Job: &pbgbs.Job{Name: os.Args[2], GoPath: "github.com/brotherlogic/" + os.Args[2]}, JustLatest: true})
+		if err != nil {
+			log.Fatalf("Error on build: %v", err)
+		}
+
+		fmt.Printf("%v - %v\n", res.Versions[0].Version, time.Unix(res.Versions[0].VersionDate, 0))
+
 	case "crash":
 		file, err := ioutil.ReadFile(os.Args[4])
 		if err != nil {
