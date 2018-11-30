@@ -91,7 +91,7 @@ func (s *Scheduler) build(queEnt queueEntry, server string) (string, error) {
 	mergeCommand := &rCommand{command: exec.Command("git", "-C", s.dir+"/src/"+queEnt.job.GoPath, "merge", "origin/master")}
 	s.runAndWait(mergeCommand)
 
-	buildCommand := &rCommand{command: exec.Command("go", "get", queEnt.job.GoPath)}
+	buildCommand := &rCommand{command: exec.Command("go", "get", "-u", queEnt.job.GoPath)}
 	s.runAndWait(buildCommand)
 
 	// If the build has failed, there will be no file output
