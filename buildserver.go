@@ -80,19 +80,21 @@ func (s *Server) dequeue(ctx context.Context) {
 	if len(s.buildQueue) > 0 && s.currentBuilds < s.maxBuilds {
 		s.currentBuilds++
 		if s.runBuild {
-			if time.Now().Sub(s.buildQueue[0].timeIn) > time.Minute*10 {
-				s.RaiseIssue(ctx, "Long Build", fmt.Sprintf("%v took %v to get to the front of the queue", s.buildQueue[0].job.Name, time.Now().Sub(s.buildQueue[0].timeIn)), false)
-			}
-			_, err := s.scheduler.build(s.buildQueue[0], s.Registry.Identifier)
-			if err != nil {
-				e, ok := status.FromError(err)
-				if !ok || e.Code() != codes.AlreadyExists {
-					s.RaiseIssue(ctx, "Build Failure", fmt.Sprintf("Build failed for %v: %v", s.buildQueue[0].job.Name, err), false)
+			go func() {
+				if time.Now().Sub(s.buildQueue[0].timeIn) > time.Minute*10 {
+					s.RaiseIssue(ctx, "Long Build", fmt.Sprintf("%v took %v to get to the front of the queue", s.buildQueue[0].job.Name, time.Now().Sub(s.buildQueue[0].timeIn)), false)
 				}
-			}
+				_, err := s.scheduler.build(s.buildQueue[0], s.Registry.Identifier)
+				if err != nil {
+					e, ok := status.FromError(err)
+					if !ok || e.Code() != codes.AlreadyExists {
+						s.RaiseIssue(ctx, "Build Failure", fmt.Sprintf("Build failed for %v: %v", s.buildQueue[0].job.Name, err), false)
+					}
+				}
+				s.buildQueue = s.buildQueue[1:]
+				s.currentBuilds--
+			}()
 		}
-		s.buildQueue = s.buildQueue[1:]
-		s.currentBuilds--
 	}
 }
 
