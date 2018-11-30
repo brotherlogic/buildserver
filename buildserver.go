@@ -86,6 +86,7 @@ func (s *Server) dequeue(ctx context.Context) {
 			_, err := s.scheduler.build(s.buildQueue[0], s.Registry.Identifier)
 			if err != nil {
 				e, ok := status.FromError(err)
+				s.Log(fmt.Sprintf("%v and %v on build error", ok, e.Code()))
 				if ok && e.Code() != codes.AlreadyExists {
 					s.RaiseIssue(ctx, "Build Failure", fmt.Sprintf("Build failed for %v: %v", s.buildQueue[0].job.Name, err), false)
 				}
