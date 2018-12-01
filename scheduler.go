@@ -63,7 +63,7 @@ func (s *Scheduler) saveVersionFile(v *pb.Version) {
 
 func (s *Scheduler) build(queEnt queueEntry, server string) (string, error) {
 	s.cbuild = fmt.Sprintf("%v @ %v", queEnt.job.Name, time.Now())
-	if val, ok := s.lastBuild[queEnt.job.Name]; ok && time.Now().Sub(val) < time.Minute*10 {
+	if val, ok := s.lastBuild[queEnt.job.Name]; ok && time.Now().Sub(val) < time.Minute*2 {
 		return "", status.Error(codes.AlreadyExists, fmt.Sprintf("Skipping build for %v since we have a recent one", queEnt.job.Name))
 	}
 	s.lastBuild[queEnt.job.Name] = time.Now()
