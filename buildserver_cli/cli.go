@@ -39,7 +39,7 @@ func main() {
 
 	switch os.Args[1] {
 	case "build":
-		res, err := client.Build(ctx, &pb.BuildRequest{Job: &pbgbs.Job{Name: os.Args[2], GoPath: "github.com/brotherlogic/" + os.Args[2]}})
+		_, err := client.Build(ctx, &pb.BuildRequest{Job: &pbgbs.Job{Name: os.Args[2], GoPath: "github.com/brotherlogic/" + os.Args[2]}})
 		if err != nil {
 			log.Fatalf("Error on build: %v", err)
 		}
