@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"log"
 	"os"
 	"testing"
 	"time"
@@ -110,9 +109,11 @@ func TestBuildWithFailure(t *testing.T) {
 }
 
 func TestList(t *testing.T) {
-	log.Printf("TEST LIST")
 	s := InitTestServer("testlist")
 	_, err := s.Build(context.Background(), &pb.BuildRequest{Job: &pbgbs.Job{Name: "crasher", GoPath: "github.com/brotherlogic/crasher"}})
+	if err != nil {
+		t.Fatalf("Error in build: %v", err)
+	}
 	s.drainQueue(context.Background())
 
 	resp, err := s.GetVersions(context.Background(), &pb.VersionRequest{Job: &pbgbs.Job{Name: "crasher", GoPath: "github.com/brotherlogic/crasher"}})
