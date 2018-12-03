@@ -41,11 +41,13 @@ func main() {
 	case "build":
 		_, err := client.Build(ctx, &pb.BuildRequest{Job: &pbgbs.Job{Name: os.Args[2], GoPath: "github.com/brotherlogic/" + os.Args[2]}})
 		if err != nil {
+			utils.SendTrace(ctx, "builserver-"+os.Args[1], time.Now(), pbt.Milestone_END, "buildserver")
 			log.Fatalf("Error on build: %v", err)
 		}
 	case "latest":
 		res, err := client.GetVersions(ctx, &pb.VersionRequest{Job: &pbgbs.Job{Name: os.Args[2], GoPath: "github.com/brotherlogic/" + os.Args[2]}, JustLatest: true})
 		if err != nil {
+			utils.SendTrace(ctx, "builserver-"+os.Args[1], time.Now(), pbt.Milestone_END, "buildserver")
 			log.Fatalf("Error on build: %v", err)
 		}
 
@@ -53,6 +55,7 @@ func main() {
 	case "crash":
 		file, err := ioutil.ReadFile(os.Args[4])
 		if err != nil {
+			utils.SendTrace(ctx, "builserver-"+os.Args[1], time.Now(), pbt.Milestone_END, "buildserver")
 			log.Fatalf("Error reading file: %v", err)
 		}
 
