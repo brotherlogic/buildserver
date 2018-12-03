@@ -16,7 +16,9 @@ func (s *Server) preloadInfo() error {
 			data, _ := ioutil.ReadFile(path)
 			val := &pb.Version{}
 			proto.Unmarshal(data, val)
+			s.pathMapMutex.Lock()
 			s.pathMap[path[:len(path)-len(".version")]] = val
+			s.pathMapMutex.Unlock()
 		}
 		return nil
 	})

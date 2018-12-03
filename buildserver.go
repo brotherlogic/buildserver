@@ -43,6 +43,7 @@ type Server struct {
 	buildQueue        []queueEntry
 	blacklist         []string
 	pathMap           map[string]*pb.Version
+	pathMapMutex      *sync.Mutex
 	crashes           int64
 	maxBuilds         int
 }
@@ -84,13 +85,13 @@ func (s *Server) dequeue(ctx context.Context) {
 				s.currentBuilds++
 				s.buildQueue = s.buildQueue[1:]
 				if time.Now().Sub(job.timeIn) > time.Minute*10 {
-					s.RaiseIssue(ctx, "Long Build", fmt.Sprintf("%v took %v to get to the front of the queue", s.buildQueue[0].job.Name, time.Now().Sub(s.buildQueue[0].timeIn)), false)
+					s.RaiseIssue(ctx, "Long Build", fmt.Sprintf("%v took %v to get to the front of the queue", job.job.Name, time.Now().Sub(job.timeIn)), false)
 				}
 				_, err := s.scheduler.build(job, s.Registry.Identifier)
 				if err != nil {
 					e, ok := status.FromError(err)
 					if !ok || e.Code() != codes.AlreadyExists {
-						s.RaiseIssue(ctx, "Build Failure", fmt.Sprintf("Build failed for %v: %v", s.buildQueue[0].job.Name, err), false)
+						s.RaiseIssue(ctx, "Build Failure", fmt.Sprintf("Build failed for %v: %v", job.job.Name, err), false)
 					}
 				}
 				s.currentBuilds--
@@ -100,14 +101,16 @@ func (s *Server) dequeue(ctx context.Context) {
 }
 
 func (s *Server) drainQueue(ctx context.Context) {
-	for len(s.buildQueue) > 0 {
+	for len(s.buildQueue) > 0 || s.currentBuilds > 0 {
 		s.dequeue(ctx)
 		time.Sleep(time.Second)
 	}
 }
 
 func (s *Server) load(v *pb.Version) {
+	s.pathMapMutex.Lock()
 	s.pathMap[v.Path] = v
+	s.pathMapMutex.Unlock()
 }
 
 func (s *Server) backgroundBuilder(ctx context.Context) {
@@ -176,6 +179,7 @@ func Init() *Server {
 		[]queueEntry{},
 		[]string{"led"},
 		make(map[string]*pb.Version),
+		&sync.Mutex{},
 		int64(0),
 		2,
 	}
@@ -203,6 +207,8 @@ func (s *Server) Mote(ctx context.Context, master bool) error {
 
 // GetState gets the state of the server
 func (s *Server) GetState() []*pbg.State {
+	s.pathMapMutex.Lock()
+	defer s.pathMapMutex.Unlock()
 	return []*pbg.State{
 		&pbg.State{Key: "enabled", Text: fmt.Sprintf("%v", s.runBuild)},
 		&pbg.State{Key: "buildc", Value: int64(s.buildRequest)},

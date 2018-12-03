@@ -61,7 +61,7 @@ func main() {
 
 		_, err = client.ReportCrash(ctx, &pb.CrashRequest{Job: &pbgbs.Job{Name: os.Args[2]}, Version: os.Args[3], Crash: &pb.Crash{ErrorMessage: string(file)}})
 		if err != nil {
-			log.Printf("Error reporting: %v", err)
+			log.Fatalf("Error reporting: %v", err)
 		}
 	}
 	utils.SendTrace(ctx, "builserver-"+os.Args[1], time.Now(), pbt.Milestone_END, "buildserver")

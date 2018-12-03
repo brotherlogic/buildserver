@@ -68,6 +68,7 @@ func (s *Server) GetVersions(ctx context.Context, req *pb.VersionRequest) (*pb.V
 	resp := &pb.VersionResponse{}
 	latest := make(map[string]*pb.Version)
 	bestTime := make(map[string]int64)
+	s.pathMapMutex.Lock()
 	for _, v := range s.pathMap {
 		if req.GetJob().Name == "" || v.Job.Name == req.GetJob().Name {
 			_, ok := bestTime[v.Job.Name]
@@ -81,6 +82,7 @@ func (s *Server) GetVersions(ctx context.Context, req *pb.VersionRequest) (*pb.V
 			}
 		}
 	}
+	s.pathMapMutex.Unlock()
 
 	if req.JustLatest {
 		versions := []*pb.Version{}
