@@ -238,7 +238,7 @@ func main() {
 	server.RegisterServer("buildserver", false)
 
 	server.RegisterRepeatingTask(server.backgroundBuilder, "background_builder", time.Minute*5)
-	server.RegisterRepeatingTask(server.dequeue, "dequeue", time.Second)
+	server.RegisterRepeatingTaskNonMaster(server.dequeue, "dequeue", time.Second)
 
 	server.preloadInfo()
 
