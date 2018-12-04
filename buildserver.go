@@ -22,9 +22,10 @@ import (
 )
 
 type queueEntry struct {
-	job       *pbgbs.Job
-	timeIn    time.Time
-	fullBuild bool
+	job              *pbgbs.Job
+	timeIn           time.Time
+	fullBuild        bool
+	queueSizeAtEntry int
 }
 
 //Server main server type
@@ -73,7 +74,7 @@ func (s *Server) enqueue(job *pbgbs.Job) {
 
 	if !found {
 		s.builds[job.Name] = time.Now()
-		s.buildQueue = append(s.buildQueue, queueEntry{job: job, timeIn: time.Now()})
+		s.buildQueue = append(s.buildQueue, queueEntry{job: job, timeIn: time.Now(), queueSizeAtEntry: len(s.buildQueue)})
 	}
 }
 
@@ -85,7 +86,7 @@ func (s *Server) dequeue(ctx context.Context) {
 				s.currentBuilds++
 				s.buildQueue = s.buildQueue[1:]
 				if time.Now().Sub(job.timeIn) > time.Minute*10 {
-					s.RaiseIssue(ctx, "Long Build", fmt.Sprintf("%v took %v to get to the front of the queue", job.job.Name, time.Now().Sub(job.timeIn)), false)
+					s.RaiseIssue(ctx, "Long Build", fmt.Sprintf("%v took %v to get to the front of the queue (%v in the queue)", job.job.Name, time.Now().Sub(job.timeIn), job.queueSizeAtEntry), false)
 				}
 				_, err := s.scheduler.build(job, s.Registry.Identifier)
 				if err != nil {
