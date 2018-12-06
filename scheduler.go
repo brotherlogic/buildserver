@@ -42,16 +42,18 @@ type rCommand struct {
 }
 
 func (s *Scheduler) saveVersionInfo(j *pbgbs.Job, path string, server string) {
-	f, _ := os.Stat(path)
-	ver := &pb.Version{
-		Job:         j,
-		Version:     getVersion(path),
-		Path:        path,
-		Server:      server,
-		VersionDate: f.ModTime().Unix(),
-	}
+	f, err := os.Stat(path)
+	if err != nil {
+		ver := &pb.Version{
+			Job:         j,
+			Version:     getVersion(path),
+			Path:        path,
+			Server:      server,
+			VersionDate: f.ModTime().Unix(),
+		}
 
-	s.saveVersionFile(ver)
+		s.saveVersionFile(ver)
+	}
 }
 
 func (s *Scheduler) saveVersionFile(v *pb.Version) {
