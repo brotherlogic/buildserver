@@ -43,6 +43,7 @@ type rCommand struct {
 
 func (s *Scheduler) saveVersionInfo(j *pbgbs.Job, path string, server string) {
 	f, err := os.Stat(path)
+	s.log(fmt.Sprintf("Error stating path: %v (%v)", err, path))
 	if err != nil {
 		ver := &pb.Version{
 			Job:         j,
