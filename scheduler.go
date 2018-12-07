@@ -64,9 +64,7 @@ func (s *Scheduler) saveVersionFile(v *pb.Version) {
 	}
 
 	err = ioutil.WriteFile(nfile, data, 0644)
-	if err != nil {
-		s.log(fmt.Sprintf("Failure to write version file: %v", err))
-	}
+	s.log(fmt.Sprintf("Written to write version file: %v", err))
 
 	s.load(v)
 }
