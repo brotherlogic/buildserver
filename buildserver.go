@@ -49,6 +49,7 @@ type Server struct {
 	pathMapMutex      *sync.Mutex
 	crashes           int64
 	maxBuilds         int
+	buildFails        map[string]int
 }
 
 type fileDetails struct {
@@ -98,8 +99,13 @@ func (s *Server) dequeue(ctx context.Context) {
 				if err != nil {
 					e, ok := status.FromError(err)
 					if !ok || e.Code() != codes.AlreadyExists {
-						s.RaiseIssue(ctx, "Build Failure", fmt.Sprintf("Build failed for %v: %v", job.job.Name, err), false)
+						s.buildFails[job.job.Name]++
+						if s.buildFails[job.job.Name] > 3 {
+							s.RaiseIssue(ctx, "Build Failure", fmt.Sprintf("Build failed for %v: %v", job.job.Name, err), false)
+						}
 					}
+				} else {
+					s.buildFails[job.job.Name] = 0
 				}
 				s.currentBuilds--
 			}()
@@ -190,6 +196,7 @@ func Init() *Server {
 		&sync.Mutex{},
 		int64(0),
 		2,
+		make(map[string]int),
 	}
 
 	s.scheduler.log = s.log
@@ -225,6 +232,7 @@ func (s *Server) GetState() []*pbg.State {
 		&pbg.State{Key: "crashes", Value: s.crashes},
 		&pbg.State{Key: "paths_read", Value: int64(len(s.pathMap))},
 		&pbg.State{Key: "current_build", Text: s.scheduler.cbuild},
+		&pbg.State{Key: "build_fails", Text: fmt.Sprintf("%v", s.buildFails)},
 	}
 }
 
