@@ -22,14 +22,15 @@ import (
 
 // Scheduler for doing builds
 type Scheduler struct {
-	dir         string
-	masterMutex *sync.Mutex
-	mMap        map[string]*sync.Mutex
-	log         func(s string)
-	md5command  string
-	load        func(v *pb.Version)
-	lastBuild   map[string]time.Time
-	cbuild      string
+	dir            string
+	masterMutex    *sync.Mutex
+	mMap           map[string]*sync.Mutex
+	log            func(s string)
+	md5command     string
+	load           func(v *pb.Version)
+	lastBuildMutex *sync.Mutex
+	lastBuild      map[string]time.Time
+	cbuild         string
 }
 
 type rCommand struct {
@@ -58,25 +59,20 @@ func (s *Scheduler) saveVersionInfo(j *pbgbs.Job, path string, server string) {
 
 func (s *Scheduler) saveVersionFile(v *pb.Version) {
 	nfile := v.Path + ".version"
-	data, err := proto.Marshal(v)
-	if err != nil {
-		s.log(fmt.Sprintf("Failure to marshal proto file: %v", err))
-	}
-
-	err = ioutil.WriteFile(nfile, data, 0644)
-	if err != nil {
-		s.log(fmt.Sprintf("Written to write version file: %v", err))
-	}
-
+	data, _ := proto.Marshal(v)
+	ioutil.WriteFile(nfile, data, 0644)
 	s.load(v)
 }
 
 func (s *Scheduler) build(queEnt queueEntry, server string) (string, error) {
 	s.cbuild = fmt.Sprintf("%v @ %v", queEnt.job.Name, time.Now())
+	s.lastBuildMutex.Lock()
 	if val, ok := s.lastBuild[queEnt.job.Name]; ok && time.Now().Sub(val) < time.Minute*2 {
+		s.lastBuildMutex.Unlock()
 		return "", status.Error(codes.AlreadyExists, fmt.Sprintf("Skipping build for %v since we have a recent one", queEnt.job.Name))
 	}
 	s.lastBuild[queEnt.job.Name] = time.Now()
+	s.lastBuildMutex.Unlock()
 	fb := rand.Float32() < 0.1
 	s.log(fmt.Sprintf("BUILDING [%v] %v {%v}", fb, queEnt.job.Name, time.Now().Sub(queEnt.timeIn)))
 

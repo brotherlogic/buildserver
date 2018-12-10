@@ -171,6 +171,7 @@ func Init() *Server {
 			nil,
 			"md5sum",
 			nil,
+			&sync.Mutex{},
 			make(map[string]time.Time),
 			"",
 		},
