@@ -105,7 +105,7 @@ func (s *Server) dequeue(ctx context.Context) {
 						}
 					}
 				} else {
-					s.buildFails[job.job.Name] = 0
+					delete(s.buildFails, job.job.Name)
 				}
 				s.currentBuilds--
 			}()
