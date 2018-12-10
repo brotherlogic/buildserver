@@ -34,6 +34,7 @@ func TestAppendRun(t *testing.T) {
 		LogTest,
 		"md5sum",
 		load,
+		&sync.Mutex{},
 		make(map[string]time.Time),
 		"",
 	}
@@ -57,6 +58,7 @@ func TestRunNoCommand(t *testing.T) {
 		LogTest,
 		"md5sum",
 		load,
+		&sync.Mutex{},
 		make(map[string]time.Time),
 		"",
 	}
@@ -84,6 +86,7 @@ func TestRunBadCommand(t *testing.T) {
 		LogTest,
 		"md5sum",
 		load,
+		&sync.Mutex{},
 		make(map[string]time.Time),
 		"",
 	}
@@ -115,6 +118,7 @@ func TestBuidlRun(t *testing.T) {
 		LogTest,
 		"md5sum",
 		load,
+		&sync.Mutex{},
 		make(map[string]time.Time),
 		"",
 	}
@@ -147,6 +151,7 @@ func TestBuildRunError(t *testing.T) {
 		LogTest,
 		"md5sum",
 		load,
+		&sync.Mutex{},
 		make(map[string]time.Time),
 		"",
 	}
@@ -171,6 +176,7 @@ func TestEmptyJobName(t *testing.T) {
 		LogTest,
 		"md5sum",
 		load,
+		&sync.Mutex{},
 		make(map[string]time.Time),
 		"",
 	}
