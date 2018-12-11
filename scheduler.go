@@ -99,7 +99,7 @@ func (s *Scheduler) build(queEnt queueEntry, server string) (string, error) {
 
 	hashGetCommand := &rCommand{command: exec.Command("cat", s.dir+"/src/"+queEnt.job.GoPath+".git/refs/heads/master")}
 	s.runAndWait(hashGetCommand)
-	s.log(fmt.Sprintf("GOT %v", hashGetCommand.output))
+	s.log(fmt.Sprintf("GOT %v,%v -> %v", hashGetCommand.output, hashGetCommand.erroutput, hashGetCommand.err))
 
 	buildCommand := &rCommand{command: exec.Command("go", "get", "-u", queEnt.job.GoPath)}
 	s.runAndWait(buildCommand)
