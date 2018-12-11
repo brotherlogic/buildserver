@@ -97,6 +97,10 @@ func (s *Scheduler) build(queEnt queueEntry, server string) (string, error) {
 	mergeCommand := &rCommand{command: exec.Command("git", "-C", s.dir+"/src/"+queEnt.job.GoPath, "merge", "origin/master")}
 	s.runAndWait(mergeCommand)
 
+	hashGetCommand := &rCommand{command: exec.Command("cat", s.dir+"/src/"+queEnt.job.GoPath+".git/refs/heads/master")}
+	s.runAndWait(hashGetCommand)
+	s.log(fmt.Sprintf("GOT %v", hashGetCommand.output))
+
 	buildCommand := &rCommand{command: exec.Command("go", "get", "-u", queEnt.job.GoPath)}
 	s.runAndWait(buildCommand)
 

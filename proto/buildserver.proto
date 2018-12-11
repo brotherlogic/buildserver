@@ -15,6 +15,8 @@ message Version {
   string server = 4;
   int64 version_date = 5;
   repeated Crash crashes = 6;
+
+  string github_hash = 7;
 }
 
 message VersionRequest {
