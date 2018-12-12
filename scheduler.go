@@ -45,7 +45,6 @@ type rCommand struct {
 
 func (s *Scheduler) saveVersionInfo(j *pbgbs.Job, path string, server string, githubHash string) {
 	f, err := os.Stat(path)
-	s.log(fmt.Sprintf("Saving %v", githubHash))
 	if err == nil {
 		ver := &pb.Version{
 			Job:         j,
@@ -77,7 +76,6 @@ func (s *Scheduler) build(queEnt queueEntry, server string, latestHash string) (
 	s.lastBuild[queEnt.job.Name] = time.Now()
 	s.lastBuildMutex.Unlock()
 	fb := rand.Float32() < 0.1
-	s.log(fmt.Sprintf("BUILDING [%v] %v {%v}", fb, queEnt.job.Name, time.Now().Sub(queEnt.timeIn)))
 
 	if queEnt.job.Name == "" {
 		return "", fmt.Errorf("Job is not specified correctly (has no name)")
@@ -107,7 +105,8 @@ func (s *Scheduler) build(queEnt queueEntry, server string, latestHash string) (
 		return "", status.Error(codes.AlreadyExists, fmt.Sprintf("Skipping build for %v since we have a recent hash", queEnt.job.Name))
 	}
 	loadedHash := hashGetCommand.output
-	s.log(fmt.Sprintf("HASH %v vs %v", loadedHash, latestHash))
+
+	s.log(fmt.Sprintf("BUILDING [%v] %v {%v}", fb, queEnt.job.Name, time.Now().Sub(queEnt.timeIn)))
 
 	buildCommand := &rCommand{command: exec.Command("go", "get", "-u", queEnt.job.GoPath)}
 	s.runAndWait(buildCommand)
