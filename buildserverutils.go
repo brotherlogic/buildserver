@@ -18,6 +18,11 @@ func (s *Server) preloadInfo() error {
 			proto.Unmarshal(data, val)
 			s.pathMapMutex.Lock()
 			s.pathMap[path[:len(path)-len(".version")]] = val
+			jobn := val.Job.Name
+			if val.VersionDate > s.latestBuild[jobn] {
+				s.latestBuild[jobn] = val.VersionDate
+				s.latestHash[jobn] = val.GithubHash
+			}
 			s.pathMapMutex.Unlock()
 		}
 		return nil

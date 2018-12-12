@@ -51,6 +51,8 @@ type Server struct {
 	crashes           int64
 	maxBuilds         int
 	buildFails        map[string]int
+	latestHash        map[string]string
+	latestBuild       map[string]int64
 }
 
 type fileDetails struct {
@@ -199,6 +201,8 @@ func Init() *Server {
 		int64(0),
 		2,
 		make(map[string]int),
+		make(map[string]string),
+		make(map[string]int64),
 	}
 
 	s.scheduler.log = s.log
@@ -226,6 +230,14 @@ func (s *Server) Mote(ctx context.Context, master bool) error {
 func (s *Server) GetState() []*pbg.State {
 	s.pathMapMutex.Lock()
 	defer s.pathMapMutex.Unlock()
+
+	counts := 0
+	for _, hash := range s.latestHash {
+		if len(hash) > 0 {
+			counts++
+		}
+	}
+
 	return []*pbg.State{
 		&pbg.State{Key: "enabled", Text: fmt.Sprintf("%v", s.runBuild)},
 		&pbg.State{Key: "buildc", Value: int64(s.buildRequest)},
@@ -235,6 +247,7 @@ func (s *Server) GetState() []*pbg.State {
 		&pbg.State{Key: "paths_read", Value: int64(len(s.pathMap))},
 		&pbg.State{Key: "current_build", Text: s.scheduler.cbuild},
 		&pbg.State{Key: "build_fails", Text: fmt.Sprintf("%v", s.buildFails)},
+		&pbg.State{Key: "hashses_stored", Value: int64(counts)},
 	}
 }
 
