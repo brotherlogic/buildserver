@@ -66,7 +66,7 @@ func (s *Scheduler) saveVersionFile(v *pb.Version) {
 	s.load(v)
 }
 
-func (s *Scheduler) build(queEnt queueEntry, server string) (string, error) {
+func (s *Scheduler) build(queEnt queueEntry, server string, latestHash string) (string, error) {
 	s.cbuild = fmt.Sprintf("%v @ %v", queEnt.job.Name, time.Now())
 	s.lastBuildMutex.Lock()
 	if val, ok := s.lastBuild[queEnt.job.Name]; ok && time.Now().Sub(val) < time.Minute*2 {
@@ -101,7 +101,7 @@ func (s *Scheduler) build(queEnt queueEntry, server string) (string, error) {
 
 	hashGetCommand := &rCommand{command: exec.Command("cat", s.dir+"/src/"+queEnt.job.GoPath+"/.git/refs/heads/master")}
 	s.runAndWait(hashGetCommand)
-	s.log(fmt.Sprintf("HASH %v", hashGetCommand.output))
+	s.log(fmt.Sprintf("HASH %v vs %v", hashGetCommand.output, latestHash))
 
 	buildCommand := &rCommand{command: exec.Command("go", "get", "-u", queEnt.job.GoPath)}
 	s.runAndWait(buildCommand)

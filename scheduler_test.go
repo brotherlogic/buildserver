@@ -123,7 +123,7 @@ func TestBuidlRun(t *testing.T) {
 		"",
 	}
 
-	hash, err := s.build(queueEntry{job: &pbgbs.Job{Name: "crasher", GoPath: "github.com/brotherlogic/crasher"}}, "madeup")
+	hash, err := s.build(queueEntry{job: &pbgbs.Job{Name: "crasher", GoPath: "github.com/brotherlogic/crasher"}}, "madeup", "blah")
 
 	f, err := os.Open(wd + "/buildtest/builds/github.com/brotherlogic/crasher/crasher-" + hash)
 	if err != nil {
@@ -157,7 +157,7 @@ func TestBuildRunError(t *testing.T) {
 	}
 	s.lastBuild["crasher"] = time.Now()
 
-	hash, err := s.build(queueEntry{job: &pbgbs.Job{Name: "crasher", GoPath: "github.com/brotherlogic/crasher"}}, "madeup")
+	hash, err := s.build(queueEntry{job: &pbgbs.Job{Name: "crasher", GoPath: "github.com/brotherlogic/crasher"}}, "madeup", "blah")
 	if err == nil {
 		t.Errorf("Should have errored here: %v", hash)
 	}
@@ -180,7 +180,7 @@ func TestEmptyJobName(t *testing.T) {
 		make(map[string]time.Time),
 		"",
 	}
-	hash, err := s.build(queueEntry{job: &pbgbs.Job{GoPath: "github.com/brotherlogic/crasher"}}, "madeup")
+	hash, err := s.build(queueEntry{job: &pbgbs.Job{GoPath: "github.com/brotherlogic/crasher"}}, "madeup", "blah")
 	if err == nil {
 		t.Errorf("Empty job name did not fail build: %v", hash)
 	}
