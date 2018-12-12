@@ -44,6 +44,7 @@ type rCommand struct {
 
 func (s *Scheduler) saveVersionInfo(j *pbgbs.Job, path string, server string, githubHash string) {
 	f, err := os.Stat(path)
+	s.log(fmt.Sprintf("Saving %v", githubHash))
 	if err == nil {
 		ver := &pb.Version{
 			Job:         j,
@@ -100,6 +101,7 @@ func (s *Scheduler) build(queEnt queueEntry, server string) (string, error) {
 
 	hashGetCommand := &rCommand{command: exec.Command("cat", s.dir+"/src/"+queEnt.job.GoPath+"/.git/refs/heads/master")}
 	s.runAndWait(hashGetCommand)
+	s.log(fmt.Sprintf("HASH %v", hashGetCommand.output))
 
 	buildCommand := &rCommand{command: exec.Command("go", "get", "-u", queEnt.job.GoPath)}
 	s.runAndWait(buildCommand)
@@ -108,9 +110,6 @@ func (s *Scheduler) build(queEnt queueEntry, server string) (string, error) {
 	if _, err := os.Stat(s.dir + "/bin/" + queEnt.job.Name); os.IsNotExist(err) {
 		return "", fmt.Errorf("Build failed: %v and %v -> %v", buildCommand.output, buildCommand.erroutput, buildCommand.err)
 	}
-
-	hashCommand := &rCommand{command: exec.Command(s.md5command, s.dir+"/bin/"+queEnt.job.Name)}
-	s.runAndWait(hashCommand)
 
 	data, _ := ioutil.ReadFile(s.dir + "/bin/" + queEnt.job.Name)
 	hash := fmt.Sprintf("%x", md5.Sum(data))
