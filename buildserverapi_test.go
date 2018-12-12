@@ -139,6 +139,23 @@ func TestListSingle(t *testing.T) {
 	}
 }
 
+func TestDoubleBuild(t *testing.T) {
+	s := InitTestServer("testlistsingle")
+	s.scheduler.waitTime = time.Second
+	_, err := s.Build(context.Background(), &pb.BuildRequest{Job: &pbgbs.Job{Name: "crasher", GoPath: "github.com/brotherlogic/crasher"}})
+	s.drainQueue(context.Background())
+	_, err = s.Build(context.Background(), &pb.BuildRequest{Job: &pbgbs.Job{Name: "crasher", GoPath: "github.com/brotherlogic/crasher"}})
+	s.drainQueue(context.Background())
+
+	resp, err := s.GetVersions(context.Background(), &pb.VersionRequest{Job: &pbgbs.Job{Name: "crasher", GoPath: "github.com/brotherlogic/crasher"}, JustLatest: true})
+	if err != nil {
+		t.Fatalf("Get version failed: %v", err)
+	}
+	if len(resp.Versions) != 1 {
+		t.Errorf("Not enough versions: %v", resp)
+	}
+}
+
 func TestBlacklist(t *testing.T) {
 	s := InitTestServer("testlistfail")
 	resp, err := s.Build(context.Background(), &pb.BuildRequest{Job: &pbgbs.Job{Name: "led", GoPath: "github.com/brotherlogic/crasher"}})
