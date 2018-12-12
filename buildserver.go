@@ -28,6 +28,7 @@ type queueEntry struct {
 	queueSizeAtEntry int
 	buildTime        time.Duration
 	inFront          []queueEntry
+	pastGithubHash   string
 }
 
 //Server main server type
@@ -81,6 +82,7 @@ func (s *Server) enqueue(job *pbgbs.Job) {
 		for _, ent := range s.buildQueue {
 			before = append(before, ent)
 		}
+
 		s.buildQueue = append(s.buildQueue, queueEntry{job: job, timeIn: time.Now(), queueSizeAtEntry: len(s.buildQueue), inFront: before})
 	}
 }

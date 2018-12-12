@@ -51,7 +51,7 @@ func main() {
 			log.Fatalf("Error on build: %v", err)
 		}
 
-		fmt.Printf("%v - %v\n", res.Versions[0].Version, time.Unix(res.Versions[0].VersionDate, 0))
+		fmt.Printf("%v - %v,%v\n", res.Versions[0].Version, time.Unix(res.Versions[0].VersionDate, 0), res.Versions[0].GithubHash)
 	case "crash":
 		file, err := ioutil.ReadFile(os.Args[4])
 		if err != nil {

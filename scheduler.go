@@ -42,7 +42,7 @@ type rCommand struct {
 	err       error
 }
 
-func (s *Scheduler) saveVersionInfo(j *pbgbs.Job, path string, server string) {
+func (s *Scheduler) saveVersionInfo(j *pbgbs.Job, path string, server string, githubHash string) {
 	f, err := os.Stat(path)
 	if err == nil {
 		ver := &pb.Version{
@@ -51,6 +51,7 @@ func (s *Scheduler) saveVersionInfo(j *pbgbs.Job, path string, server string) {
 			Path:        path,
 			Server:      server,
 			VersionDate: f.ModTime().Unix(),
+			GithubHash:  githubHash,
 		}
 
 		s.saveVersionFile(ver)
@@ -99,7 +100,6 @@ func (s *Scheduler) build(queEnt queueEntry, server string) (string, error) {
 
 	hashGetCommand := &rCommand{command: exec.Command("cat", s.dir+"/src/"+queEnt.job.GoPath+"/.git/refs/heads/master")}
 	s.runAndWait(hashGetCommand)
-	s.log(fmt.Sprintf("GOT %v,%v -> %v", hashGetCommand.output, hashGetCommand.erroutput, hashGetCommand.err))
 
 	buildCommand := &rCommand{command: exec.Command("go", "get", "-u", queEnt.job.GoPath)}
 	s.runAndWait(buildCommand)
@@ -119,7 +119,7 @@ func (s *Scheduler) build(queEnt queueEntry, server string) (string, error) {
 	copyCommand := &rCommand{command: exec.Command("mv", s.dir+"/bin/"+queEnt.job.Name, s.dir+"/builds/"+queEnt.job.GoPath+"/"+queEnt.job.Name+"-"+hash)}
 	s.runAndWait(copyCommand)
 
-	s.saveVersionInfo(queEnt.job, s.dir+"/builds/"+queEnt.job.GoPath+"/"+queEnt.job.Name+"-"+hash, server)
+	s.saveVersionInfo(queEnt.job, s.dir+"/builds/"+queEnt.job.GoPath+"/"+queEnt.job.Name+"-"+hash, server, hashGetCommand.output)
 
 	return hash, nil
 }
