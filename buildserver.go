@@ -99,7 +99,7 @@ func (s *Server) dequeue(ctx context.Context) {
 				if time.Now().Sub(job.timeIn) > time.Minute*10 {
 					s.RaiseIssue(ctx, "Long Build", fmt.Sprintf("%v took %v to get to the front of the queue (%v in the queue) %v", job.job.Name, time.Now().Sub(job.timeIn), job.queueSizeAtEntry, job.inFront[0]), false)
 				}
-				_, err := s.scheduler.build(job, s.Registry.Identifier)
+				_, err := s.scheduler.build(job, s.Registry.Identifier, s.latestHash[job.job.Name])
 				if err != nil {
 					e, ok := status.FromError(err)
 					if !ok || e.Code() != codes.AlreadyExists {
