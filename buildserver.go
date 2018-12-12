@@ -127,6 +127,11 @@ func (s *Server) drainQueue(ctx context.Context) {
 func (s *Server) load(v *pb.Version) {
 	s.pathMapMutex.Lock()
 	s.pathMap[v.Path] = v
+	jobn := v.Job.Name
+	if v.VersionDate > s.latestBuild[jobn] {
+		s.latestBuild[jobn] = v.VersionDate
+		s.latestHash[jobn] = v.GithubHash
+	}
 	s.pathMapMutex.Unlock()
 }
 
@@ -184,6 +189,7 @@ func Init() *Server {
 			&sync.Mutex{},
 			make(map[string]time.Time),
 			"",
+			time.Minute * 2,
 		},
 		make(map[string]time.Time),
 		"/media/scratch/buildserver",

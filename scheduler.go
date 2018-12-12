@@ -31,6 +31,7 @@ type Scheduler struct {
 	lastBuildMutex *sync.Mutex
 	lastBuild      map[string]time.Time
 	cbuild         string
+	waitTime       time.Duration
 }
 
 type rCommand struct {
@@ -69,7 +70,7 @@ func (s *Scheduler) saveVersionFile(v *pb.Version) {
 func (s *Scheduler) build(queEnt queueEntry, server string, latestHash string) (string, error) {
 	s.cbuild = fmt.Sprintf("%v @ %v", queEnt.job.Name, time.Now())
 	s.lastBuildMutex.Lock()
-	if val, ok := s.lastBuild[queEnt.job.Name]; ok && time.Now().Sub(val) < time.Minute*2 {
+	if val, ok := s.lastBuild[queEnt.job.Name]; ok && time.Now().Sub(val) < s.waitTime {
 		s.lastBuildMutex.Unlock()
 		return "", status.Error(codes.AlreadyExists, fmt.Sprintf("Skipping build for %v since we have a recent one", queEnt.job.Name))
 	}
@@ -101,10 +102,19 @@ func (s *Scheduler) build(queEnt queueEntry, server string, latestHash string) (
 
 	hashGetCommand := &rCommand{command: exec.Command("cat", s.dir+"/src/"+queEnt.job.GoPath+"/.git/refs/heads/master")}
 	s.runAndWait(hashGetCommand)
-	s.log(fmt.Sprintf("HASH %v vs %v", hashGetCommand.output, latestHash))
+
+	if len(latestHash) > 0 && hashGetCommand.output == latestHash {
+		return "", status.Error(codes.AlreadyExists, fmt.Sprintf("Skipping build for %v since we have a recent hash", queEnt.job.Name))
+	}
+	loadedHash := hashGetCommand.output
+	s.log(fmt.Sprintf("HASH %v vs %v", loadedHash, latestHash))
 
 	buildCommand := &rCommand{command: exec.Command("go", "get", "-u", queEnt.job.GoPath)}
 	s.runAndWait(buildCommand)
+
+	hashGetCommand = &rCommand{command: exec.Command("cat", s.dir+"/src/"+queEnt.job.GoPath+"/.git/refs/heads/master")}
+	s.runAndWait(hashGetCommand)
+	loadedHash = hashGetCommand.output
 
 	// If the build has failed, there will be no file output
 	if _, err := os.Stat(s.dir + "/bin/" + queEnt.job.Name); os.IsNotExist(err) {
@@ -118,7 +128,7 @@ func (s *Scheduler) build(queEnt queueEntry, server string, latestHash string) (
 	copyCommand := &rCommand{command: exec.Command("mv", s.dir+"/bin/"+queEnt.job.Name, s.dir+"/builds/"+queEnt.job.GoPath+"/"+queEnt.job.Name+"-"+hash)}
 	s.runAndWait(copyCommand)
 
-	s.saveVersionInfo(queEnt.job, s.dir+"/builds/"+queEnt.job.GoPath+"/"+queEnt.job.Name+"-"+hash, server, hashGetCommand.output)
+	s.saveVersionInfo(queEnt.job, s.dir+"/builds/"+queEnt.job.GoPath+"/"+queEnt.job.Name+"-"+hash, server, loadedHash)
 
 	return hash, nil
 }
