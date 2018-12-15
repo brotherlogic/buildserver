@@ -5,7 +5,6 @@ import (
 	"crypto/md5"
 	"fmt"
 	"io/ioutil"
-	"math/rand"
 	"os"
 	"os/exec"
 	"strings"
@@ -75,7 +74,6 @@ func (s *Scheduler) build(queEnt queueEntry, server string, latestHash string) (
 	}
 	s.lastBuild[queEnt.job.Name] = time.Now()
 	s.lastBuildMutex.Unlock()
-	fb := rand.Float32() < 0.1
 
 	if queEnt.job.Name == "" {
 		return "", fmt.Errorf("Job is not specified correctly (has no name)")
@@ -106,7 +104,7 @@ func (s *Scheduler) build(queEnt queueEntry, server string, latestHash string) (
 	}
 	loadedHash := hashGetCommand.output
 
-	s.log(fmt.Sprintf("BUILDING [%v] %v {%v}", fb, queEnt.job.Name, time.Now().Sub(queEnt.timeIn)))
+	s.log(fmt.Sprintf("BUILDING %v {%v} %v -> %v", queEnt.job.Name, time.Now().Sub(queEnt.timeIn), latestHash, hashGetCommand.output))
 
 	buildCommand := &rCommand{command: exec.Command("go", "get", "-u", queEnt.job.GoPath)}
 	s.runAndWait(buildCommand)
