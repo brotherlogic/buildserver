@@ -51,6 +51,7 @@ type Server struct {
 	crashes           int64
 	maxBuilds         int
 	buildFails        map[string]int
+	buildFailsMutex   *sync.Mutex
 	latestHash        map[string]string
 	latestBuild       map[string]int64
 }
@@ -100,6 +101,7 @@ func (s *Server) dequeue(ctx context.Context) {
 					s.RaiseIssue(ctx, "Long Build", fmt.Sprintf("%v took %v to get to the front of the queue (%v in the queue) %v", job.job.Name, time.Now().Sub(job.timeIn), job.queueSizeAtEntry, job.inFront[0]), false)
 				}
 				_, err := s.scheduler.build(job, s.Registry.Identifier, s.latestHash[job.job.Name])
+				s.buildFailsMutex.Lock()
 				if err != nil {
 					e, ok := status.FromError(err)
 					if !ok || e.Code() != codes.AlreadyExists {
@@ -111,6 +113,7 @@ func (s *Server) dequeue(ctx context.Context) {
 				} else {
 					delete(s.buildFails, job.job.Name)
 				}
+				s.buildFailsMutex.Unlock()
 				s.currentBuilds--
 			}()
 		}
@@ -208,6 +211,7 @@ func Init() *Server {
 		int64(0),
 		2,
 		make(map[string]int),
+		&sync.Mutex{},
 		make(map[string]string),
 		make(map[string]int64),
 	}
@@ -237,6 +241,8 @@ func (s *Server) Mote(ctx context.Context, master bool) error {
 func (s *Server) GetState() []*pbg.State {
 	s.pathMapMutex.Lock()
 	defer s.pathMapMutex.Unlock()
+	s.buildFailsMutex.Lock()
+	defer s.buildFailsMutex.Unlock()
 
 	counts := 0
 	for _, hash := range s.latestHash {
