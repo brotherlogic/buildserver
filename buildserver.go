@@ -190,6 +190,7 @@ func Init() *Server {
 			make(map[string]time.Time),
 			"",
 			time.Minute * 2,
+			int64(0),
 		},
 		make(map[string]time.Time),
 		"/media/scratch/buildserver",
@@ -254,6 +255,7 @@ func (s *Server) GetState() []*pbg.State {
 		&pbg.State{Key: "current_build", Text: s.scheduler.cbuild},
 		&pbg.State{Key: "build_fails", Text: fmt.Sprintf("%v", s.buildFails)},
 		&pbg.State{Key: "hashses_stored", Value: int64(counts)},
+		&pbg.State{Key: "scheduled_runs", Value: s.scheduler.runs},
 	}
 }
 
