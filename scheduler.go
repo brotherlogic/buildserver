@@ -31,6 +31,7 @@ type Scheduler struct {
 	lastBuild      map[string]time.Time
 	cbuild         string
 	waitTime       time.Duration
+	runs           int64
 }
 
 type rCommand struct {
@@ -140,6 +141,7 @@ func (s *Scheduler) runAndWait(c *rCommand) {
 }
 
 func (s *Scheduler) run(c *rCommand) error {
+	s.runs++
 	env := os.Environ()
 	gpath := s.dir
 	c.command.Path = strings.Replace(c.command.Path, "$GOPATH", gpath, -1)
