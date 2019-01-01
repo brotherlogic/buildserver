@@ -107,7 +107,7 @@ func (s *Server) dequeue(ctx context.Context) {
 					if !ok || e.Code() != codes.AlreadyExists {
 						s.buildFails[job.job.Name]++
 						if s.buildFails[job.job.Name] > 3 {
-							s.RaiseIssue(ctx, "Build Failure", fmt.Sprintf("Build failed for %v: %v", job.job.Name, err), false)
+							s.RaiseIssue(ctx, "Build Failure", fmt.Sprintf("Build failed for %v: %v running on %v", job.job.Name, err, s.Registry.Identifier), false)
 						}
 					}
 				} else {
