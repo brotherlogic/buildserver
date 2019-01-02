@@ -11,6 +11,7 @@ import (
 
 	"github.com/brotherlogic/goserver"
 	"github.com/brotherlogic/keystore/client"
+	"github.com/pkg/profile"
 	"golang.org/x/net/context"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
@@ -285,6 +286,8 @@ func main() {
 	server.RegisterRepeatingTaskNonMaster(server.dequeue, "dequeue", time.Second)
 
 	server.preloadInfo()
+
+	defer profile.Start(profile.MemProfile).Stop()
 
 	fmt.Printf("%v\n", server.Serve())
 }
