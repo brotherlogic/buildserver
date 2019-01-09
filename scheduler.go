@@ -107,7 +107,7 @@ func (s *Scheduler) build(queEnt queueEntry, server string, latestHash string) (
 		return "", status.Error(codes.AlreadyExists, fmt.Sprintf("Skipping build for %v since we have a recent hash", queEnt.job.Name))
 	}
 
-	s.log(fmt.Sprintf("BUILDING %v {%v} %v -> :%v: given :%v:", queEnt.job.Name, time.Now().Sub(queEnt.timeIn), latestHash, readHash, readHash == latestHash))
+	s.log(fmt.Sprintf("BUILDING %v {%v} :%v: -> :%v: given %v vs %v", queEnt.job.Name, time.Now().Sub(queEnt.timeIn), latestHash, readHash, len(readHash), len(latestHash)))
 
 	buildCommand := &rCommand{command: exec.Command("go", "get", "-u", queEnt.job.GoPath)}
 	s.runAndWait(buildCommand)
