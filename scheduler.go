@@ -97,36 +97,39 @@ func (s *Scheduler) build(queEnt queueEntry, server string, latestHash string) (
 	mergeCommand := &rCommand{command: exec.Command("git", "-C", s.dir+"/src/"+queEnt.job.GoPath, "merge", "origin/master")}
 	s.runAndWait(mergeCommand)
 
-	hashGetCommand := &rCommand{command: exec.Command("cat", s.dir+"/src/"+queEnt.job.GoPath+"/.git/refs/heads/master")}
-	s.runAndWait(hashGetCommand)
+	readHash := ""
+	data, err := ioutil.ReadFile(s.dir + "/src/" + queEnt.job.GoPath + "/.git/refs/heads/master")
+	s.log(fmt.Sprintf("Reading hash: %v", err))
+	if err == nil {
+		readHash = string(data)
+	}
 
-	if len(latestHash) > 0 && hashGetCommand.output == latestHash {
+	if len(latestHash) > 0 && readHash == latestHash {
 		return "", status.Error(codes.AlreadyExists, fmt.Sprintf("Skipping build for %v since we have a recent hash", queEnt.job.Name))
 	}
-	loadedHash := hashGetCommand.output
 
-	s.log(fmt.Sprintf("BUILDING %v {%v} %v -> %v [%v]", queEnt.job.Name, time.Now().Sub(queEnt.timeIn), latestHash, hashGetCommand.output, hashGetCommand.erroutput))
+	s.log(fmt.Sprintf("BUILDING %v {%v} %v -> %v", queEnt.job.Name, time.Now().Sub(queEnt.timeIn), latestHash, readHash))
 
 	buildCommand := &rCommand{command: exec.Command("go", "get", "-u", queEnt.job.GoPath)}
 	s.runAndWait(buildCommand)
 
-	hashGetCommand = &rCommand{command: exec.Command("cat", s.dir+"/src/"+queEnt.job.GoPath+"/.git/refs/heads/master")}
-	s.runAndWait(hashGetCommand)
-	loadedHash = hashGetCommand.output
+	builtHash := ""
+	data, _ = ioutil.ReadFile(s.dir + "/src/" + queEnt.job.GoPath + "/.git/refs/heads/master")
+	builtHash = string(data)
 
 	// If the build has failed, there will be no file output
 	if _, err := os.Stat(s.dir + "/bin/" + queEnt.job.Name); os.IsNotExist(err) {
 		return "", fmt.Errorf("Build failed: %v and %v -> %v", buildCommand.output, buildCommand.erroutput, buildCommand.err)
 	}
 
-	data, _ := ioutil.ReadFile(s.dir + "/bin/" + queEnt.job.Name)
+	data, _ = ioutil.ReadFile(s.dir + "/bin/" + queEnt.job.Name)
 	hash := fmt.Sprintf("%x", md5.Sum(data))
 
 	os.MkdirAll(s.dir+"/builds/"+queEnt.job.GoPath, 0755)
 	copyCommand := &rCommand{command: exec.Command("mv", s.dir+"/bin/"+queEnt.job.Name, s.dir+"/builds/"+queEnt.job.GoPath+"/"+queEnt.job.Name+"-"+hash)}
 	s.runAndWait(copyCommand)
 
-	s.saveVersionInfo(queEnt.job, s.dir+"/builds/"+queEnt.job.GoPath+"/"+queEnt.job.Name+"-"+hash, server, loadedHash)
+	s.saveVersionInfo(queEnt.job, s.dir+"/builds/"+queEnt.job.GoPath+"/"+queEnt.job.Name+"-"+hash, server, builtHash)
 
 	return hash, nil
 }
