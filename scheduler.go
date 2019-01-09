@@ -99,7 +99,6 @@ func (s *Scheduler) build(queEnt queueEntry, server string, latestHash string) (
 
 	readHash := ""
 	data, err := ioutil.ReadFile(s.dir + "/src/" + queEnt.job.GoPath + "/.git/refs/heads/master")
-	s.log(fmt.Sprintf("Reading hash: %v", err))
 	if err == nil {
 		readHash = string(data)
 	}
@@ -108,7 +107,7 @@ func (s *Scheduler) build(queEnt queueEntry, server string, latestHash string) (
 		return "", status.Error(codes.AlreadyExists, fmt.Sprintf("Skipping build for %v since we have a recent hash", queEnt.job.Name))
 	}
 
-	s.log(fmt.Sprintf("BUILDING %v {%v} %v -> %v", queEnt.job.Name, time.Now().Sub(queEnt.timeIn), latestHash, readHash))
+	s.log(fmt.Sprintf("BUILDING %v {%v} %v -> :%v: given :%v:", queEnt.job.Name, time.Now().Sub(queEnt.timeIn), latestHash, readHash, readHash == latestHash))
 
 	buildCommand := &rCommand{command: exec.Command("go", "get", "-u", queEnt.job.GoPath)}
 	s.runAndWait(buildCommand)
