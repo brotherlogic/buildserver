@@ -105,7 +105,7 @@ func (s *Scheduler) build(queEnt queueEntry, server string, latestHash string) (
 	}
 	loadedHash := hashGetCommand.output
 
-	s.log(fmt.Sprintf("BUILDING %v {%v} %v -> %v", queEnt.job.Name, time.Now().Sub(queEnt.timeIn), latestHash, hashGetCommand.output))
+	s.log(fmt.Sprintf("BUILDING %v {%v} %v -> %v [%v]", queEnt.job.Name, time.Now().Sub(queEnt.timeIn), latestHash, hashGetCommand.output, hashGetCommand.erroutput))
 
 	buildCommand := &rCommand{command: exec.Command("go", "get", "-u", queEnt.job.GoPath)}
 	s.runAndWait(buildCommand)
