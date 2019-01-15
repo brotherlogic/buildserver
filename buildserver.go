@@ -139,9 +139,11 @@ func (s *Server) load(v *pb.Version) {
 }
 
 func (s *Server) backgroundBuilder(ctx context.Context) {
+	s.jobsMutex.Lock()
 	for _, j := range s.jobs {
 		s.enqueue(j)
 	}
+	s.jobsMutex.Unlock()
 }
 
 func (p *prodLister) listFiles(job *pbgbs.Job) ([]fileDetails, error) {
