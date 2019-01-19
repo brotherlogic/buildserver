@@ -5,6 +5,7 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"time"
 
 	pb "github.com/brotherlogic/buildserver/proto"
 	"github.com/golang/protobuf/proto"
@@ -22,6 +23,7 @@ func (s *Server) preloadInfo() error {
 			if val.VersionDate > s.latestBuild[jobn] {
 				s.latestBuild[jobn] = val.VersionDate
 				s.latestHash[jobn] = val.GithubHash
+				s.latestDate[jobn] = time.Unix(val.VersionDate, 0)
 			}
 			s.pathMapMutex.Unlock()
 		}

@@ -54,6 +54,7 @@ type Server struct {
 	buildFailsMutex   *sync.Mutex
 	latestHash        map[string]string
 	latestBuild       map[string]int64
+	latestDate        map[string]time.Time
 }
 
 type fileDetails struct {
@@ -86,7 +87,13 @@ func (s *Server) enqueue(job *pbgbs.Job) {
 			before = append(before, ent)
 		}
 
-		s.buildQueue = append(s.buildQueue, queueEntry{job: job, timeIn: time.Now(), queueSizeAtEntry: len(s.buildQueue), inFront: before})
+		forceBuild := false
+		if val, ok := s.latestDate[job.Name]; ok {
+			if time.Now().Sub(val) > time.Hour*24 {
+				forceBuild = true
+			}
+		}
+		s.buildQueue = append(s.buildQueue, queueEntry{job: job, timeIn: time.Now(), queueSizeAtEntry: len(s.buildQueue), inFront: before, fullBuild: forceBuild})
 	}
 }
 
@@ -134,6 +141,7 @@ func (s *Server) load(v *pb.Version) {
 	if v.VersionDate > s.latestBuild[jobn] {
 		s.latestBuild[jobn] = v.VersionDate
 		s.latestHash[jobn] = v.GithubHash
+		s.latestDate[jobn] = time.Unix(v.VersionDate, 0)
 	}
 	s.pathMapMutex.Unlock()
 }
@@ -216,6 +224,7 @@ func Init() *Server {
 		&sync.Mutex{},
 		make(map[string]string),
 		make(map[string]int64),
+		make(map[string]time.Time),
 	}
 
 	s.scheduler.log = s.log
