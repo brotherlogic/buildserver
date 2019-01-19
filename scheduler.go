@@ -92,28 +92,30 @@ func (s *Scheduler) build(queEnt queueEntry, server string, latestHash string) (
 	defer s.mMap[queEnt.job.Name].Unlock()
 
 	//Refresh the project
-	fetchCommand := &rCommand{command: exec.Command("git", "-C", s.dir+"/src/"+queEnt.job.GoPath, "fetch", "-p")}
-	s.runAndWait(fetchCommand)
-	mergeCommand := &rCommand{command: exec.Command("git", "-C", s.dir+"/src/"+queEnt.job.GoPath, "merge", "origin/master")}
-	s.runAndWait(mergeCommand)
+	if !queEnt.fullBuild {
+		fetchCommand := &rCommand{command: exec.Command("git", "-C", s.dir+"/src/"+queEnt.job.GoPath, "fetch", "-p")}
+		s.runAndWait(fetchCommand)
+		mergeCommand := &rCommand{command: exec.Command("git", "-C", s.dir+"/src/"+queEnt.job.GoPath, "merge", "origin/master")}
+		s.runAndWait(mergeCommand)
 
-	readHash := ""
-	data, err := ioutil.ReadFile(s.dir + "/src/" + queEnt.job.GoPath + "/.git/refs/heads/master")
-	if err == nil {
-		readHash = strings.TrimSpace(string(data))
+		readHash := ""
+		data, err := ioutil.ReadFile(s.dir + "/src/" + queEnt.job.GoPath + "/.git/refs/heads/master")
+		if err == nil {
+			readHash = strings.TrimSpace(string(data))
+		}
+
+		if len(latestHash) > 0 && readHash == latestHash {
+			return "", status.Error(codes.AlreadyExists, fmt.Sprintf("Skipping build for %v since we have a recent hash", queEnt.job.Name))
+		}
 	}
 
-	if len(latestHash) > 0 && readHash == latestHash {
-		return "", status.Error(codes.AlreadyExists, fmt.Sprintf("Skipping build for %v since we have a recent hash", queEnt.job.Name))
-	}
-
-	s.log(fmt.Sprintf("BUILDING %v {%v} :%v: -> :%v: given %v vs %v", queEnt.job.Name, time.Now().Sub(queEnt.timeIn), latestHash, readHash, len(readHash), len(latestHash)))
+	s.log(fmt.Sprintf("BUILDING %v {%v}", queEnt.job.Name, time.Now().Sub(queEnt.timeIn)))
 
 	buildCommand := &rCommand{command: exec.Command("go", "get", "-u", queEnt.job.GoPath)}
 	s.runAndWait(buildCommand)
 
 	builtHash := ""
-	data, _ = ioutil.ReadFile(s.dir + "/src/" + queEnt.job.GoPath + "/.git/refs/heads/master")
+	data, _ := ioutil.ReadFile(s.dir + "/src/" + queEnt.job.GoPath + "/.git/refs/heads/master")
 	builtHash = strings.TrimSpace(string(data))
 
 	// If the build has failed, there will be no file output
