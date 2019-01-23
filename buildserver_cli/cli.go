@@ -38,6 +38,32 @@ func main() {
 	client := pb.NewBuildServiceClient(conn)
 
 	switch os.Args[1] {
+	case "spbuild":
+		ctx, cancel := utils.BuildContext("buildserver-"+os.Args[1], "buildserver", pbgs.ContextType_MEDIUM)
+		defer cancel()
+
+		entries, err := utils.ResolveAll("buildserver")
+		if err != nil {
+			log.Fatalf("Unable to reach organiser: %v", err)
+		}
+		for _, entry := range entries {
+			if entry.Identifier == os.Args[2] {
+				conn, err := grpc.Dial(entry.Ip+":"+strconv.Itoa(int(entry.Port)), grpc.WithInsecure())
+				defer conn.Close()
+
+				if err != nil {
+					log.Fatalf("Unable to dial: %v", err)
+				}
+
+				client := pb.NewBuildServiceClient(conn)
+
+				_, err = client.Build(ctx, &pb.BuildRequest{Job: &pbgbs.Job{Name: os.Args[3], GoPath: "github.com/brotherlogic/" + os.Args[3]}, ForceBuild: true})
+				if err != nil {
+					utils.SendTrace(ctx, "builserver-"+os.Args[1], time.Now(), pbt.Milestone_END, "buildserver")
+					log.Fatalf("Error on build: %v", err)
+				}
+			}
+		}
 	case "build":
 		_, err := client.Build(ctx, &pb.BuildRequest{Job: &pbgbs.Job{Name: os.Args[2], GoPath: "github.com/brotherlogic/" + os.Args[2]}, ForceBuild: len(os.Args) > 3})
 		if err != nil {
@@ -67,8 +93,11 @@ func main() {
 				utils.SendTrace(ctx, "builserver-"+os.Args[1], time.Now(), pbt.Milestone_END, "buildserver")
 				log.Fatalf("Error on build: %v", err)
 			}
-
-			fmt.Printf("(%v) %v - %v (%v)\n", entry.Identifier, res.Versions[0].Version, time.Unix(res.Versions[0].VersionDate, 0), len(res.Versions[0].Crashes))
+			if len(res.Versions) > 0 {
+				fmt.Printf("(%v) %v - %v (%v)\n", entry.Identifier, res.Versions[0].Version, time.Unix(res.Versions[0].VersionDate, 0), len(res.Versions[0].Crashes))
+			} else {
+				fmt.Printf("(%v) no versions\n", entry.Identifier)
+			}
 		}
 	case "latest":
 		res, err := client.GetVersions(ctx, &pb.VersionRequest{Job: &pbgbs.Job{Name: os.Args[2], GoPath: "github.com/brotherlogic/" + os.Args[2]}, JustLatest: true})
