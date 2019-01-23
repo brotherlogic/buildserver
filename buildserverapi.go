@@ -24,7 +24,7 @@ func (s *Server) Build(ctx context.Context, req *pb.BuildRequest) (*pb.BuildResp
 	s.buildRequest++
 
 	//Don't build blacklisted jobs
-	for _, blacklist := range s.blacklist {
+	for _, blacklist := range s.nobuild {
 		if blacklist == req.GetJob().Name {
 			s.LogTrace(ctx, "GetVersions", time.Now(), pbt.Milestone_END_FUNCTION)
 			return &pb.BuildResponse{}, fmt.Errorf("Can't build %v due to blacklist", blacklist)
@@ -59,6 +59,11 @@ func (s *Server) GetVersions(ctx context.Context, req *pb.VersionRequest) (*pb.V
 
 	if req.GetJob() == nil {
 		return &pb.VersionResponse{}, fmt.Errorf("You sent an empty job for some reason")
+	}
+
+	if s.blacklist[req.GetJob().Name] {
+		s.enqueue(req.GetJob(), true)
+		return &pb.VersionResponse{}, fmt.Errorf("Job is blacklisted")
 	}
 
 	s.jobsMutex.Lock()
