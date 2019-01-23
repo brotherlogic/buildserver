@@ -45,7 +45,7 @@ type Server struct {
 	currentBuilds     int
 	currentBuildMutex *sync.Mutex
 	buildQueue        []queueEntry
-	blacklist         []string
+	nobuild           []string
 	pathMap           map[string]*pb.Version
 	pathMapMutex      *sync.Mutex
 	crashes           int64
@@ -55,6 +55,7 @@ type Server struct {
 	latestHash        map[string]string
 	latestBuild       map[string]int64
 	latestDate        map[string]time.Time
+	blacklist         map[string]bool
 }
 
 type fileDetails struct {
@@ -118,6 +119,7 @@ func (s *Server) dequeue(ctx context.Context) {
 						}
 					}
 				} else {
+					delete(s.blacklist, job.job.Name)
 					delete(s.buildFails, job.job.Name)
 				}
 				s.buildFailsMutex.Unlock()
@@ -225,10 +227,13 @@ func Init() *Server {
 		make(map[string]string),
 		make(map[string]int64),
 		make(map[string]time.Time),
+		make(map[string]bool),
 	}
 
 	s.scheduler.log = s.log
 	s.scheduler.load = s.load
+
+	s.blacklist["recordwants"] = true
 
 	return s
 }
@@ -263,6 +268,7 @@ func (s *Server) GetState() []*pbg.State {
 	}
 
 	return []*pbg.State{
+		&pbg.State{Key: "blacklist", Text: fmt.Sprintf("%v", s.blacklist)},
 		&pbg.State{Key: "enabled", Text: fmt.Sprintf("%v", s.runBuild)},
 		&pbg.State{Key: "buildc", Value: int64(s.buildRequest)},
 		&pbg.State{Key: "concurrent_builds", Value: int64(s.currentBuilds)},
