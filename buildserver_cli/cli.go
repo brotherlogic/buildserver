@@ -39,7 +39,7 @@ func main() {
 
 	switch os.Args[1] {
 	case "build":
-		_, err := client.Build(ctx, &pb.BuildRequest{Job: &pbgbs.Job{Name: os.Args[2], GoPath: "github.com/brotherlogic/" + os.Args[2]}})
+		_, err := client.Build(ctx, &pb.BuildRequest{Job: &pbgbs.Job{Name: os.Args[2], GoPath: "github.com/brotherlogic/" + os.Args[2]}, ForceBuild: len(os.Args) > 3})
 		if err != nil {
 			utils.SendTrace(ctx, "builserver-"+os.Args[1], time.Now(), pbt.Milestone_END, "buildserver")
 			log.Fatalf("Error on build: %v", err)

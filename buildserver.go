@@ -71,7 +71,7 @@ type prodLister struct {
 	fail bool
 }
 
-func (s *Server) enqueue(job *pbgbs.Job) {
+func (s *Server) enqueue(job *pbgbs.Job, force bool) {
 	//Only enqueue if the job isn't already there
 	found := false
 	for _, j := range s.buildQueue {
@@ -87,7 +87,7 @@ func (s *Server) enqueue(job *pbgbs.Job) {
 			before = append(before, ent)
 		}
 
-		forceBuild := false
+		forceBuild := force
 		if val, ok := s.latestDate[job.Name]; ok {
 			if time.Now().Sub(val) > time.Hour*24 {
 				forceBuild = true
@@ -149,7 +149,7 @@ func (s *Server) load(v *pb.Version) {
 func (s *Server) backgroundBuilder(ctx context.Context) {
 	s.jobsMutex.Lock()
 	for _, j := range s.jobs {
-		s.enqueue(j)
+		s.enqueue(j, false)
 	}
 	s.jobsMutex.Unlock()
 }
