@@ -6,6 +6,7 @@ import (
 	"io/ioutil"
 	"log"
 	"os"
+	"strconv"
 	"sync"
 	"time"
 
@@ -19,6 +20,7 @@ import (
 	pb "github.com/brotherlogic/buildserver/proto"
 	pbgbs "github.com/brotherlogic/gobuildslave/proto"
 	pbg "github.com/brotherlogic/goserver/proto"
+	"github.com/brotherlogic/goserver/utils"
 )
 
 type queueEntry struct {
@@ -70,6 +72,35 @@ type lister interface {
 type prodLister struct {
 	dir  string
 	fail bool
+}
+
+func (s *Server) runCheck(ctx context.Context) {
+	entries, err := utils.ResolveAll("buildserver")
+	if err == nil {
+		for _, entry := range entries {
+			if entry.Identifier != s.Registry.Identifier {
+				conn, err := grpc.Dial(entry.Ip+":"+strconv.Itoa(int(entry.Port)), grpc.WithInsecure())
+				defer conn.Close()
+
+				if err != nil {
+					log.Fatalf("Unable to dial: %v", err)
+				}
+
+				client := pb.NewBuildServiceClient(conn)
+
+				for _, job := range s.jobs {
+					latest, err := client.GetVersions(ctx, &pb.VersionRequest{Job: job, JustLatest: true})
+					s.Log(fmt.Sprintf("Checking %v and %v", latest, s.latestBuild[job.Name]))
+					if err == nil {
+
+						if len(latest.GetVersions()) > 0 && latest.GetVersions()[0].VersionDate > s.latestBuild[job.Name] {
+							s.blacklist[job.Name] = true
+						}
+					}
+				}
+			}
+		}
+	}
 }
 
 func (s *Server) enqueue(job *pbgbs.Job, force bool) {
@@ -299,6 +330,7 @@ func main() {
 	server.RegisterServer("buildserver", false)
 
 	server.RegisterRepeatingTask(server.backgroundBuilder, "background_builder", time.Minute*5)
+	server.RegisterRepeatingTask(server.runCheck, "checker", time.Minute*1)
 	server.RegisterRepeatingTaskNonMaster(server.dequeue, "dequeue", time.Second)
 
 	server.preloadInfo()
