@@ -30,6 +30,7 @@ message VersionResponse {
 
 message BuildRequest {
   gobuildslave.Job job = 1;
+  bool force_build = 2;
 }
 
 message BuildResponse {}

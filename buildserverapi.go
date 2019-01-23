@@ -32,7 +32,7 @@ func (s *Server) Build(ctx context.Context, req *pb.BuildRequest) (*pb.BuildResp
 	}
 
 	//Build the binary
-	s.enqueue(req.GetJob())
+	s.enqueue(req.GetJob(), req.ForceBuild)
 
 	return &pb.BuildResponse{}, nil
 }

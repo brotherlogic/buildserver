@@ -23,7 +23,7 @@ func BenchmarkRunBuilds(b *testing.B) {
 			for buildserver.currentBuilds > 0 {
 				time.Sleep(time.Millisecond)
 			}
-			buildserver.enqueue(&pbgbs.Job{GoPath: "github.com/brotherlogic/buildserver", Name: "buildserver"})
+			buildserver.enqueue(&pbgbs.Job{GoPath: "github.com/brotherlogic/buildserver", Name: "buildserver"}, false)
 			buildserver.dequeue(context.Background())
 			os.RemoveAll(wd + "/" + f)
 
@@ -33,7 +33,7 @@ func BenchmarkRunBuilds(b *testing.B) {
 	}
 
 	log.Printf("DONINGTON")
-	buildserver.enqueue(&pbgbs.Job{GoPath: "github.com/brotherlogic/monitor", Name: "monitor"})
+	buildserver.enqueue(&pbgbs.Job{GoPath: "github.com/brotherlogic/monitor", Name: "monitor"}, false)
 	buildserver.dequeue(context.Background())
 	os.RemoveAll(wd + "/" + f)
 
