@@ -90,10 +90,9 @@ func (s *Server) runCheck(ctx context.Context) {
 
 				for _, job := range s.jobs {
 					latest, err := client.GetVersions(ctx, &pb.VersionRequest{Job: job, JustLatest: true})
-					s.Log(fmt.Sprintf("Checking %v and %v", latest, s.latestBuild[job.Name]))
 					if err == nil {
 
-						if len(latest.GetVersions()) > 0 && latest.GetVersions()[0].VersionDate > s.latestBuild[job.Name] {
+						if len(latest.GetVersions()) > 0 && latest.GetVersions()[0].VersionDate > s.latestBuild[job.Name] && latest.GetVersions()[0].Version != s.latestHash[job.Name] {
 							s.blacklist[job.Name] = true
 						}
 					}
