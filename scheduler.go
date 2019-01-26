@@ -32,6 +32,8 @@ type Scheduler struct {
 	cbuild         string
 	waitTime       time.Duration
 	runs           int64
+	cRuns          int64
+	cFins          int64
 }
 
 type rCommand struct {
@@ -136,12 +138,14 @@ func (s *Scheduler) build(queEnt queueEntry, server string, latestHash string) (
 }
 
 func (s *Scheduler) runAndWait(c *rCommand) {
+	s.cRuns++
 	c.err = s.run(c)
 	if c.err == nil {
 		for c.endTime == 0 {
 			time.Sleep(time.Second)
 		}
 	}
+	s.cFins++
 }
 
 func (s *Scheduler) run(c *rCommand) error {
