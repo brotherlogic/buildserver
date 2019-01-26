@@ -39,6 +39,8 @@ func TestAppendRun(t *testing.T) {
 		"",
 		time.Minute * 2,
 		int64(0),
+		int64(0),
+		int64(0),
 	}
 
 	rc := &rCommand{command: exec.Command("ls")}
@@ -64,6 +66,8 @@ func TestRunNoCommand(t *testing.T) {
 		make(map[string]time.Time),
 		"",
 		time.Minute * 2,
+		int64(0),
+		int64(0),
 		int64(0),
 	}
 
@@ -94,6 +98,8 @@ func TestRunBadCommand(t *testing.T) {
 		make(map[string]time.Time),
 		"",
 		time.Minute * 2,
+		int64(0),
+		int64(0),
 		int64(0),
 	}
 
@@ -128,6 +134,8 @@ func TestBuidlRun(t *testing.T) {
 		make(map[string]time.Time),
 		"",
 		time.Minute * 2,
+		int64(0),
+		int64(0),
 		int64(0),
 	}
 
@@ -164,6 +172,8 @@ func TestBuildRunError(t *testing.T) {
 		"",
 		time.Minute * 2,
 		int64(0),
+		int64(0),
+		int64(0),
 	}
 	s.lastBuild["crasher"] = time.Now()
 
@@ -190,6 +200,8 @@ func TestEmptyJobName(t *testing.T) {
 		make(map[string]time.Time),
 		"",
 		time.Minute * 2,
+		int64(0),
+		int64(0),
 		int64(0),
 	}
 	hash, err := s.build(queueEntry{job: &pbgbs.Job{GoPath: "github.com/brotherlogic/crasher"}}, "madeup", "blah")
