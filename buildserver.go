@@ -88,6 +88,7 @@ func (s *Server) runCheck(ctx context.Context) {
 
 				client := pb.NewBuildServiceClient(conn)
 
+				s.jobsMutex.Lock()
 				for _, job := range s.jobs {
 					latest, err := client.GetVersions(ctx, &pb.VersionRequest{Job: job, JustLatest: true})
 					if err == nil {
@@ -97,6 +98,7 @@ func (s *Server) runCheck(ctx context.Context) {
 						}
 					}
 				}
+				s.jobsMutex.Unlock()
 			}
 		}
 	}
