@@ -38,6 +38,7 @@ type Server struct {
 	*goserver.GoServer
 	scheduler         *Scheduler
 	builds            map[string]time.Time
+	buildsMutex       *sync.Mutex
 	dir               string
 	lister            lister
 	jobs              map[string]*pbgbs.Job
@@ -114,7 +115,9 @@ func (s *Server) enqueue(job *pbgbs.Job, force bool) {
 	}
 
 	if !found {
+		s.buildsMutex.Lock()
 		s.builds[job.Name] = time.Now()
+		s.buildsMutex.Unlock()
 		before := []queueEntry{}
 		for _, ent := range s.buildQueue {
 			before = append(before, ent)
@@ -242,6 +245,7 @@ func Init() *Server {
 			int64(0),
 		},
 		make(map[string]time.Time),
+		&sync.Mutex{},
 		"/media/scratch/buildserver",
 		&prodLister{dir: "/media/scratch/buildserver"},
 		make(map[string]*pbgbs.Job),
