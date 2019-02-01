@@ -322,7 +322,7 @@ func (s *Server) GetState() []*pbg.State {
 		&pbg.State{Key: "scheduled_runs", Value: s.scheduler.runs},
 		&pbg.State{Key: "command_runs", Value: s.scheduler.cRuns},
 		&pbg.State{Key: "command_finishes", Value: s.scheduler.cFins},
-		&pbg.State{Key: "profiling", Value: int64(1)},
+		&pbg.State{Key: "profiling", Value: int64(2)},
 	}
 }
 
