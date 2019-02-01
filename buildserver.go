@@ -348,7 +348,7 @@ func main() {
 
 	// This enables pprof
 	server.MemCap = 200000000
-	http.ListenAndServe(":8089", nil)
+	go http.ListenAndServe(":8089", nil)
 
 	server.preloadInfo()
 
