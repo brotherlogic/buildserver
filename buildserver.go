@@ -5,12 +5,14 @@ import (
 	"fmt"
 	"io/ioutil"
 	"log"
+	"net/http"
 	"os"
 	"strconv"
 	"sync"
 	"time"
 
 	"github.com/brotherlogic/goserver"
+	"github.com/brotherlogic/goserver/utils"
 	"github.com/brotherlogic/keystore/client"
 	"golang.org/x/net/context"
 	"google.golang.org/grpc"
@@ -20,7 +22,8 @@ import (
 	pb "github.com/brotherlogic/buildserver/proto"
 	pbgbs "github.com/brotherlogic/gobuildslave/proto"
 	pbg "github.com/brotherlogic/goserver/proto"
-	"github.com/brotherlogic/goserver/utils"
+
+	_ "net/http/pprof"
 )
 
 type queueEntry struct {
@@ -319,6 +322,7 @@ func (s *Server) GetState() []*pbg.State {
 		&pbg.State{Key: "scheduled_runs", Value: s.scheduler.runs},
 		&pbg.State{Key: "command_runs", Value: s.scheduler.cRuns},
 		&pbg.State{Key: "command_finishes", Value: s.scheduler.cFins},
+		&pbg.State{Key: "profiling", Value: int64(1)},
 	}
 }
 
@@ -341,6 +345,10 @@ func main() {
 	server.RegisterRepeatingTask(server.backgroundBuilder, "background_builder", time.Minute*5)
 	server.RegisterRepeatingTask(server.runCheck, "checker", time.Minute*1)
 	server.RegisterRepeatingTaskNonMaster(server.dequeue, "dequeue", time.Second)
+
+	// This enables pprof
+	server.MemCap = 200000000
+	http.ListenAndServe(":8089", nil)
 
 	server.preloadInfo()
 
