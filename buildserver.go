@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"io/ioutil"
 	"log"
-	"net/http"
 	"os"
 	"strconv"
 	"sync"
@@ -22,8 +21,6 @@ import (
 	pb "github.com/brotherlogic/buildserver/proto"
 	pbgbs "github.com/brotherlogic/gobuildslave/proto"
 	pbg "github.com/brotherlogic/goserver/proto"
-
-	_ "net/http/pprof"
 )
 
 type queueEntry struct {
@@ -345,10 +342,6 @@ func main() {
 	server.RegisterRepeatingTask(server.backgroundBuilder, "background_builder", time.Minute*5)
 	server.RegisterRepeatingTask(server.runCheck, "checker", time.Minute*1)
 	server.RegisterRepeatingTaskNonMaster(server.dequeue, "dequeue", time.Second)
-
-	// This enables pprof
-	server.MemCap = 200000000
-	go http.ListenAndServe(":8089", nil)
 
 	server.preloadInfo()
 
