@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"log"
+	"net"
 	"os"
 	"strconv"
 	"time"
@@ -114,10 +115,30 @@ func main() {
 			log.Fatalf("Error reading file: %v", err)
 		}
 
-		_, err = client.ReportCrash(ctx, &pb.CrashRequest{Job: &pbgbs.Job{Name: os.Args[2]}, Version: os.Args[3], Crash: &pb.Crash{ErrorMessage: string(file)}})
+		origin := getLocalIP()
+		_, err = client.ReportCrash(ctx, &pb.CrashRequest{Origin: origin, Job: &pbgbs.Job{Name: os.Args[2]}, Version: os.Args[3], Crash: &pb.Crash{ErrorMessage: string(file)}})
 		if err != nil {
 			log.Fatalf("Error reporting: %v", err)
 		}
 	}
 	utils.SendTrace(ctx, "builserver-"+os.Args[1], time.Now(), pbt.Milestone_END, "buildserver")
+}
+
+func getLocalIP() string {
+	ifaces, _ := net.Interfaces()
+
+	var ip net.IP
+	for _, i := range ifaces {
+		addrs, _ := i.Addrs()
+
+		for _, addr := range addrs {
+			if ipnet, ok := addr.(*net.IPNet); ok && !ipnet.IP.IsLoopback() {
+				if ipnet.IP.To4() != nil {
+					ip = ipnet.IP
+				}
+			}
+		}
+	}
+
+	return ip.String()
 }

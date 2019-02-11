@@ -37,8 +37,9 @@ message BuildResponse {}
 
 message CrashRequest {
   gobuildslave.Job job = 1;
-  string version = 3;
   Crash crash = 2;
+  string version = 3;
+  string origin = 4;
 }
 
 message CrashResponse {}
