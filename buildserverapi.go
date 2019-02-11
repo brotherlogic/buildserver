@@ -42,7 +42,7 @@ func (s *Server) ReportCrash(ctx context.Context, req *pb.CrashRequest) (*pb.Cra
 	s.crashes++
 	for _, val := range s.pathMap {
 		if val.Version == req.Version && val.Job.Name == req.Job.Name {
-			s.RaiseIssue(ctx, "Crash for "+val.Job.Name, fmt.Sprintf("%v", req.Crash.ErrorMessage), false)
+			s.RaiseIssue(ctx, fmt.Sprintf("Crash for %v", val.Job.Name), fmt.Sprintf("on %v - %v", req.Origin, req.Crash.ErrorMessage), false)
 			val.Crashes = append(val.Crashes, req.Crash)
 			s.scheduler.saveVersionFile(val)
 			return &pb.CrashResponse{}, nil
