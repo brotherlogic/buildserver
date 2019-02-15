@@ -49,7 +49,7 @@ func (s *Server) ReportCrash(ctx context.Context, req *pb.CrashRequest) (*pb.Cra
 		}
 	}
 
-	s.BounceIssue(ctx, fmt.Sprintf("Crash for %v", req.Job.Name), fmt.Sprintf("%v", req.Crash.ErrorMessage), req.Job.Name)
+	s.BounceIssue(ctx, fmt.Sprintf("Crash for %v", req.Job.Name), fmt.Sprintf("On %v: %v", req.Origin, req.Crash.ErrorMessage), req.Job.Name)
 	return &pb.CrashResponse{}, fmt.Errorf("Version not found")
 }
 
