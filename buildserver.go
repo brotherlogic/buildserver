@@ -59,6 +59,7 @@ type Server struct {
 	latestBuild       map[string]int64
 	latestDate        map[string]time.Time
 	blacklist         map[string]bool
+	blacklistMutex    *sync.Mutex
 }
 
 type fileDetails struct {
@@ -266,6 +267,7 @@ func Init() *Server {
 		make(map[string]int64),
 		make(map[string]time.Time),
 		make(map[string]bool),
+		&sync.Mutex{},
 	}
 
 	s.scheduler.log = s.log
@@ -310,6 +312,8 @@ func (s *Server) GetState() []*pbg.State {
 		}
 	}
 
+	s.blacklistMutex.Lock()
+	defer s.blacklistMutex.Unlock()
 	return []*pbg.State{
 		&pbg.State{Key: "blacklist", Text: fmt.Sprintf("%v", s.blacklist)},
 		&pbg.State{Key: "enabled", Text: fmt.Sprintf("%v", s.runBuild)},
