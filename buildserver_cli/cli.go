@@ -14,15 +14,13 @@ import (
 
 	pb "github.com/brotherlogic/buildserver/proto"
 	pbgbs "github.com/brotherlogic/gobuildslave/proto"
-	pbgs "github.com/brotherlogic/goserver/proto"
-	pbt "github.com/brotherlogic/tracer/proto"
 
 	//Needed to pull in gzip encoding init
 	_ "google.golang.org/grpc/encoding/gzip"
 )
 
 func main() {
-	ctx, cancel := utils.BuildContext("buildserver-"+os.Args[1], "buildserver", pbgs.ContextType_MEDIUM)
+	ctx, cancel := utils.BuildContext("buildserver-"+os.Args[1], "buildserver")
 	defer cancel()
 
 	host, port, err := utils.Resolve("buildserver")
@@ -40,7 +38,7 @@ func main() {
 
 	switch os.Args[1] {
 	case "spbuild":
-		ctx, cancel := utils.BuildContext("buildserver-"+os.Args[1], "buildserver", pbgs.ContextType_MEDIUM)
+		ctx, cancel := utils.BuildContext("buildserver-"+os.Args[1], "buildserver")
 		defer cancel()
 
 		entries, err := utils.ResolveAll("buildserver")
@@ -60,7 +58,6 @@ func main() {
 
 				_, err = client.Build(ctx, &pb.BuildRequest{Job: &pbgbs.Job{Name: os.Args[3], GoPath: "github.com/brotherlogic/" + os.Args[3]}, ForceBuild: true})
 				if err != nil {
-					utils.SendTrace(ctx, "builserver-"+os.Args[1], time.Now(), pbt.Milestone_END, "buildserver")
 					log.Fatalf("Error on build: %v", err)
 				}
 			}
@@ -68,7 +65,6 @@ func main() {
 	case "build":
 		_, err := client.Build(ctx, &pb.BuildRequest{Job: &pbgbs.Job{Name: os.Args[2], GoPath: "github.com/brotherlogic/" + os.Args[2]}, ForceBuild: len(os.Args) > 3})
 		if err != nil {
-			utils.SendTrace(ctx, "builserver-"+os.Args[1], time.Now(), pbt.Milestone_END, "buildserver")
 			log.Fatalf("Error on build: %v", err)
 		}
 	case "alllatest":
@@ -77,7 +73,7 @@ func main() {
 			log.Fatalf("Unable to reach organiser: %v", err)
 		}
 		for _, entry := range entries {
-			ctx, cancel := utils.BuildContext("buildserver-"+os.Args[1], "buildserver", pbgs.ContextType_MEDIUM)
+			ctx, cancel := utils.BuildContext("buildserver-"+os.Args[1], "buildserver")
 			defer cancel()
 
 			conn, err := grpc.Dial(entry.Ip+":"+strconv.Itoa(int(entry.Port)), grpc.WithInsecure())
@@ -91,7 +87,6 @@ func main() {
 
 			res, err := client.GetVersions(ctx, &pb.VersionRequest{Job: &pbgbs.Job{Name: os.Args[2], GoPath: "github.com/brotherlogic/" + os.Args[2]}, JustLatest: true})
 			if err != nil {
-				utils.SendTrace(ctx, "builserver-"+os.Args[1], time.Now(), pbt.Milestone_END, "buildserver")
 				log.Fatalf("Error on build: %v", err)
 			}
 			if len(res.Versions) > 0 {
@@ -103,7 +98,6 @@ func main() {
 	case "latest":
 		res, err := client.GetVersions(ctx, &pb.VersionRequest{Job: &pbgbs.Job{Name: os.Args[2], GoPath: "github.com/brotherlogic/" + os.Args[2]}, JustLatest: true})
 		if err != nil {
-			utils.SendTrace(ctx, "builserver-"+os.Args[1], time.Now(), pbt.Milestone_END, "buildserver")
 			log.Fatalf("Error on build: %v", err)
 		}
 
@@ -111,7 +105,6 @@ func main() {
 	case "crash":
 		file, err := ioutil.ReadFile(os.Args[4])
 		if err != nil {
-			utils.SendTrace(ctx, "builserver-"+os.Args[1], time.Now(), pbt.Milestone_END, "buildserver")
 			log.Fatalf("Error reading file: %v", err)
 		}
 
@@ -121,7 +114,6 @@ func main() {
 			log.Fatalf("Error reporting: %v", err)
 		}
 	}
-	utils.SendTrace(ctx, "builserver-"+os.Args[1], time.Now(), pbt.Milestone_END, "buildserver")
 }
 
 func getLocalIP() string {

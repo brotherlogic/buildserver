@@ -3,12 +3,10 @@ package main
 import (
 	"fmt"
 	"strings"
-	"time"
 
 	"golang.org/x/net/context"
 
 	pb "github.com/brotherlogic/buildserver/proto"
-	pbt "github.com/brotherlogic/tracer/proto"
 )
 
 func getVersion(f string) string {
@@ -28,7 +26,6 @@ func (s *Server) Build(ctx context.Context, req *pb.BuildRequest) (*pb.BuildResp
 	defer s.blacklistMutex.Unlock()
 	for _, blacklist := range s.nobuild {
 		if blacklist == req.GetJob().Name {
-			s.LogTrace(ctx, "GetVersions", time.Now(), pbt.Milestone_END_FUNCTION)
 			return &pb.BuildResponse{}, fmt.Errorf("Can't build %v due to blacklist", blacklist)
 		}
 	}
@@ -57,8 +54,6 @@ func (s *Server) ReportCrash(ctx context.Context, req *pb.CrashRequest) (*pb.Cra
 
 //GetVersions gets the versions
 func (s *Server) GetVersions(ctx context.Context, req *pb.VersionRequest) (*pb.VersionResponse, error) {
-	ctx = s.LogTrace(ctx, "GetVersions", time.Now(), pbt.Milestone_START_FUNCTION)
-
 	if req.GetJob() == nil {
 		return &pb.VersionResponse{}, fmt.Errorf("You sent an empty job for some reason")
 	}
@@ -99,10 +94,8 @@ func (s *Server) GetVersions(ctx context.Context, req *pb.VersionRequest) (*pb.V
 		for _, l := range latest {
 			versions = append(versions, l)
 		}
-		s.LogTrace(ctx, "GetVersions", time.Now(), pbt.Milestone_END_FUNCTION)
 		return &pb.VersionResponse{Versions: versions}, nil
 	}
 
-	s.LogTrace(ctx, "GetVersions", time.Now(), pbt.Milestone_END_FUNCTION)
 	return resp, nil
 }
