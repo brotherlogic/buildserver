@@ -130,6 +130,12 @@ func (s *Server) enqueue(job *pbgbs.Job, force bool) {
 				forceBuild = true
 			}
 		}
+
+		//Reject a full build if there's one in the queue
+		for _, entry := range s.buildQueue {
+			forceBuild = forceBuild && !entry.fullBuild
+		}
+
 		s.buildQueue = append(s.buildQueue, queueEntry{job: job, timeIn: time.Now(), queueSizeAtEntry: len(s.buildQueue), inFront: before, fullBuild: forceBuild})
 	}
 }
