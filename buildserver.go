@@ -150,21 +150,29 @@ func (s *Server) dequeue(ctx context.Context) {
 				if time.Now().Sub(job.timeIn) > time.Minute*10 {
 					s.RaiseIssue(ctx, "Long Build", fmt.Sprintf("%v took %v to get to the front of the queue (%v in the queue) %v", job.job.Name, time.Now().Sub(job.timeIn), job.queueSizeAtEntry, job.inFront[0]), false)
 				}
-				_, err := s.scheduler.build(job, s.Registry.Identifier, s.latestHash[job.job.Name])
-				s.buildFailsMutex.Lock()
-				if err != nil {
-					e, ok := status.FromError(err)
-					if !ok || e.Code() != codes.AlreadyExists {
-						s.buildFails[job.job.Name]++
-						if s.buildFails[job.job.Name] > 3 {
-							s.RaiseIssue(ctx, "Build Failure", fmt.Sprintf("Build failed for %v: %v running on %v", job.job.Name, err, s.Registry.Identifier), false)
-						}
+				if len(s.blacklist) == 0 || s.blacklist[job.job.Name] {
+
+					// Do a full build if we're blacklisted
+					if s.blacklist[job.job.Name] {
+						job.fullBuild = true
 					}
-				} else {
-					delete(s.blacklist, job.job.Name)
-					delete(s.buildFails, job.job.Name)
+
+					_, err := s.scheduler.build(job, s.Registry.Identifier, s.latestHash[job.job.Name])
+					s.buildFailsMutex.Lock()
+					if err != nil {
+						e, ok := status.FromError(err)
+						if !ok || e.Code() != codes.AlreadyExists {
+							s.buildFails[job.job.Name]++
+							if s.buildFails[job.job.Name] > 3 {
+								s.RaiseIssue(ctx, "Build Failure", fmt.Sprintf("Build failed for %v: %v running on %v", job.job.Name, err, s.Registry.Identifier), false)
+							}
+						}
+					} else {
+						delete(s.blacklist, job.job.Name)
+						delete(s.buildFails, job.job.Name)
+					}
+					s.buildFailsMutex.Unlock()
 				}
-				s.buildFailsMutex.Unlock()
 				s.currentBuilds--
 			}()
 		}
@@ -278,8 +286,6 @@ func Init() *Server {
 
 	s.scheduler.log = s.log
 	s.scheduler.load = s.load
-
-	s.blacklist["recordwants"] = true
 
 	return s
 }
