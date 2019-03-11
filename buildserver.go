@@ -151,6 +151,12 @@ func (s *Server) dequeue(ctx context.Context) {
 					s.RaiseIssue(ctx, "Long Build", fmt.Sprintf("%v took %v to get to the front of the queue (%v in the queue) %v", job.job.Name, time.Now().Sub(job.timeIn), job.queueSizeAtEntry, job.inFront[0]), false)
 				}
 				if len(s.blacklist) == 0 || s.blacklist[job.job.Name] {
+
+					// Do a full build if we're blacklisted
+					if s.blacklist[job.job.Name] {
+						job.fullBuild = true
+					}
+
 					_, err := s.scheduler.build(job, s.Registry.Identifier, s.latestHash[job.job.Name])
 					s.buildFailsMutex.Lock()
 					if err != nil {
