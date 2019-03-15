@@ -324,9 +324,28 @@ func (s *Server) GetState() []*pbg.State {
 		}
 	}
 
+	memoryCrashes := make(map[string]int)
+	for _, v := range s.pathMap {
+		mCrash := 0
+		for _, c := range v.Crashes {
+			if c.CrashType == pb.Crash_MEMORY {
+				mCrash++
+			}
+		}
+
+		if mCrash > 0 {
+			if _, ok := memoryCrashes[v.Job.Name]; !ok {
+				memoryCrashes[v.Job.Name] = 0
+			}
+			memoryCrashes[v.Job.Name] += mCrash
+		}
+	}
+
 	s.blacklistMutex.Lock()
 	defer s.blacklistMutex.Unlock()
 	return []*pbg.State{
+		&pbg.State{Key: "versions", Value: int64(len(s.pathMap))},
+		&pbg.State{Key: "memory", Text: fmt.Sprintf("%v", memoryCrashes)},
 		&pbg.State{Key: "blacklist", Text: fmt.Sprintf("%v", s.blacklist)},
 		&pbg.State{Key: "enabled", Text: fmt.Sprintf("%v", s.runBuild)},
 		&pbg.State{Key: "buildc", Value: int64(s.buildRequest)},
@@ -340,7 +359,6 @@ func (s *Server) GetState() []*pbg.State {
 		&pbg.State{Key: "scheduled_runs", Value: s.scheduler.runs},
 		&pbg.State{Key: "command_runs", Value: s.scheduler.cRuns},
 		&pbg.State{Key: "command_finishes", Value: s.scheduler.cFins},
-		&pbg.State{Key: "profiling", Value: int64(2)},
 	}
 }
 

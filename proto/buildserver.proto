@@ -6,6 +6,14 @@ import "github.com/brotherlogic/gobuildslave/proto/slave.proto";
 
 message Crash {
   string error_message = 1;
+
+  enum CrashType {
+    UNKNOWN = 0;
+    MEMORY = 1;
+    PANIC = 2;
+  }
+
+  CrashType crash_type = 2;
 }
 
 message Version {
