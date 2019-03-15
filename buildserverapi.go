@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"strings"
+	"time"
 
 	"golang.org/x/net/context"
 
@@ -83,7 +84,12 @@ func (s *Server) GetVersions(ctx context.Context, req *pb.VersionRequest) (*pb.V
 	resp := &pb.VersionResponse{}
 	latest := make(map[string]*pb.Version)
 	bestTime := make(map[string]int64)
+	t := time.Now()
 	s.pathMapMutex.Lock()
+	d := time.Now().Sub(t)
+	if d > s.lockTime {
+		s.lockTime = d
+	}
 	for _, v := range s.pathMap {
 		if req.GetJob().Name == "" || v.Job.Name == req.GetJob().Name {
 			_, ok := bestTime[v.Job.Name]
