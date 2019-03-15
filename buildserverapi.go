@@ -41,14 +41,18 @@ func (s *Server) ReportCrash(ctx context.Context, req *pb.CrashRequest) (*pb.Cra
 	s.crashes++
 	for _, val := range s.pathMap {
 		if val.Version == req.Version && val.Job.Name == req.Job.Name {
-			s.RaiseIssue(ctx, fmt.Sprintf("Crash for %v", val.Job.Name), fmt.Sprintf("on %v - %v", req.Origin, req.Crash.ErrorMessage), false)
+			if req.Crash.CrashType != pb.Crash_MEMORY {
+				s.RaiseIssue(ctx, fmt.Sprintf("Crash for %v", val.Job.Name), fmt.Sprintf("on %v - %v", req.Origin, req.Crash.ErrorMessage), false)
+			}
 			val.Crashes = append(val.Crashes, req.Crash)
 			s.scheduler.saveVersionFile(val)
 			return &pb.CrashResponse{}, nil
 		}
 	}
 
-	s.BounceIssue(ctx, fmt.Sprintf("Crash for %v", req.Job.Name), fmt.Sprintf("On %v: %v", req.Origin, req.Crash.ErrorMessage), req.Job.Name)
+	if req.Crash.CrashType != pb.Crash_MEMORY {
+		s.BounceIssue(ctx, fmt.Sprintf("Crash for %v", req.Job.Name), fmt.Sprintf("On %v: %v", req.Origin, req.Crash.ErrorMessage), req.Job.Name)
+	}
 	return &pb.CrashResponse{}, fmt.Errorf("Version %v not found for %v (%v)", req.Version, req.Origin, req.Crash.CrashType)
 }
 
