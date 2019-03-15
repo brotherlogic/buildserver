@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"strings"
+	"time"
 
 	"golang.org/x/net/context"
 
@@ -41,14 +42,18 @@ func (s *Server) ReportCrash(ctx context.Context, req *pb.CrashRequest) (*pb.Cra
 	s.crashes++
 	for _, val := range s.pathMap {
 		if val.Version == req.Version && val.Job.Name == req.Job.Name {
-			s.RaiseIssue(ctx, fmt.Sprintf("Crash for %v", val.Job.Name), fmt.Sprintf("on %v - %v", req.Origin, req.Crash.ErrorMessage), false)
+			if req.Crash.CrashType != pb.Crash_MEMORY {
+				s.RaiseIssue(ctx, fmt.Sprintf("Crash for %v", val.Job.Name), fmt.Sprintf("on %v - %v", req.Origin, req.Crash.ErrorMessage), false)
+			}
 			val.Crashes = append(val.Crashes, req.Crash)
 			s.scheduler.saveVersionFile(val)
 			return &pb.CrashResponse{}, nil
 		}
 	}
 
-	s.BounceIssue(ctx, fmt.Sprintf("Crash for %v", req.Job.Name), fmt.Sprintf("On %v: %v", req.Origin, req.Crash.ErrorMessage), req.Job.Name)
+	if req.Crash.CrashType != pb.Crash_MEMORY {
+		s.BounceIssue(ctx, fmt.Sprintf("Crash for %v", req.Job.Name), fmt.Sprintf("On %v: %v", req.Origin, req.Crash.ErrorMessage), req.Job.Name)
+	}
 	return &pb.CrashResponse{}, fmt.Errorf("Version %v not found for %v (%v)", req.Version, req.Origin, req.Crash.CrashType)
 }
 
@@ -66,14 +71,25 @@ func (s *Server) GetVersions(ctx context.Context, req *pb.VersionRequest) (*pb.V
 	}
 	s.blacklistMutex.Unlock()
 
-	s.jobsMutex.Lock()
-	s.jobs[req.GetJob().Name] = req.GetJob()
-	s.jobsMutex.Unlock()
+	found := false
+	for _, job := range s.jobs {
+		if job.Name == req.GetJob().Name {
+			found = true
+		}
+	}
+	if !found {
+		s.jobs = append(s.jobs, req.GetJob())
+	}
 
 	resp := &pb.VersionResponse{}
 	latest := make(map[string]*pb.Version)
 	bestTime := make(map[string]int64)
+	t := time.Now()
 	s.pathMapMutex.Lock()
+	d := time.Now().Sub(t)
+	if d > s.lockTime {
+		s.lockTime = d
+	}
 	for _, v := range s.pathMap {
 		if req.GetJob().Name == "" || v.Job.Name == req.GetJob().Name {
 			_, ok := bestTime[v.Job.Name]
