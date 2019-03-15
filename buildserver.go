@@ -41,8 +41,7 @@ type Server struct {
 	buildsMutex       *sync.Mutex
 	dir               string
 	lister            lister
-	jobs              map[string]*pbgbs.Job
-	jobsMutex         *sync.Mutex
+	jobs              []*pbgbs.Job
 	buildRequest      int
 	runBuild          bool
 	currentBuilds     int
@@ -90,7 +89,6 @@ func (s *Server) runCheck(ctx context.Context) {
 
 				client := pb.NewBuildServiceClient(conn)
 
-				s.jobsMutex.Lock()
 				for _, job := range s.jobs {
 					latest, err := client.GetVersions(ctx, &pb.VersionRequest{Job: job, JustLatest: true})
 					if err == nil {
@@ -100,7 +98,6 @@ func (s *Server) runCheck(ctx context.Context) {
 						}
 					}
 				}
-				s.jobsMutex.Unlock()
 			}
 		}
 	}
@@ -199,11 +196,9 @@ func (s *Server) load(v *pb.Version) {
 }
 
 func (s *Server) backgroundBuilder(ctx context.Context) {
-	s.jobsMutex.Lock()
 	for _, j := range s.jobs {
 		s.enqueue(j, false)
 	}
-	s.jobsMutex.Unlock()
 }
 
 func (p *prodLister) listFiles(job *pbgbs.Job) ([]fileDetails, error) {
@@ -263,8 +258,7 @@ func Init() *Server {
 		&sync.Mutex{},
 		"/media/scratch/buildserver",
 		&prodLister{dir: "/media/scratch/buildserver"},
-		make(map[string]*pbgbs.Job),
-		&sync.Mutex{},
+		make([]*pbgbs.Job, 0),
 		0,
 		true,
 		0,
