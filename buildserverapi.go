@@ -71,16 +71,6 @@ func (s *Server) GetVersions(ctx context.Context, req *pb.VersionRequest) (*pb.V
 	}
 	s.blacklistMutex.Unlock()
 
-	found := false
-	for _, job := range s.jobs {
-		if job.Name == req.GetJob().Name {
-			found = true
-		}
-	}
-	if !found {
-		s.jobs = append(s.jobs, req.GetJob())
-	}
-
 	resp := &pb.VersionResponse{}
 	latest := make(map[string]*pb.Version)
 	bestTime := make(map[string]int64)
