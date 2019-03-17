@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"log"
+	"net/http"
 	"os"
 	"strconv"
 	"sync"
@@ -359,6 +360,23 @@ func (s *Server) GetState() []*pbg.State {
 	}
 }
 
+type properties struct{}
+
+func (s *Server) deliver(w http.ResponseWriter, r *http.Request) {
+	err := s.render("Hello", properties{}, w)
+	if err != nil {
+		s.Log(fmt.Sprintf("Error writing: %v", err))
+	}
+}
+
+func (s *Server) serveUp(port int32) {
+	http.HandleFunc("/", s.deliver)
+	err := http.ListenAndServe(fmt.Sprintf(":%v", port), nil)
+	if err != nil {
+		panic(err)
+	}
+}
+
 func main() {
 	var quiet = flag.Bool("quiet", false, "Show all output")
 	flag.Parse()
@@ -374,6 +392,8 @@ func main() {
 	server.Register = server
 
 	server.RegisterServer("buildserver", false)
+
+	go server.serveUp(server.Registry.Port + 1)
 
 	server.RegisterRepeatingTask(server.backgroundBuilder, "background_builder", time.Minute*5)
 	server.RegisterRepeatingTask(server.runCheck, "checker", time.Minute*1)
