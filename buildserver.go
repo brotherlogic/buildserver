@@ -7,7 +7,6 @@ import (
 	"log"
 	"net/http"
 	"os"
-	"strconv"
 	"sync"
 	"time"
 
@@ -82,12 +81,11 @@ func (s *Server) runCheck(ctx context.Context) {
 	if err == nil {
 		for _, entry := range entries {
 			if entry.Identifier != s.Registry.Identifier {
-				conn, err := grpc.Dial(entry.Ip+":"+strconv.Itoa(int(entry.Port)), grpc.WithInsecure())
-				defer conn.Close()
-
+				conn, err := s.DoDial(entry)
 				if err != nil {
 					log.Fatalf("Unable to dial: %v", err)
 				}
+				defer conn.Close()
 
 				client := pb.NewBuildServiceClient(conn)
 
@@ -396,7 +394,7 @@ func main() {
 	go server.serveUp(server.Registry.Port + 1)
 
 	server.RegisterRepeatingTask(server.backgroundBuilder, "background_builder", time.Minute*5)
-	server.RegisterRepeatingTask(server.runCheck, "checker", time.Minute*1)
+	server.RegisterRepeatingTask(server.runCheck, "checker", time.Minute*5)
 	server.RegisterRepeatingTaskNonMaster(server.dequeue, "dequeue", time.Second)
 
 	server.preloadInfo()
