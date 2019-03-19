@@ -60,6 +60,7 @@ type Server struct {
 	blacklist         map[string]bool
 	blacklistMutex    *sync.Mutex
 	lockTime          time.Duration
+	checkError        string
 }
 
 type fileDetails struct {
@@ -100,6 +101,8 @@ func (s *Server) runCheck(ctx context.Context) {
 				}
 			}
 		}
+	} else {
+		s.Log(fmt.Sprintf("Resolve error: %v", err))
 	}
 }
 
@@ -277,6 +280,7 @@ func Init() *Server {
 		make(map[string]bool),
 		&sync.Mutex{},
 		0,
+		"",
 	}
 
 	s.scheduler.log = s.log
