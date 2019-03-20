@@ -86,6 +86,8 @@ func (s *Server) runCheck(ctx context.Context) {
 			jobs[v.Job.Name] = v.Job
 		}
 	}
+	s.pathMapMutex.Unlock()
+
 	if err == nil {
 		for _, entry := range entries {
 			if entry.Identifier != s.Registry.Identifier {
