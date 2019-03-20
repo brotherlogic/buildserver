@@ -79,10 +79,15 @@ type prodLister struct {
 
 func (s *Server) runCheck(ctx context.Context) {
 	entries, err := utils.ResolveAll("buildserver")
+	jobs := make(map[string]*pbgbs.Job)
+	s.pathMapMutex.Lock()
+	for _, v := range s.pathMap {
+		if _, ok := jobs[v.Job.Name]; !ok {
+			jobs[v.Job.Name] = v.Job
+		}
+	}
 	if err == nil {
-		s.Log(fmt.Sprintf("Checking %v", len(entries)))
 		for _, entry := range entries {
-			s.Log(fmt.Sprintf("%v and %v", entry.Identifier, s.Registry.Identifier))
 			if entry.Identifier != s.Registry.Identifier {
 				conn, err := s.DoDial(entry)
 				if err != nil {
@@ -91,8 +96,7 @@ func (s *Server) runCheck(ctx context.Context) {
 				defer conn.Close()
 
 				client := pb.NewBuildServiceClient(conn)
-
-				for _, job := range s.jobs {
+				for _, job := range jobs {
 					latest, err := client.GetVersions(ctx, &pb.VersionRequest{Job: job, JustLatest: true})
 					if err == nil {
 
