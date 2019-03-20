@@ -80,7 +80,9 @@ type prodLister struct {
 func (s *Server) runCheck(ctx context.Context) {
 	entries, err := utils.ResolveAll("buildserver")
 	if err == nil {
+		s.Log(fmt.Sprintf("Checking %v", len(entries)))
 		for _, entry := range entries {
+			s.Log(fmt.Sprintf("%v and %v", entry.Identifier, s.Registry.Identifier))
 			if entry.Identifier != s.Registry.Identifier {
 				conn, err := s.DoDial(entry)
 				if err != nil {
