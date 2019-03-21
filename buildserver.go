@@ -379,7 +379,12 @@ func (s *Server) deliver(w http.ResponseWriter, r *http.Request) {
 	for _, v := range s.pathMap {
 		versions = append(versions, v)
 	}
-	err := s.render("Hello", properties{Versions: versions}, w)
+	data, err := Asset("templates/main.html")
+	if err != nil {
+		fmt.Fprintf(w, fmt.Sprintf("Error: %v", err))
+		return
+	}
+	err = s.render(string(data), properties{Versions: versions}, w)
 	if err != nil {
 		s.Log(fmt.Sprintf("Error writing: %v", err))
 	}
