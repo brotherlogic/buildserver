@@ -1,7 +1,7 @@
 package main
 
-import "html/template"
 import "io"
+import "html/template"
 
 func (s *Server) render(f string, props properties, w io.Writer) error {
 	templ := template.New("main")
@@ -9,7 +9,6 @@ func (s *Server) render(f string, props properties, w io.Writer) error {
 	if err != nil {
 		return err
 	}
-
 	templ.Execute(w, props)
 	return nil
 }
