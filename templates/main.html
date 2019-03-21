@@ -3,5 +3,11 @@
     <title>Buildserver</title>
   </head>
   <body>
+    <h1>Buildserver</h1>
+    <ul>
+    {{range .Versions}}
+    <li>{{.Version}}</li>
+    {{end}}
+    </ul>
   </body>
   </html>

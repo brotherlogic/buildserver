@@ -370,10 +370,16 @@ func (s *Server) GetState() []*pbg.State {
 	}
 }
 
-type properties struct{}
+type properties struct {
+	Versions []*pb.Version
+}
 
 func (s *Server) deliver(w http.ResponseWriter, r *http.Request) {
-	err := s.render("Hello", properties{}, w)
+	versions := []*pb.Version{}
+	for _, v := range s.pathMap {
+		versions = append(versions, v)
+	}
+	err := s.render("Hello", properties{Versions: versions}, w)
 	if err != nil {
 		s.Log(fmt.Sprintf("Error writing: %v", err))
 	}
@@ -403,7 +409,7 @@ func main() {
 
 	server.RegisterServer("buildserver", false)
 
-	go server.serveUp(server.Registry.Port + 1)
+	go server.serveUp(server.Registry.Port - 1)
 
 	server.RegisterRepeatingTask(server.backgroundBuilder, "background_builder", time.Minute*5)
 	server.RegisterRepeatingTask(server.runCheck, "checker", time.Minute*5)
