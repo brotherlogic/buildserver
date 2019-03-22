@@ -57,6 +57,7 @@ type Server struct {
 	latestHash        map[string]string
 	latestBuild       map[string]int64
 	latestDate        map[string]time.Time
+	latestVersion     map[string]string
 	blacklist         map[string]bool
 	blacklistMutex    *sync.Mutex
 	lockTime          time.Duration
@@ -102,7 +103,7 @@ func (s *Server) runCheck(ctx context.Context) {
 					latest, err := client.GetVersions(ctx, &pb.VersionRequest{Job: job, JustLatest: true})
 					if err == nil {
 
-						if len(latest.GetVersions()) > 0 && latest.GetVersions()[0].VersionDate > s.latestBuild[job.Name] && latest.GetVersions()[0].Version != s.latestHash[job.Name] {
+						if len(latest.GetVersions()) > 0 && latest.GetVersions()[0].VersionDate > s.latestBuild[job.Name] && latest.GetVersions()[0].Version != s.latestVersion[job.Name] {
 							s.blacklist[job.Name] = true
 
 							// Ensure blacklisted jobs get built
@@ -205,6 +206,7 @@ func (s *Server) load(v *pb.Version) {
 		s.latestBuild[jobn] = v.VersionDate
 		s.latestHash[jobn] = v.GithubHash
 		s.latestDate[jobn] = time.Unix(v.VersionDate, 0)
+		s.latestVersion[jobn] = v.Version
 	}
 	s.pathMapMutex.Unlock()
 }
@@ -288,6 +290,7 @@ func Init() *Server {
 		make(map[string]string),
 		make(map[string]int64),
 		make(map[string]time.Time),
+		make(map[string]string),
 		make(map[string]bool),
 		&sync.Mutex{},
 		0,
