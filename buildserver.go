@@ -104,6 +104,9 @@ func (s *Server) runCheck(ctx context.Context) {
 
 						if len(latest.GetVersions()) > 0 && latest.GetVersions()[0].VersionDate > s.latestBuild[job.Name] && latest.GetVersions()[0].Version != s.latestHash[job.Name] {
 							s.blacklist[job.Name] = true
+
+							// Ensure blacklisted jobs get built
+							s.enqueue(job, true)
 						}
 					}
 				}
