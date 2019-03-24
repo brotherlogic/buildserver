@@ -377,13 +377,21 @@ func (s *Server) GetState() []*pbg.State {
 }
 
 type properties struct {
-	Versions []*pb.Version
+	Versions []string
 }
 
 func (s *Server) deliver(w http.ResponseWriter, r *http.Request) {
-	versions := []*pb.Version{}
+	versions := []string{}
 	for _, v := range s.pathMap {
-		versions = append(versions, v)
+		found := false
+		for _, ver := range versions {
+			if ver == v.Job.Name {
+				found = true
+			}
+		}
+		if !found {
+			versions = append(versions, v.Job.Name)
+		}
 	}
 	data, err := Asset("templates/main.html")
 	if err != nil {
