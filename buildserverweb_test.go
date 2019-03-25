@@ -48,3 +48,13 @@ func TestTemplateFailure(t *testing.T) {
 		t.Errorf("No error in processing")
 	}
 }
+
+func TestVersionTemplateFailure(t *testing.T) {
+	s := InitTestServer(".testtemplatefail")
+	var buf bytes.Buffer
+	err := s.renderVersion("{{.broken", properties{}, &buf)
+
+	if err == nil {
+		t.Errorf("No error in processing")
+	}
+}
