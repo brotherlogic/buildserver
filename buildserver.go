@@ -377,23 +377,48 @@ func (s *Server) GetState() []*pbg.State {
 }
 
 type properties struct {
-	Versions []string
+	Binaries []string
+	Versions []*pb.Version
 }
 
 func (s *Server) deliver(w http.ResponseWriter, r *http.Request) {
-	versions := []string{}
+	binaries := []string{}
 	for _, v := range s.pathMap {
 		found := false
-		for _, ver := range versions {
+		for _, ver := range binaries {
 			if ver == v.Job.Name {
 				found = true
 			}
 		}
 		if !found {
-			versions = append(versions, v.Job.Name)
+			binaries = append(binaries, v.Job.Name)
 		}
 	}
 	data, err := Asset("templates/main.html")
+	if err != nil {
+		fmt.Fprintf(w, fmt.Sprintf("Error: %v", err))
+		return
+	}
+	err = s.render(string(data), properties{Binaries: binaries}, w)
+	if err != nil {
+		s.Log(fmt.Sprintf("Error writing: %v", err))
+	}
+}
+
+func (s *Server) deliverVersion(w http.ResponseWriter, r *http.Request) {
+	versions := []*pb.Version{}
+	binary, ok := r.URL.Query()["binary"]
+
+	if !ok {
+		return
+	}
+
+	for _, v := range s.pathMap {
+		if v.Job.Name == binary[0] {
+			versions = append(versions, v)
+		}
+	}
+	data, err := Asset("templates/version.html")
 	if err != nil {
 		fmt.Fprintf(w, fmt.Sprintf("Error: %v", err))
 		return
