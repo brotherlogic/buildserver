@@ -1,0 +1,13 @@
+<html>
+  <head>
+    <title>Buildserver</title>
+  </head>
+  <body>
+    <h1>Buildserver</h1>
+    <ul>
+    {{range .Versions}}
+    <li>{{.VersionDate}} {{.Version}</li>
+    {{end}}
+    </ul>
+  </body>
+  </html>
