@@ -431,6 +431,7 @@ func (s *Server) deliverVersion(w http.ResponseWriter, r *http.Request) {
 
 func (s *Server) serveUp(port int32) {
 	http.HandleFunc("/", s.deliver)
+	http.HandleFunc("/version", s.deliverVersion)
 	err := http.ListenAndServe(fmt.Sprintf(":%v", port), nil)
 	if err != nil {
 		panic(err)
