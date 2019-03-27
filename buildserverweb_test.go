@@ -40,7 +40,7 @@ func TestEasyVersionTemplate(t *testing.T) {
 func TestEasyBinary(t *testing.T) {
 	s := InitTestServer(".testtemplate")
 	var buf bytes.Buffer
-	err := s.renderVersion("templates/binary.html", properties{Versions: []*pb.Version{
+	err := s.renderBinary("templates/binary.html", properties{Versions: []*pb.Version{
 		&pb.Version{Version: "blah", VersionDate: 1234},
 	}}, &buf)
 
@@ -76,7 +76,7 @@ func TestVersionTemplateFailure(t *testing.T) {
 func TestBinaryTemplateFailure(t *testing.T) {
 	s := InitTestServer(".testtemplatefail")
 	var buf bytes.Buffer
-	err := s.renderVersion("{{.broken", properties{}, &buf)
+	err := s.renderBinary("{{.broken", properties{}, &buf)
 
 	if err == nil {
 		t.Errorf("No error in processing")
