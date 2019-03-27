@@ -379,6 +379,7 @@ func (s *Server) GetState() []*pbg.State {
 type properties struct {
 	Binaries []string
 	Versions []*pb.Version
+	Version  *pb.Version
 }
 
 func (s *Server) deliver(w http.ResponseWriter, r *http.Request) {
@@ -406,6 +407,30 @@ func (s *Server) deliver(w http.ResponseWriter, r *http.Request) {
 }
 
 func (s *Server) deliverVersion(w http.ResponseWriter, r *http.Request) {
+	var version *pb.Version
+	ver, ok := r.URL.Query()["version"]
+
+	if !ok {
+		return
+	}
+
+	for _, v := range s.pathMap {
+		if v.Version == ver[0] {
+			version = v
+		}
+	}
+	data, err := Asset("templates/version.html")
+	if err != nil {
+		fmt.Fprintf(w, fmt.Sprintf("Error: %v", err))
+		return
+	}
+	err = s.render(string(data), properties{Version: version}, w)
+	if err != nil {
+		s.Log(fmt.Sprintf("Error writing: %v", err))
+	}
+}
+
+func (s *Server) deliverBinary(w http.ResponseWriter, r *http.Request) {
 	versions := []*pb.Version{}
 	binary, ok := r.URL.Query()["binary"]
 
@@ -418,7 +443,7 @@ func (s *Server) deliverVersion(w http.ResponseWriter, r *http.Request) {
 			versions = append(versions, v)
 		}
 	}
-	data, err := Asset("templates/version.html")
+	data, err := Asset("templates/binary.html")
 	if err != nil {
 		fmt.Fprintf(w, fmt.Sprintf("Error: %v", err))
 		return
@@ -432,6 +457,7 @@ func (s *Server) deliverVersion(w http.ResponseWriter, r *http.Request) {
 func (s *Server) serveUp(port int32) {
 	http.HandleFunc("/", s.deliver)
 	http.HandleFunc("/version", s.deliverVersion)
+	http.HandleFunc("/binary", s.deliverBinary)
 	err := http.ListenAndServe(fmt.Sprintf(":%v", port), nil)
 	if err != nil {
 		panic(err)

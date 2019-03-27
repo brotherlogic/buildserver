@@ -22,3 +22,13 @@ func (s *Server) renderVersion(f string, props properties, w io.Writer) error {
 	templ.Execute(w, props)
 	return nil
 }
+
+func (s *Server) renderBinary(f string, props properties, w io.Writer) error {
+	templ := template.New("binary")
+	templ, err := templ.Parse(f)
+	if err != nil {
+		return err
+	}
+	templ.Execute(w, props)
+	return nil
+}

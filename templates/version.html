@@ -3,11 +3,8 @@
     <title>Buildserver</title>
   </head>
   <body>
-    <h1>Buildserver</h1>
-    <ul>
-    {{range .Versions}}
-    <li>{{.VersionDate}} {{.Version}}</li>
-    {{end}}
-    </ul>
+    <h1>{{ .Job.Name }}</h1>
+    <h2>{{ .Version }}</h2>
+    Crashes: {{ len .Crashes }}
   </body>
   </html>
