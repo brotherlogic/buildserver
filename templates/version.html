@@ -3,8 +3,8 @@
     <title>Buildserver - Version</title>
   </head>
   <body>
-    <h1>{{ Version.Job.Name }}</h1>
-    <h2>{{ Version.Version }}</h2>
-    Crashes: {{ len Version.Crashes }}
+    <h1>{{ .Version.Job.Name }}</h1>
+    <h2>{{ .Version.Version }}</h2>
+    Crashes: {{ len .Version.Crashes }}
   </body>
   </html>
