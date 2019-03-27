@@ -419,7 +419,7 @@ func (s *Server) deliverVersion(w http.ResponseWriter, r *http.Request) {
 			version = v
 		}
 	}
-	s.Log(fmt.Sprintf("Found: %v", version))
+
 	data, err := Asset("templates/version.html")
 	if err != nil {
 		fmt.Fprintf(w, fmt.Sprintf("Error: %v", err))
