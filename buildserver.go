@@ -419,12 +419,13 @@ func (s *Server) deliverVersion(w http.ResponseWriter, r *http.Request) {
 			version = v
 		}
 	}
+	s.Log(fmt.Sprintf("Found: %v", version))
 	data, err := Asset("templates/version.html")
 	if err != nil {
 		fmt.Fprintf(w, fmt.Sprintf("Error: %v", err))
 		return
 	}
-	err = s.render(string(data), properties{Version: version}, w)
+	err = s.renderVersion(string(data), properties{Version: version}, w)
 	if err != nil {
 		s.Log(fmt.Sprintf("Error writing: %v", err))
 	}
@@ -448,7 +449,7 @@ func (s *Server) deliverBinary(w http.ResponseWriter, r *http.Request) {
 		fmt.Fprintf(w, fmt.Sprintf("Error: %v", err))
 		return
 	}
-	err = s.render(string(data), properties{Versions: versions}, w)
+	err = s.renderBinary(string(data), properties{Versions: versions}, w)
 	if err != nil {
 		s.Log(fmt.Sprintf("Error writing: %v", err))
 	}
