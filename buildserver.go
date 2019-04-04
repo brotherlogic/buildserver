@@ -78,7 +78,7 @@ type prodLister struct {
 	fail bool
 }
 
-func (s *Server) runCheck(ctx context.Context) {
+func (s *Server) runCheck(ctx context.Context) error {
 	entries, err := utils.ResolveAll("buildserver")
 	jobs := make(map[string]*pbgbs.Job)
 	s.pathMapMutex.Lock()
@@ -94,7 +94,7 @@ func (s *Server) runCheck(ctx context.Context) {
 			if entry.Identifier != s.Registry.Identifier {
 				conn, err := s.DoDial(entry)
 				if err != nil {
-					log.Fatalf("Unable to dial: %v", err)
+					return err
 				}
 				defer conn.Close()
 
@@ -114,8 +114,10 @@ func (s *Server) runCheck(ctx context.Context) {
 			}
 		}
 	} else {
-		s.Log(fmt.Sprintf("Resolve error: %v", err))
+		return err
 	}
+
+	return nil
 }
 
 func (s *Server) enqueue(job *pbgbs.Job, force bool) {
@@ -152,7 +154,7 @@ func (s *Server) enqueue(job *pbgbs.Job, force bool) {
 	}
 }
 
-func (s *Server) dequeue(ctx context.Context) {
+func (s *Server) dequeue(ctx context.Context) error {
 	if len(s.buildQueue) > 0 && s.currentBuilds < s.maxBuilds {
 		if s.runBuild {
 			go func() {
@@ -189,6 +191,7 @@ func (s *Server) dequeue(ctx context.Context) {
 			}()
 		}
 	}
+	return nil
 }
 
 func (s *Server) drainQueue(ctx context.Context) {
@@ -211,10 +214,11 @@ func (s *Server) load(v *pb.Version) {
 	s.pathMapMutex.Unlock()
 }
 
-func (s *Server) backgroundBuilder(ctx context.Context) {
+func (s *Server) backgroundBuilder(ctx context.Context) error {
 	for _, j := range s.jobs {
 		s.enqueue(j, false)
 	}
+	return nil
 }
 
 func (p *prodLister) listFiles(job *pbgbs.Job) ([]fileDetails, error) {
