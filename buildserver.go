@@ -104,7 +104,9 @@ func (s *Server) runCheck(ctx context.Context) error {
 					if err == nil {
 
 						if len(latest.GetVersions()) > 0 && latest.GetVersions()[0].VersionDate > s.latestBuild[job.Name] && latest.GetVersions()[0].Version != s.latestVersion[job.Name] {
+							s.blacklistMutex.Lock()
 							s.blacklist[job.Name] = true
+							s.blacklistMutex.Unlock()
 
 							// Ensure blacklisted jobs get built
 							s.enqueue(job, true)
@@ -164,6 +166,8 @@ func (s *Server) dequeue(ctx context.Context) error {
 				if time.Now().Sub(job.timeIn) > time.Minute*30 {
 					s.RaiseIssue(ctx, "Long Build", fmt.Sprintf("%v took %v to get to the front of the queue (%v in the queue) %v", job.job.Name, time.Now().Sub(job.timeIn), job.queueSizeAtEntry, job.inFront[0]), false)
 				}
+				s.blacklistMutex.Lock()
+				defer s.blacklistMutex.Unlock()
 				if len(s.blacklist) == 0 || s.blacklist[job.job.Name] {
 
 					// Do a full build if we're blacklisted
