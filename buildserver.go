@@ -192,8 +192,9 @@ func (s *Server) dequeue(ctx context.Context) error {
 						delete(s.buildFails, job.job.Name)
 					}
 					s.buildFailsMutex.Unlock()
+				} else {
+					s.blacklistMutex.Unlock()
 				}
-				s.blacklistMutex.Unlock()
 				s.currentBuilds--
 			}()
 		}
