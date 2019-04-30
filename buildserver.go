@@ -232,14 +232,8 @@ func (s *Server) backgroundBuilder(ctx context.Context) error {
 		}
 	}
 
-	for _, job := range s.jobs {
-		if job.Name == oldestJob {
-			s.enqueue(job, false)
-			return nil
-		}
-	}
-
-	return fmt.Errorf("Unable to located %v in %v jobs", oldestJob, len(s.jobs))
+	s.enqueue(&pbgbs.Job{Name: oldestJob, GoPath: "github.com/brotherlogic/" + oldestJob}, false)
+	return nil
 }
 
 func (p *prodLister) listFiles(job *pbgbs.Job) ([]fileDetails, error) {
