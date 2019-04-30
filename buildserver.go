@@ -223,10 +223,23 @@ func (s *Server) load(v *pb.Version) {
 }
 
 func (s *Server) backgroundBuilder(ctx context.Context) error {
-	for _, j := range s.jobs {
-		s.enqueue(j, false)
+	oldestJob := ""
+	oldest := time.Now().Unix()
+	for key, val := range s.latestBuild {
+		if val < oldest {
+			oldest = val
+			oldestJob = key
+		}
 	}
-	return nil
+
+	for _, job := range s.jobs {
+		if job.Name == oldestJob {
+			s.enqueue(job, false)
+			return nil
+		}
+	}
+
+	return fmt.Errorf("Unable to located %v in %v jobs", oldestJob, len(s.jobs))
 }
 
 func (p *prodLister) listFiles(job *pbgbs.Job) ([]fileDetails, error) {
