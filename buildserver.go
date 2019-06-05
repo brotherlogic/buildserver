@@ -19,6 +19,7 @@ import (
 	"google.golang.org/grpc/status"
 
 	pb "github.com/brotherlogic/buildserver/proto"
+	pbfc "github.com/brotherlogic/filecopier/proto"
 	pbgbs "github.com/brotherlogic/gobuildslave/proto"
 	pbg "github.com/brotherlogic/goserver/proto"
 )
@@ -339,6 +340,7 @@ func (s *Server) Shutdown(ctx context.Context) error {
 
 // Mote promotes/demotes this server
 func (s *Server) Mote(ctx context.Context, master bool) error {
+	s.preloadInfo()
 	return nil
 }
 
@@ -509,7 +511,26 @@ func (s *Server) aligner(ctx context.Context) error {
 				if len(latest.GetVersions()) > 0 &&
 					latest.GetVersions()[0].VersionDate > s.latestBuild[job.Name] &&
 					latest.GetVersions()[0].Version != s.latestVersion[job.Name] {
-					s.Log(fmt.Sprintf("Master has a later version for %v", job.Name))
+					cconn, err := s.DialMaster("filecopier")
+					if err != nil {
+						return err
+					}
+					defer cconn.Close()
+
+					cclient := pbfc.NewFileCopierServiceClient(cconn)
+					cclient.QueueCopy(ctx, &pbfc.CopyRequest{
+						InputFile:    latest.GetVersions()[0].Path,
+						InputServer:  latest.GetVersions()[0].Server,
+						OutputServer: s.Registry.Identifier,
+						OutputFile:   latest.GetVersions()[0].Path,
+					})
+					cclient.QueueCopy(ctx, &pbfc.CopyRequest{
+						InputFile:    latest.GetVersions()[0].Path + ".version",
+						InputServer:  latest.GetVersions()[0].Server,
+						OutputServer: s.Registry.Identifier,
+						OutputFile:   latest.GetVersions()[0].Path + ".version",
+					})
+
 				}
 			}
 		}
@@ -540,8 +561,6 @@ func main() {
 	server.RegisterRepeatingTask(server.runCheck, "checker", time.Minute*5)
 	server.RegisterRepeatingTaskNonMaster(server.dequeue, "dequeue", time.Second)
 	server.RegisterRepeatingTaskNonMaster(server.aligner, "aligner", time.Minute)
-
-	server.preloadInfo()
 
 	fmt.Printf("%v\n", server.Serve())
 }
