@@ -484,6 +484,16 @@ func (s *Server) serveUp(port int32) {
 	}
 }
 
+func (s *Server) aligner(ctx context.Context) error {
+	if !s.Registry.Master {
+		for _, job := range s.jobs {
+			s.Log(fmt.Sprintf("Aligning %v", job.Name))
+		}
+	}
+
+	return nil
+}
+
 func main() {
 	var quiet = flag.Bool("quiet", false, "Show all output")
 	flag.Parse()
@@ -505,6 +515,7 @@ func main() {
 	server.RegisterRepeatingTask(server.backgroundBuilder, "background_builder", time.Minute*5)
 	server.RegisterRepeatingTask(server.runCheck, "checker", time.Minute*5)
 	server.RegisterRepeatingTaskNonMaster(server.dequeue, "dequeue", time.Second)
+	server.RegisterRepeatingTaskNonMaster(server.aligner, "aligner", time.Minute)
 
 	server.preloadInfo()
 
