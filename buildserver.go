@@ -488,6 +488,30 @@ func (s *Server) aligner(ctx context.Context) error {
 	if !s.Registry.Master {
 		for _, job := range s.jobs {
 			s.Log(fmt.Sprintf("Aligning %v", job.Name))
+			entries, err := utils.ResolveAll("buildserver")
+			if err != nil {
+				return err
+			}
+
+			for _, e := range entries {
+				conn, err := s.DoDial(e)
+				if err != nil {
+					return err
+				}
+				defer conn.Close()
+
+				client := pb.NewBuildServiceClient(conn)
+				latest, err := client.GetVersions(ctx, &pb.VersionRequest{Job: job, JustLatest: true})
+				if err != nil {
+					return err
+				}
+
+				if len(latest.GetVersions()) > 0 &&
+					latest.GetVersions()[0].VersionDate > s.latestBuild[job.Name] &&
+					latest.GetVersions()[0].Version != s.latestVersion[job.Name] {
+					s.Log(fmt.Sprintf("Master has a later version for %v", job.Name))
+				}
+			}
 		}
 	}
 
