@@ -485,8 +485,10 @@ func (s *Server) serveUp(port int32) {
 }
 
 func (s *Server) aligner(ctx context.Context) error {
-	for _, job := range s.jobs {
-		s.Log(fmt.Sprintf("Aligning %v", job.Name))
+	if !s.Registry.Master {
+		for _, job := range s.jobs {
+			s.Log(fmt.Sprintf("Aligning %v", job.Name))
+		}
 	}
 
 	return nil
