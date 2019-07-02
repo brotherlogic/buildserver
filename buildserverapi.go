@@ -95,6 +95,11 @@ func (s *Server) GetVersions(ctx context.Context, req *pb.VersionRequest) (*pb.V
 	}
 	s.pathMapMutex.Unlock()
 
+	// Kick off an async build if we no versions
+	if len(latest) == 0 {
+		go s.Build(ctx, &pb.BuildRequest{Job: req.GetJob()})
+	}
+
 	if req.JustLatest {
 		versions := []*pb.Version{}
 		for _, l := range latest {
