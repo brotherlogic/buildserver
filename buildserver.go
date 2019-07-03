@@ -537,6 +537,8 @@ func (s *Server) aligner(ctx context.Context) error {
 		}
 	}
 
+	s.preloadInfo()
+
 	return nil
 }
 
