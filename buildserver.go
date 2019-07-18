@@ -12,7 +12,6 @@ import (
 
 	"github.com/brotherlogic/goserver"
 	"github.com/brotherlogic/goserver/utils"
-	"github.com/brotherlogic/keystore/client"
 	"golang.org/x/net/context"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
@@ -552,7 +551,7 @@ func main() {
 		log.SetOutput(ioutil.Discard)
 	}
 	server := Init()
-	server.GoServer.KSclient = *keystoreclient.GetClient(server.GetIP)
+	//server.GoServer.KSclient = *keystoreclient.GetClient(server.DialMaster)
 	server.PrepServer()
 	server.Register = server
 
