@@ -40,16 +40,19 @@ func (s *Server) Build(ctx context.Context, req *pb.BuildRequest) (*pb.BuildResp
 //ReportCrash reports a crash
 func (s *Server) ReportCrash(ctx context.Context, req *pb.CrashRequest) (*pb.CrashResponse, error) {
 	s.crashes++
+	s.pathMapMutex.Lock()
 	for _, val := range s.pathMap {
 		if val.Version == req.Version && val.Job.Name == req.Job.Name {
 			if req.Crash.CrashType != pb.Crash_MEMORY {
 				s.RaiseIssue(ctx, fmt.Sprintf("Crash for %v", val.Job.Name), fmt.Sprintf("on %v - %v", req.Origin, req.Crash.ErrorMessage), false)
 			}
 			val.Crashes = append(val.Crashes, req.Crash)
+			s.pathMapMutex.Unlock()
 			s.scheduler.saveVersionFile(val)
 			return &pb.CrashResponse{}, nil
 		}
 	}
+	s.pathMapMutex.Unlock()
 
 	if req.Crash.CrashType != pb.Crash_MEMORY {
 		s.BounceIssue(ctx, fmt.Sprintf("Crash for %v", req.Job.Name), fmt.Sprintf("On %v: %v", req.Origin, req.Crash.ErrorMessage), req.Job.Name)
