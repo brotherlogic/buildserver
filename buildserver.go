@@ -164,7 +164,7 @@ func (s *Server) dequeue(ctx context.Context) error {
 				s.currentBuilds++
 				s.buildQueue = s.buildQueue[1:]
 				if time.Now().Sub(job.timeIn) > time.Minute*30 {
-					s.RaiseIssue(ctx, "Long Build", fmt.Sprintf("%v took %v to get to the front of the queue (%v in the queue) %v", job.job.Name, time.Now().Sub(job.timeIn), job.queueSizeAtEntry, job.inFront[0]), false)
+					s.RaiseIssue(ctx, "Long Build", fmt.Sprintf("%v took %v to get to the front of the queue (%v in the queue)", job.job.Name, time.Now().Sub(job.timeIn), job.queueSizeAtEntry), false)
 				}
 				s.blacklistMutex.Lock()
 				if len(s.blacklist) == 0 || s.blacklist[job.job.Name] {
