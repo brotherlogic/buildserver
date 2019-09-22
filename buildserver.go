@@ -377,6 +377,7 @@ func (s *Server) GetState() []*pbg.State {
 	s.blacklistMutex.Lock()
 	defer s.blacklistMutex.Unlock()
 	return []*pbg.State{
+		&pbg.State{Key: "build_queue_length", Value: int64(len(s.buildQueue))},
 		&pbg.State{Key: "lock_time", TimeDuration: s.lockTime.Nanoseconds()},
 		&pbg.State{Key: "versions", Value: int64(len(s.pathMap))},
 		&pbg.State{Key: "memory", Text: fmt.Sprintf("%v", memoryCrashes)},
@@ -384,7 +385,6 @@ func (s *Server) GetState() []*pbg.State {
 		&pbg.State{Key: "enabled", Text: fmt.Sprintf("%v", s.runBuild)},
 		&pbg.State{Key: "buildc", Value: int64(s.buildRequest)},
 		&pbg.State{Key: "concurrent_builds", Value: int64(s.currentBuilds)},
-		&pbg.State{Key: "build_queue_length", Value: int64(len(s.buildQueue))},
 		&pbg.State{Key: "crashes", Value: s.crashes},
 		&pbg.State{Key: "paths_read", Value: int64(len(s.pathMap))},
 		&pbg.State{Key: "current_build", Text: s.scheduler.cbuild},

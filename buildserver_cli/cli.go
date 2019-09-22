@@ -23,7 +23,7 @@ func main() {
 	ctx, cancel := utils.BuildContext("buildserver-"+os.Args[1], "buildserver")
 	defer cancel()
 
-	host, port, err := utils.Resolve("buildserver")
+	host, port, err := utils.Resolve("buildserver", "buildserver-cli")
 	if err != nil {
 		log.Fatalf("Unable to reach organiser: %v", err)
 	}
