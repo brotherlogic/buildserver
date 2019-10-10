@@ -16,27 +16,30 @@ func (s *Server) preloadInfo() error {
 		if strings.HasSuffix(path, ".version") {
 			data, _ := ioutil.ReadFile(path)
 			val := &pb.Version{}
-			proto.Unmarshal(data, val)
-			s.pathMapMutex.Lock()
-			s.pathMap[path[:len(path)-len(".version")]] = val
-			jobn := val.Job.Name
+			if len(data) > 0 {
+				proto.Unmarshal(data, val)
+				s.pathMapMutex.Lock()
+				s.pathMap[path[:len(path)-len(".version")]] = val
 
-			found := false
-			for _, job := range s.jobs {
-				if job.Name == jobn {
-					found = true
+				jobn := val.Job.Name
+
+				found := false
+				for _, job := range s.jobs {
+					if job.Name == jobn {
+						found = true
+					}
 				}
-			}
-			if !found {
-				s.jobs = append(s.jobs, val.Job)
-			}
+				if !found {
+					s.jobs = append(s.jobs, val.Job)
+				}
 
-			if val.VersionDate > s.latestBuild[jobn] {
-				s.latestBuild[jobn] = val.VersionDate
-				s.latestHash[jobn] = val.GithubHash
-				s.latestDate[jobn] = time.Unix(val.VersionDate, 0)
+				if val.VersionDate > s.latestBuild[jobn] {
+					s.latestBuild[jobn] = val.VersionDate
+					s.latestHash[jobn] = val.GithubHash
+					s.latestDate[jobn] = time.Unix(val.VersionDate, 0)
+				}
+				s.pathMapMutex.Unlock()
 			}
-			s.pathMapMutex.Unlock()
 		}
 		return nil
 	})
