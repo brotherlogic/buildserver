@@ -8,6 +8,7 @@ import (
 	"golang.org/x/net/context"
 
 	pb "github.com/brotherlogic/buildserver/proto"
+	"github.com/golang/protobuf/proto"
 )
 
 func getVersion(f string) string {
@@ -41,7 +42,6 @@ func (s *Server) Build(ctx context.Context, req *pb.BuildRequest) (*pb.BuildResp
 func (s *Server) ReportCrash(ctx context.Context, req *pb.CrashRequest) (*pb.CrashResponse, error) {
 	s.crashes++
 	s.pathMapMutex.Lock()
-	s.Log(fmt.Sprintf("CRASH %v", req))
 	for _, val := range s.pathMap {
 		if val.Version == req.Version && val.Job.Name == req.Job.Name {
 			s.BounceIssue(ctx, fmt.Sprintf("Crash for %v", val.Job.Name), fmt.Sprintf("on %v - %v", req.Origin, req.Crash.ErrorMessage), val.Job.Name)
@@ -105,8 +105,12 @@ func (s *Server) GetVersions(ctx context.Context, req *pb.VersionRequest) (*pb.V
 	if req.JustLatest {
 		versions := []*pb.Version{}
 		for _, l := range latest {
-			versions = append(versions, l)
+			// Remove all crashes
+			copy := proto.Clone(l).(*pb.Version)
+			copy.Crashes = []*pb.Crash{}
+			versions = append(versions, copy)
 		}
+
 		return &pb.VersionResponse{Versions: versions}, nil
 	}
 

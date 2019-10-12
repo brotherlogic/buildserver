@@ -172,3 +172,34 @@ func TestDynamicBlacklist(t *testing.T) {
 		t.Errorf("Should have failed: %v", resp)
 	}
 }
+
+func TestCrash(t *testing.T) {
+	s := InitTestServer("testcrash")
+
+	_, err := s.Build(context.Background(), &pb.BuildRequest{Job: &pbgbs.Job{Name: "crasher", GoPath: "github.com/brotherlogic/crasher"}})
+	if err != nil {
+		t.Fatalf("Error in build: %v", err)
+	}
+	s.drainQueue(context.Background())
+
+	resp, err := s.GetVersions(context.Background(), &pb.VersionRequest{Job: &pbgbs.Job{Name: "crasher", GoPath: "github.com/brotherlogic/crasher"}})
+	if err != nil {
+		t.Errorf("Error getting versions: %v", err)
+	}
+
+	if len(resp.Versions) != 1 || len(resp.Versions[0].Crashes) != 0 {
+		t.Errorf("bad pull - not version or crashes: %v", resp)
+	}
+
+	s.ReportCrash(context.Background(), &pb.CrashRequest{Job: &pbgbs.Job{Name: "crasher"}, Version: resp.Versions[0].Version, Crash: &pb.Crash{ErrorMessage: "help"}})
+
+	resp, err = s.GetVersions(context.Background(), &pb.VersionRequest{JustLatest: true, Job: &pbgbs.Job{Name: "crasher", GoPath: "github.com/brotherlogic/crasher"}})
+	if err != nil {
+		t.Errorf("Error getting versions: %v", err)
+	}
+
+	// Get latest should not get crashes
+	if len(resp.Versions) != 1 || len(resp.Versions[0].Crashes) != 0 {
+		t.Errorf("bad pull - not version or crashes: %v", resp)
+	}
+}
