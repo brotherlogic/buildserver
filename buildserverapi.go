@@ -40,6 +40,9 @@ func (s *Server) Build(ctx context.Context, req *pb.BuildRequest) (*pb.BuildResp
 
 //ReportCrash reports a crash
 func (s *Server) ReportCrash(ctx context.Context, req *pb.CrashRequest) (*pb.CrashResponse, error) {
+	if len(req.Crash.ErrorMessage) == 0 {
+		return nil, fmt.Errorf("Cannot submit an empty crash report")
+	}
 	s.crashes++
 	s.pathMapMutex.Lock()
 	for _, val := range s.pathMap {
