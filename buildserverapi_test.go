@@ -54,6 +54,14 @@ func TestCrashReport(t *testing.T) {
 	s.ReportCrash(context.Background(), &pb.CrashRequest{Job: &pbgbs.Job{Name: "testing"}, Crash: &pb.Crash{ErrorMessage: "help"}})
 }
 
+func TestCrashReportWithEmpty(t *testing.T) {
+	s := InitTestServer("testcrashreport")
+	_, err := s.ReportCrash(context.Background(), &pb.CrashRequest{Job: &pbgbs.Job{Name: "testing"}, Crash: &pb.Crash{ErrorMessage: ""}})
+	if err == nil {
+		t.Errorf("Should have failed")
+	}
+}
+
 func TestCrashReportWithUpdate(t *testing.T) {
 	s := InitTestServer("testcrashreport")
 	s.pathMap["blah"] = &pb.Version{Version: "1234", Job: &pbgbs.Job{Name: "testing"}}

@@ -121,7 +121,7 @@ func (s *Scheduler) build(queEnt queueEntry, server string, latestHash string) (
 	builtHash = strings.TrimSpace(string(data))
 
 	// If the build has failed, there will be no file output
-	if _, err := os.Stat(s.dir + "/bin/" + queEnt.job.Name); os.IsNotExist(err) {
+	if _, err := os.Stat(s.dir + "/bin/" + queEnt.job.Name); os.IsNotExist(err) && (len(buildCommand.output) > 0 || len(buildCommand.erroutput) > 0) {
 		return "", fmt.Errorf("Build failed: %v and %v -> %v", buildCommand.output, buildCommand.erroutput, buildCommand.err)
 	}
 
