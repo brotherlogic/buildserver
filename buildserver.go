@@ -157,6 +157,8 @@ func (s *Server) enqueue(job *pbgbs.Job, force bool) {
 }
 
 func (s *Server) dequeue(ctx context.Context) error {
+	s.currentBuildMutex.Lock()
+	defer s.currentBuildMutex.Unlock()
 	if len(s.buildQueue) > 0 && s.currentBuilds < s.maxBuilds {
 		if s.runBuild {
 			go func() {
