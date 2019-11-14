@@ -37,6 +37,7 @@ func (s *Server) preloadInfo() error {
 					s.latestBuild[jobn] = val.VersionDate
 					s.latestHash[jobn] = val.GithubHash
 					s.latestDate[jobn] = time.Unix(val.VersionDate, 0)
+					s.latestVersion[jobn] = val.Version
 				}
 				s.pathMapMutex.Unlock()
 			}
