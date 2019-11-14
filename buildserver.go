@@ -192,6 +192,7 @@ func (s *Server) dequeue(ctx context.Context) error {
 					s.blacklistMutex.Unlock()
 
 					_, err := s.scheduler.build(job, s.Registry.Identifier, s.latestHash[job.job.Name])
+					s.checkError = fmt.Sprintf("%v", err)
 					s.buildFailsMutex.Lock()
 					if err != nil {
 						e, ok := status.FromError(err)
@@ -393,6 +394,7 @@ func (s *Server) GetState() []*pbg.State {
 	s.blacklistMutex.Lock()
 	defer s.blacklistMutex.Unlock()
 	return []*pbg.State{
+		&pbg.State{Key: "check_error", Text: s.checkError},
 		&pbg.State{Key: "latest_versions", Value: int64(len(s.latestVersion))},
 		&pbg.State{Key: "build_queue_length", Value: int64(len(s.buildQueue))},
 		&pbg.State{Key: "lock_time", TimeDuration: s.lockTime.Nanoseconds()},
