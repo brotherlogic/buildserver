@@ -78,6 +78,19 @@ type prodLister struct {
 	fail bool
 }
 
+func (s *Server) validateBuilds(ctx context.Context) error {
+	for _, versionString := range s.latestVersion {
+		for _, version := range s.pathMap {
+			if version.Version == versionString && time.Now().Sub(time.Unix(version.LastBuildTime, 0)) > time.Hour*24 {
+				s.enqueue(version.Job, true)
+			}
+
+		}
+	}
+
+	return nil
+}
+
 func (s *Server) runCheck(ctx context.Context) error {
 	entries, err := utils.ResolveAll("buildserver")
 	jobs := make(map[string]*pbgbs.Job)
@@ -566,6 +579,7 @@ func main() {
 	server.RegisterRepeatingTask(server.runCheck, "checker", time.Minute*5)
 	server.RegisterRepeatingTaskNonMaster(server.dequeue, "dequeue", time.Second)
 	server.RegisterRepeatingTaskNonMaster(server.aligner, "aligner", time.Minute)
+	server.RegisterRepeatingTaskNonMaster(server.validateBuilds, "validateBuilds", time.Minute)
 
 	fmt.Printf("%v\n", server.Serve())
 }
