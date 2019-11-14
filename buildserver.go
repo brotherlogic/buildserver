@@ -392,7 +392,7 @@ func (s *Server) GetState() []*pbg.State {
 	s.blacklistMutex.Lock()
 	defer s.blacklistMutex.Unlock()
 	return []*pbg.State{
-		&pbg.State{Key: "versions", Value: int64(len(s.latestVersion))},
+		&pbg.State{Key: "latest_versions", Value: int64(len(s.latestVersion))},
 		&pbg.State{Key: "build_queue_length", Value: int64(len(s.buildQueue))},
 		&pbg.State{Key: "lock_time", TimeDuration: s.lockTime.Nanoseconds()},
 		&pbg.State{Key: "versions", Value: int64(len(s.pathMap))},
