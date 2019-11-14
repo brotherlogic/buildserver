@@ -80,11 +80,13 @@ type prodLister struct {
 
 func (s *Server) validateBuilds(ctx context.Context) error {
 	for _, versionString := range s.latestVersion {
-		for _, version := range s.pathMap {
-			if version.Version == versionString && time.Now().Sub(time.Unix(version.LastBuildTime, 0)) > time.Hour*24 {
-				s.enqueue(version.Job, true)
-			}
+		if s.pathMap != nil {
+			for _, version := range s.pathMap {
+				if version.Version == versionString && time.Now().Sub(time.Unix(version.LastBuildTime, 0)) > time.Hour*24 {
+					s.enqueue(version.Job, true)
+				}
 
+			}
 		}
 	}
 
