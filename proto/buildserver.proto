@@ -25,6 +25,8 @@ message Version {
   repeated Crash crashes = 6;
 
   string github_hash = 7;
+
+  int64 last_build_time = 8;
 }
 
 message VersionRequest {
