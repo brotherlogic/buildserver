@@ -580,7 +580,7 @@ func main() {
 	server.RegisterRepeatingTask(server.runCheck, "checker", time.Minute*5)
 	server.RegisterRepeatingTaskNonMaster(server.dequeue, "dequeue", time.Second)
 	server.RegisterRepeatingTaskNonMaster(server.aligner, "aligner", time.Minute)
-	server.RegisterRepeating(server.validateBuilds, "validateBuilds", time.Minute)
+	server.RegisterRepeatingTask(server.validateBuilds, "validateBuilds", time.Minute)
 
 	fmt.Printf("%v\n", server.Serve())
 }
