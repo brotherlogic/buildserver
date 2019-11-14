@@ -79,17 +79,16 @@ type prodLister struct {
 }
 
 func (s *Server) validateBuilds(ctx context.Context) error {
+	s.pathMapMutex.Lock()
+	defer s.pathMapMutex.Unlock()
 	for _, versionString := range s.latestVersion {
-		if s.pathMap != nil {
-			for _, version := range s.pathMap {
-				if version.Version == versionString && time.Now().Sub(time.Unix(version.LastBuildTime, 0)) > time.Hour*24 {
-					s.enqueue(version.Job, true)
-				}
-
+		for _, version := range s.pathMap {
+			if version.Version == versionString && time.Now().Sub(time.Unix(version.LastBuildTime, 0)) > time.Hour*24 {
+				s.enqueue(version.Job, true)
 			}
+
 		}
 	}
-
 	return nil
 }
 
@@ -581,7 +580,7 @@ func main() {
 	server.RegisterRepeatingTask(server.runCheck, "checker", time.Minute*5)
 	server.RegisterRepeatingTaskNonMaster(server.dequeue, "dequeue", time.Second)
 	server.RegisterRepeatingTaskNonMaster(server.aligner, "aligner", time.Minute)
-	server.RegisterRepeatingTaskNonMaster(server.validateBuilds, "validateBuilds", time.Minute)
+	server.RegisterRepeating(server.validateBuilds, "validateBuilds", time.Minute)
 
 	fmt.Printf("%v\n", server.Serve())
 }
