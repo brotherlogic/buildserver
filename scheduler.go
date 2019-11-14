@@ -49,12 +49,13 @@ func (s *Scheduler) saveVersionInfo(j *pbgbs.Job, path string, server string, gi
 	f, err := os.Stat(path)
 	if err == nil {
 		ver := &pb.Version{
-			Job:         j,
-			Version:     getVersion(path),
-			Path:        path,
-			Server:      server,
-			VersionDate: f.ModTime().Unix(),
-			GithubHash:  githubHash,
+			Job:           j,
+			Version:       getVersion(path),
+			Path:          path,
+			Server:        server,
+			VersionDate:   f.ModTime().Unix(),
+			GithubHash:    githubHash,
+			LastBuildTime: time.Now().Unix(),
 		}
 
 		s.saveVersionFile(ver)
