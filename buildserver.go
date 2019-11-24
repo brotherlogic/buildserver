@@ -574,7 +574,7 @@ func main() {
 	server.PrepServer()
 	server.Register = server
 
-	server.RegisterServer("buildserver", false)
+	server.RegisterServerV2("buildserver", false)
 
 	go server.serveUp(server.Registry.Port - 1)
 
