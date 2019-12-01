@@ -11,6 +11,7 @@ import (
 
 	"github.com/brotherlogic/goserver/utils"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/resolver"
 
 	pb "github.com/brotherlogic/buildserver/proto"
 	pbgbs "github.com/brotherlogic/gobuildslave/proto"
@@ -19,15 +20,15 @@ import (
 	_ "google.golang.org/grpc/encoding/gzip"
 )
 
+func init() {
+	resolver.Register(&utils.DiscoveryClientResolverBuilder{})
+}
+
 func main() {
 	ctx, cancel := utils.BuildContext("buildserver-"+os.Args[1], "buildserver")
 	defer cancel()
 
-	host, port, err := utils.Resolve("buildserver", "buildserver-cli")
-	if err != nil {
-		log.Fatalf("Unable to reach organiser: %v", err)
-	}
-	conn, err := grpc.Dial(host+":"+strconv.Itoa(int(port)), grpc.WithInsecure())
+	conn, err := grpc.Dial("discovery:///buildserver", grpc.WithInsecure())
 	defer conn.Close()
 
 	if err != nil {
