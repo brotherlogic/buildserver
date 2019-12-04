@@ -574,7 +574,10 @@ func main() {
 	server.PrepServer()
 	server.Register = server
 
-	server.RegisterServerV2("buildserver", false, false)
+	err := server.RegisterServerV2("buildserver", false, false)
+	if err != nil {
+		log.Fatalf("Error registering us: %v", err)
+	}
 
 	go server.serveUp(server.Registry.Port - 1)
 
