@@ -26,5 +26,6 @@ buildserver_cli/buildserver_cli
 
 testlistsingle/
 testloadversion/
+testcrash/
 
 .version
