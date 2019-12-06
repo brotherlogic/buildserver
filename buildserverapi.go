@@ -59,7 +59,7 @@ func (s *Server) ReportCrash(ctx context.Context, req *pb.CrashRequest) (*pb.Cra
 	if req.Crash.CrashType != pb.Crash_MEMORY {
 		s.BounceIssue(ctx, fmt.Sprintf("Crash for %v", req.Job.Name), fmt.Sprintf("On %v: %v", req.Origin, req.Crash.ErrorMessage), req.Job.Name)
 	}
-	return &pb.CrashResponse{}, fmt.Errorf("Version %v not found for %v (%v)", req.Version, req.Origin, req.Crash.CrashType)
+	return &pb.CrashResponse{}, fmt.Errorf("Version %v/%v not found for %v (%v)", req.Job.Name, req.Version, req.Origin, req.Crash.CrashType)
 }
 
 //GetVersions gets the versions
