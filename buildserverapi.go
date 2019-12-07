@@ -45,7 +45,11 @@ func (s *Server) ReportCrash(ctx context.Context, req *pb.CrashRequest) (*pb.Cra
 	}
 	s.crashes++
 	s.pathMapMutex.Lock()
+	blah := ""
 	for _, val := range s.pathMap {
+		if val.Job.Name == req.Job.Name {
+			blah += fmt.Sprintf("%v/%v vs %v/%v => %v,%v ", val.Version, val.Job.Name, req.Version, req.Job.Name, val.Version == req.Version, val.Job.Name == req.Job.Name)
+		}
 		if val.Version == req.Version && val.Job.Name == req.Job.Name {
 			s.BounceIssue(ctx, fmt.Sprintf("Crash for %v", val.Job.Name), fmt.Sprintf("on %v - %v", req.Origin, req.Crash.ErrorMessage), val.Job.Name)
 			val.Crashes = append(val.Crashes, req.Crash)
@@ -59,7 +63,7 @@ func (s *Server) ReportCrash(ctx context.Context, req *pb.CrashRequest) (*pb.Cra
 	if req.Crash.CrashType != pb.Crash_MEMORY {
 		s.BounceIssue(ctx, fmt.Sprintf("Crash for %v", req.Job.Name), fmt.Sprintf("On %v: %v", req.Origin, req.Crash.ErrorMessage), req.Job.Name)
 	}
-	return &pb.CrashResponse{}, fmt.Errorf("Version %v/%v not found for %v (%v)", req.Job.Name, req.Version, req.Origin, req.Crash.CrashType)
+	return &pb.CrashResponse{}, fmt.Errorf("Version %v/%v not found for %v (%v) -> %v", req.Job.Name, req.Version, req.Origin, req.Crash.CrashType, blah)
 }
 
 //GetVersions gets the versions
