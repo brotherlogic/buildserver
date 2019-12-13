@@ -12,6 +12,7 @@ import (
 
 	"github.com/brotherlogic/goserver"
 	"github.com/brotherlogic/goserver/utils"
+	"github.com/golang/protobuf/proto"
 	"golang.org/x/net/context"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
@@ -375,8 +376,10 @@ func (s *Server) GetState() []*pbg.State {
 	}
 
 	memoryCrashes := make(map[string]int)
+	sumv := int64(0)
 	for _, v := range s.pathMap {
 		mCrash := 0
+		sumv += int64(proto.Size(v))
 		for _, c := range v.Crashes {
 			if c.CrashType == pb.Crash_MEMORY {
 				mCrash++
@@ -399,6 +402,7 @@ func (s *Server) GetState() []*pbg.State {
 		&pbg.State{Key: "build_queue_length", Value: int64(len(s.buildQueue))},
 		&pbg.State{Key: "lock_time", TimeDuration: s.lockTime.Nanoseconds()},
 		&pbg.State{Key: "versions", Value: int64(len(s.pathMap))},
+		&pbg.State{Key: "versionSize", Value: sumv},
 		&pbg.State{Key: "memory", Text: fmt.Sprintf("%v", memoryCrashes)},
 		&pbg.State{Key: "blacklist", Text: fmt.Sprintf("%v", s.blacklist)},
 		&pbg.State{Key: "enabled", Text: fmt.Sprintf("%v", s.runBuild)},
