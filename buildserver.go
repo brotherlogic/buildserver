@@ -63,6 +63,7 @@ type Server struct {
 	blacklistMutex    *sync.Mutex
 	lockTime          time.Duration
 	checkError        string
+	enqueues          int64
 }
 
 type fileDetails struct {
@@ -138,6 +139,7 @@ func (s *Server) runCheck(ctx context.Context) error {
 }
 
 func (s *Server) enqueue(job *pbgbs.Job, force bool) {
+	s.enqueues++
 	//Only enqueue if the job isn't already there
 	found := false
 	for _, j := range s.buildQueue {
@@ -332,6 +334,7 @@ func Init() *Server {
 		&sync.Mutex{},
 		0,
 		"",
+		int64(0),
 	}
 
 	s.scheduler.log = s.log
@@ -403,6 +406,7 @@ func (s *Server) GetState() []*pbg.State {
 	s.blacklistMutex.Lock()
 	defer s.blacklistMutex.Unlock()
 	return []*pbg.State{
+		&pbg.State{Key: "enqueues", Value: s.enqueues},
 		&pbg.State{Key: "check_error", Text: s.checkError},
 		&pbg.State{Key: "latest_versions", Value: int64(len(s.latestVersion))},
 		&pbg.State{Key: "build_queue_length", Value: int64(len(s.buildQueue))},
