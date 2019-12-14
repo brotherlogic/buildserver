@@ -24,6 +24,10 @@ func (s *Server) preloadInfo() error {
 					crash.ErrorMessage = ""
 				}
 
+				// Reduce the crashes
+				if len(val.GetCrashes()) > 0 {
+					val.Crashes = val.GetCrashes()[0:1]
+				}
 				s.pathMapMutex.Lock()
 				s.pathMap[path[:len(path)-len(".version")]] = val
 
