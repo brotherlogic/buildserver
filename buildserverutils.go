@@ -18,6 +18,12 @@ func (s *Server) preloadInfo() error {
 			val := &pb.Version{}
 			if len(data) > 0 {
 				proto.Unmarshal(data, val)
+
+				// Clear the crash errors
+				for _, crash := range val.GetCrashes() {
+					crash.ErrorMessage = ""
+				}
+
 				s.pathMapMutex.Lock()
 				s.pathMap[path[:len(path)-len(".version")]] = val
 
