@@ -28,7 +28,7 @@ func main() {
 	ctx, cancel := utils.BuildContext("buildserver-"+os.Args[1], "buildserver")
 	defer cancel()
 
-	conn, err := grpc.Dial("discovery:///buildserver", grpc.WithInsecure())
+	conn, err := grpc.Dial("discovery:///buildserver", grpc.WithInsecure(), grpc.WithBalancerName("my_pick_first"))
 	defer conn.Close()
 
 	if err != nil {
@@ -66,7 +66,7 @@ func main() {
 	case "build":
 		_, err := client.Build(ctx, &pb.BuildRequest{Job: &pbgbs.Job{Name: os.Args[2], GoPath: "github.com/brotherlogic/" + os.Args[2]}, ForceBuild: len(os.Args) > 3})
 		if err != nil {
-			log.Fatalf("Error on build: %v", err)
+			log.Printf("Error on build: %v", err)
 		}
 	case "alllatest":
 		entries, err := utils.ResolveAll("buildserver")
@@ -97,13 +97,22 @@ func main() {
 			}
 		}
 	case "latest":
-		res, err := client.GetVersions(ctx, &pb.VersionRequest{Job: &pbgbs.Job{Name: os.Args[2], GoPath: "github.com/brotherlogic/" + os.Args[2]}, JustLatest: true})
+		var err error
+		for i := 0; i < 3; i++ {
+			res, err := client.GetVersions(ctx, &pb.VersionRequest{Job: &pbgbs.Job{Name: os.Args[2], GoPath: "github.com/brotherlogic/" + os.Args[2]}, JustLatest: true})
+			if err != nil {
+				log.Printf("Error %v", err)
+			}
+			if err == nil {
+				fmt.Printf("%v - %v (%v)\n", res.Versions[0].Version, time.Unix(res.Versions[0].VersionDate, 0), len(res.Versions[0].Crashes))
+				fmt.Printf("%v\n", res.Versions[0])
+				break
+			}
+		}
 		if err != nil {
 			log.Fatalf("Error on build: %v", err)
 		}
 
-		fmt.Printf("%v - %v (%v)\n", res.Versions[0].Version, time.Unix(res.Versions[0].VersionDate, 0), len(res.Versions[0].Crashes))
-		fmt.Printf("%v\n", res.Versions[0])
 	case "crash":
 		file, err := ioutil.ReadFile(os.Args[4])
 		if err != nil {
