@@ -25,7 +25,7 @@ func init() {
 }
 
 func main() {
-	ctx, cancel := utils.BuildContext("buildserver-"+os.Args[1], "buildserver")
+	ctx, cancel := utils.ManualContext("buildserver-"+os.Args[1], "buildserver", time.Second*10)
 	defer cancel()
 
 	conn, err := grpc.Dial("discovery:///buildserver", grpc.WithInsecure(), grpc.WithBalancerName("my_pick_first"))
@@ -99,6 +99,9 @@ func main() {
 	case "latest":
 		var err error
 		for i := 0; i < 3; i++ {
+			ctx, cancel := utils.ManualContext("buildserver-"+os.Args[1], "buildserver", time.Second*10)
+			defer cancel()
+
 			res, err := client.GetVersions(ctx, &pb.VersionRequest{Job: &pbgbs.Job{Name: os.Args[2], GoPath: "github.com/brotherlogic/" + os.Args[2]}, JustLatest: true})
 			if err != nil {
 				log.Printf("Error %v", err)

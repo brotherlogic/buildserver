@@ -521,9 +521,7 @@ func (s *Server) serveUp(port int32) {
 
 func (s *Server) aligner(ctx context.Context) error {
 	if !s.Registry.Master {
-		s.Log(fmt.Sprintf("Running alignment on %v jobs", len(s.jobs)))
 		for _, job := range s.jobs {
-			s.Log(fmt.Sprintf("Aligning %v", job.Name))
 			entries, err := utils.ResolveAll("buildserver")
 			if err != nil {
 				return err
