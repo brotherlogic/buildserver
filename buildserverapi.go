@@ -5,10 +5,12 @@ import (
 	"strings"
 	"time"
 
+	"github.com/golang/protobuf/proto"
 	"golang.org/x/net/context"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 
 	pb "github.com/brotherlogic/buildserver/proto"
-	"github.com/golang/protobuf/proto"
 )
 
 func getVersion(f string) string {
@@ -59,7 +61,7 @@ func (s *Server) ReportCrash(ctx context.Context, req *pb.CrashRequest) (*pb.Cra
 	if req.Crash.CrashType != pb.Crash_MEMORY {
 		s.BounceIssue(ctx, fmt.Sprintf("Crash for %v", req.Job.Name), fmt.Sprintf("On %v: %v", req.Origin, req.Crash.ErrorMessage), req.Job.Name)
 	}
-	return &pb.CrashResponse{}, fmt.Errorf("Version %v/%v not found for %v (%v) -> %v", req.Job.Name, req.Version, req.Origin, req.Crash.CrashType, req.Crash.ErrorMessage)
+	return &pb.CrashResponse{}, status.Errorf(codes.NotFound, "Version %v/%v not found for %v (%v) -> %v", req.Job.Name, req.Version, req.Origin, req.Crash.CrashType, req.Crash.ErrorMessage)
 }
 
 //GetVersions gets the versions
