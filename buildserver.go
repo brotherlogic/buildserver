@@ -406,6 +406,7 @@ func (s *Server) GetState() []*pbg.State {
 	s.blacklistMutex.Lock()
 	defer s.blacklistMutex.Unlock()
 	return []*pbg.State{
+		&pbg.State{Key: "tracked_jobs", Value: int64(len(s.jobs))},
 		&pbg.State{Key: "enqueues", Value: s.enqueues},
 		&pbg.State{Key: "check_error", Text: s.checkError},
 		&pbg.State{Key: "latest_versions", Value: int64(len(s.latestVersion))},
