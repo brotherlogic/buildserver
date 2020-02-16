@@ -59,6 +59,7 @@ type Server struct {
 	latestBuild       map[string]int64
 	latestDate        map[string]time.Time
 	latestVersion     map[string]string
+	latest            map[string]*pb.Version
 	blacklist         map[string]bool
 	blacklistMutex    *sync.Mutex
 	lockTime          time.Duration
@@ -230,16 +231,16 @@ func (s *Server) drainQueue(ctx context.Context) {
 }
 
 func (s *Server) load(v *pb.Version) {
-	s.pathMapMutex.Lock()
-	s.pathMap[v.Path] = v
 	jobn := v.Job.Name
+	log.Printf("SAVING %v and %v", v, s.latestBuild)
 	if v.VersionDate > s.latestBuild[jobn] {
+		log.Printf("SAVE")
 		s.latestBuild[jobn] = v.VersionDate
 		s.latestHash[jobn] = v.GithubHash
 		s.latestDate[jobn] = time.Unix(v.VersionDate, 0)
 		s.latestVersion[jobn] = v.Version
+		s.latest[jobn] = v
 	}
-	s.pathMapMutex.Unlock()
 }
 
 func (s *Server) backgroundBuilder(ctx context.Context) error {
@@ -330,6 +331,7 @@ func Init() *Server {
 		make(map[string]int64),
 		make(map[string]time.Time),
 		make(map[string]string),
+		make(map[string]*pb.Version),
 		make(map[string]bool),
 		&sync.Mutex{},
 		0,
@@ -593,7 +595,7 @@ func main() {
 		return
 	}
 
-	go server.serveUp(server.Registry.Port - 1)
+	//go server.serveUp(server.Registry.Port - 1)
 
 	server.RegisterRepeatingTask(server.backgroundBuilder, "background_builder", time.Minute*5)
 	//server.RegisterRepeatingTask(server.runCheck, "checker", time.Minute*5)
