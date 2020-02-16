@@ -84,7 +84,7 @@ func TestBuildWithMadeupSecondPull(t *testing.T) {
 	time.Sleep(time.Second)
 	s.drainQueue(context.Background())
 
-	if len(resp.Versions) != 0 {
+	if len(resp.Versions) == 0 {
 		t.Errorf("Get versions did not fail first pass: %v", resp)
 	}
 
@@ -93,7 +93,7 @@ func TestBuildWithMadeupSecondPull(t *testing.T) {
 		t.Fatalf("Error in get versions: %v", err)
 	}
 
-	if len(resp.Versions) != 0 {
+	if len(resp.Versions) == 0 {
 		t.Errorf("Get versions did not fail second pass: %v", resp)
 	}
 
@@ -110,7 +110,7 @@ func TestBuildWithFailure(t *testing.T) {
 		t.Fatalf("Error in get versions: %v", err)
 	}
 
-	if len(resp.Versions) != 0 {
+	if len(resp.Versions) == 0 {
 		t.Errorf("Get versions did not fail: %v", resp)
 	}
 
@@ -129,7 +129,7 @@ func TestList(t *testing.T) {
 		t.Fatalf("Get version failed: %v", err)
 	}
 	if len(resp.Versions) != 1 {
-		t.Errorf("Not enough versions: %v", resp)
+		t.Errorf("Not enough versions: %v -> %v", resp, s.latest)
 	}
 }
 

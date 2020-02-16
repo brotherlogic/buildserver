@@ -19,18 +19,6 @@ func (s *Server) preloadInfo() error {
 			if len(data) > 0 {
 				proto.Unmarshal(data, val)
 
-				// Clear the crash errors
-				for _, crash := range val.GetCrashes() {
-					crash.ErrorMessage = ""
-				}
-
-				// Reduce the crashes
-				if len(val.GetCrashes()) > 0 {
-					val.Crashes = val.GetCrashes()[0:1]
-				}
-				s.pathMapMutex.Lock()
-				s.pathMap[path[:len(path)-len(".version")]] = val
-
 				jobn := val.Job.Name
 
 				found := false
@@ -48,8 +36,8 @@ func (s *Server) preloadInfo() error {
 					s.latestHash[jobn] = val.GithubHash
 					s.latestDate[jobn] = time.Unix(val.VersionDate, 0)
 					s.latestVersion[jobn] = val.Version
+					s.latest[jobn] = val
 				}
-				s.pathMapMutex.Unlock()
 			}
 		}
 		return nil

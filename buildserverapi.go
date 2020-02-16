@@ -3,9 +3,7 @@ package main
 import (
 	"fmt"
 	"strings"
-	"time"
 
-	"github.com/golang/protobuf/proto"
 	"golang.org/x/net/context"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -58,9 +56,7 @@ func (s *Server) ReportCrash(ctx context.Context, req *pb.CrashRequest) (*pb.Cra
 	}
 	s.pathMapMutex.Unlock()
 
-	if req.Crash.CrashType != pb.Crash_MEMORY {
-		s.BounceIssue(ctx, fmt.Sprintf("Crash for %v", req.Job.Name), fmt.Sprintf("On %v: %v", req.Origin, req.Crash.ErrorMessage), req.Job.Name)
-	}
+	s.BounceIssue(ctx, fmt.Sprintf("Unfound crash for %v", req.Job.Name), fmt.Sprintf("On %v: %v", req.Origin, req.Crash.ErrorMessage), req.Job.Name)
 	return &pb.CrashResponse{}, status.Errorf(codes.NotFound, "Version %v/%v not found for %v (%v) -> %v", req.Job.Name, req.Version, req.Origin, req.Crash.CrashType, req.Crash.ErrorMessage)
 }
 
@@ -80,27 +76,8 @@ func (s *Server) GetVersions(ctx context.Context, req *pb.VersionRequest) (*pb.V
 
 	resp := &pb.VersionResponse{}
 	latest := make(map[string]*pb.Version)
-	bestTime := make(map[string]int64)
-	t := time.Now()
-	s.pathMapMutex.Lock()
-	d := time.Now().Sub(t)
-	if d > s.lockTime {
-		s.lockTime = d
-	}
-	for _, v := range s.pathMap {
-		if req.GetJob().Name == "" || v.Job.Name == req.GetJob().Name {
-			_, ok := bestTime[v.Job.Name]
-			if !ok {
-				bestTime[v.Job.Name] = 0
-			}
-			resp.Versions = append(resp.Versions, v)
-			if v.VersionDate > bestTime[v.Job.Name] {
-				latest[v.Job.Name] = v
-				bestTime[v.Job.Name] = v.VersionDate
-			}
-		}
-	}
-	s.pathMapMutex.Unlock()
+
+	resp.Versions = append(resp.Versions, s.latest[req.GetJob().GetName()])
 
 	// Kick off an async build if we no versions
 	if len(latest) == 0 {
@@ -108,15 +85,7 @@ func (s *Server) GetVersions(ctx context.Context, req *pb.VersionRequest) (*pb.V
 	}
 
 	if req.JustLatest {
-		versions := []*pb.Version{}
-		for _, l := range latest {
-			// Remove all crashes
-			copy := proto.Clone(l).(*pb.Version)
-			copy.Crashes = []*pb.Crash{}
-			versions = append(versions, copy)
-		}
-
-		return &pb.VersionResponse{Versions: versions}, nil
+		return &pb.VersionResponse{Versions: []*pb.Version{s.latest[req.GetJob().GetName()]}}, nil
 	}
 
 	return resp, nil
