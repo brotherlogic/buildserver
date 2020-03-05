@@ -599,7 +599,7 @@ func main() {
 
 	server.RegisterRepeatingTask(server.backgroundBuilder, "background_builder", time.Minute*5)
 	//server.RegisterRepeatingTask(server.runCheck, "checker", time.Minute*5)
-	server.RegisterRepeatingTaskNonMaster(server.dequeue, "dequeue", time.Second)
+	server.RegisterRepeatingTaskNonMaster(server.dequeue, "dequeue", time.Minute)
 	server.RegisterRepeatingTaskNonMaster(server.aligner, "aligner", time.Minute)
 	server.RegisterRepeatingTask(server.validateBuilds, "validateBuilds", time.Minute)
 
