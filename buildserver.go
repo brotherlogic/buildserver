@@ -232,9 +232,7 @@ func (s *Server) drainQueue(ctx context.Context) {
 
 func (s *Server) load(v *pb.Version) {
 	jobn := v.Job.Name
-	log.Printf("SAVING %v and %v", v, s.latestBuild)
 	if v.VersionDate > s.latestBuild[jobn] {
-		log.Printf("SAVE")
 		s.latestBuild[jobn] = v.VersionDate
 		s.latestHash[jobn] = v.GithubHash
 		s.latestDate[jobn] = time.Unix(v.VersionDate, 0)
