@@ -144,7 +144,7 @@ func (s *Server) enqueue(job *pbgbs.Job, force bool) {
 	//Only enqueue if the job isn't already there
 	found := false
 	for _, j := range s.buildQueue {
-		if j.job.Name == job.Name {
+		if j.job.GetName() == job.GetName() {
 			found = true
 		}
 	}
