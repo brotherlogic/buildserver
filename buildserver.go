@@ -60,8 +60,6 @@ type Server struct {
 	latestDate        map[string]time.Time
 	latestVersion     map[string]string
 	latest            map[string]*pb.Version
-	blacklist         map[string]bool
-	blacklistMutex    *sync.Mutex
 	lockTime          time.Duration
 	checkError        string
 	enqueues          int64
@@ -121,9 +119,6 @@ func (s *Server) runCheck(ctx context.Context) error {
 					if err == nil {
 
 						if len(latest.GetVersions()) > 0 && latest.GetVersions()[0].VersionDate > s.latestBuild[job.Name] && latest.GetVersions()[0].Version != s.latestVersion[job.Name] {
-							s.blacklistMutex.Lock()
-							s.blacklist[job.Name] = true
-							s.blacklistMutex.Unlock()
 
 							// Ensure blacklisted jobs get built
 							s.enqueue(job, true)
@@ -186,36 +181,21 @@ func (s *Server) dequeue(ctx context.Context) error {
 				if time.Now().Sub(job.timeIn) > time.Minute*30 {
 					s.RaiseIssue(ctx, "Long Build", fmt.Sprintf("%v took %v to get to the front of the queue (%v in the queue)", job.job.Name, time.Now().Sub(job.timeIn), job.queueSizeAtEntry), false)
 				}
-				s.blacklistMutex.Lock()
-				if len(s.blacklist) == 0 || s.blacklist[job.job.Name] {
-
-					// Do a full build if we're blacklisted
-					if s.blacklist[job.job.Name] {
-						job.fullBuild = true
-					}
-					s.blacklistMutex.Unlock()
-
-					_, err := s.scheduler.build(job, s.Registry.Identifier, s.latestHash[job.job.Name])
-					s.checkError = fmt.Sprintf("%v", err)
-					s.buildFailsMutex.Lock()
-					if err != nil {
-						e, ok := status.FromError(err)
-						if !ok || e.Code() != codes.AlreadyExists {
-							s.buildFails[job.job.Name]++
-							if s.buildFails[job.job.Name] > 3 {
-								s.RaiseIssue(ctx, "Build Failure", fmt.Sprintf("Build failed for %v: %v running on %v", job.job.Name, err, s.Registry.Identifier), false)
-							}
+				_, err := s.scheduler.build(job, s.Registry.Identifier, s.latestHash[job.job.Name])
+				s.checkError = fmt.Sprintf("%v", err)
+				s.buildFailsMutex.Lock()
+				if err != nil {
+					e, ok := status.FromError(err)
+					if !ok || e.Code() != codes.AlreadyExists {
+						s.buildFails[job.job.Name]++
+						if s.buildFails[job.job.Name] > 3 {
+							s.RaiseIssue(ctx, "Build Failure", fmt.Sprintf("Build failed for %v: %v running on %v", job.job.Name, err, s.Registry.Identifier), false)
 						}
-					} else {
-						s.blacklistMutex.Lock()
-						delete(s.blacklist, job.job.Name)
-						s.blacklistMutex.Unlock()
-						delete(s.buildFails, job.job.Name)
 					}
-					s.buildFailsMutex.Unlock()
 				} else {
-					s.blacklistMutex.Unlock()
+					delete(s.buildFails, job.job.Name)
 				}
+				s.buildFailsMutex.Unlock()
 				s.currentBuilds--
 			}()
 		}
@@ -330,8 +310,6 @@ func Init() *Server {
 		make(map[string]time.Time),
 		make(map[string]string),
 		make(map[string]*pb.Version),
-		make(map[string]bool),
-		&sync.Mutex{},
 		0,
 		"",
 		int64(0),
@@ -403,8 +381,6 @@ func (s *Server) GetState() []*pbg.State {
 		}
 	}
 
-	s.blacklistMutex.Lock()
-	defer s.blacklistMutex.Unlock()
 	return []*pbg.State{
 		&pbg.State{Key: "tracked_jobs", Value: int64(len(s.jobs))},
 		&pbg.State{Key: "enqueues", Value: s.enqueues},
@@ -416,7 +392,6 @@ func (s *Server) GetState() []*pbg.State {
 		&pbg.State{Key: "version_size", Value: sumv},
 		&pbg.State{Key: "large", Text: fmt.Sprintf("%v", large)},
 		&pbg.State{Key: "memory", Text: fmt.Sprintf("%v", memoryCrashes)},
-		&pbg.State{Key: "blacklist", Text: fmt.Sprintf("%v", s.blacklist)},
 		&pbg.State{Key: "enabled", Text: fmt.Sprintf("%v", s.runBuild)},
 		&pbg.State{Key: "buildc", Value: int64(s.buildRequest)},
 		&pbg.State{Key: "concurrent_builds", Value: int64(s.currentBuilds)},
