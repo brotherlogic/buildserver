@@ -164,23 +164,6 @@ func TestDoubleBuild(t *testing.T) {
 	}
 }
 
-func TestBlacklist(t *testing.T) {
-	s := InitTestServer("testlistfail")
-	resp, err := s.Build(context.Background(), &pb.BuildRequest{Job: &pbgbs.Job{Name: "led", GoPath: "github.com/brotherlogic/crasher"}})
-	if err == nil {
-		t.Errorf("Should have failed: %v", resp)
-	}
-}
-
-func TestDynamicBlacklist(t *testing.T) {
-	s := InitTestServer("testlistfail")
-	s.blacklist["recordwants"] = true
-	resp, err := s.GetVersions(context.Background(), &pb.VersionRequest{Job: &pbgbs.Job{Name: "recordwants", GoPath: "github.com/brotherlogic/crasher"}})
-	if err == nil {
-		t.Errorf("Should have failed: %v", resp)
-	}
-}
-
 func TestCrash(t *testing.T) {
 	s := InitTestServer("testcrash")
 
