@@ -4,10 +4,11 @@
 // 	protoc        (unknown)
 // source: buildserver.proto
 
-package gobuildslave
+package proto
 
 import (
 	context "context"
+	proto1 "github.com/brotherlogic/gobuildslave/proto"
 	proto "github.com/golang/protobuf/proto"
 	grpc "google.golang.org/grpc"
 	codes "google.golang.org/grpc/codes"
@@ -138,14 +139,14 @@ type Version struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	Job           *Job     `protobuf:"bytes,1,opt,name=job,proto3" json:"job,omitempty"`
-	Version       string   `protobuf:"bytes,2,opt,name=version,proto3" json:"version,omitempty"`
-	Path          string   `protobuf:"bytes,3,opt,name=path,proto3" json:"path,omitempty"`
-	Server        string   `protobuf:"bytes,4,opt,name=server,proto3" json:"server,omitempty"`
-	VersionDate   int64    `protobuf:"varint,5,opt,name=version_date,json=versionDate,proto3" json:"version_date,omitempty"`
-	Crashes       []*Crash `protobuf:"bytes,6,rep,name=crashes,proto3" json:"crashes,omitempty"`
-	GithubHash    string   `protobuf:"bytes,7,opt,name=github_hash,json=githubHash,proto3" json:"github_hash,omitempty"`
-	LastBuildTime int64    `protobuf:"varint,8,opt,name=last_build_time,json=lastBuildTime,proto3" json:"last_build_time,omitempty"`
+	Job           *proto1.Job `protobuf:"bytes,1,opt,name=job,proto3" json:"job,omitempty"`
+	Version       string      `protobuf:"bytes,2,opt,name=version,proto3" json:"version,omitempty"`
+	Path          string      `protobuf:"bytes,3,opt,name=path,proto3" json:"path,omitempty"`
+	Server        string      `protobuf:"bytes,4,opt,name=server,proto3" json:"server,omitempty"`
+	VersionDate   int64       `protobuf:"varint,5,opt,name=version_date,json=versionDate,proto3" json:"version_date,omitempty"`
+	Crashes       []*Crash    `protobuf:"bytes,6,rep,name=crashes,proto3" json:"crashes,omitempty"`
+	GithubHash    string      `protobuf:"bytes,7,opt,name=github_hash,json=githubHash,proto3" json:"github_hash,omitempty"`
+	LastBuildTime int64       `protobuf:"varint,8,opt,name=last_build_time,json=lastBuildTime,proto3" json:"last_build_time,omitempty"`
 }
 
 func (x *Version) Reset() {
@@ -180,7 +181,7 @@ func (*Version) Descriptor() ([]byte, []int) {
 	return file_buildserver_proto_rawDescGZIP(), []int{1}
 }
 
-func (x *Version) GetJob() *Job {
+func (x *Version) GetJob() *proto1.Job {
 	if x != nil {
 		return x.Job
 	}
@@ -241,8 +242,8 @@ type VersionRequest struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	JustLatest bool `protobuf:"varint,1,opt,name=just_latest,json=justLatest,proto3" json:"just_latest,omitempty"`
-	Job        *Job `protobuf:"bytes,2,opt,name=job,proto3" json:"job,omitempty"`
+	JustLatest bool        `protobuf:"varint,1,opt,name=just_latest,json=justLatest,proto3" json:"just_latest,omitempty"`
+	Job        *proto1.Job `protobuf:"bytes,2,opt,name=job,proto3" json:"job,omitempty"`
 }
 
 func (x *VersionRequest) Reset() {
@@ -284,7 +285,7 @@ func (x *VersionRequest) GetJustLatest() bool {
 	return false
 }
 
-func (x *VersionRequest) GetJob() *Job {
+func (x *VersionRequest) GetJob() *proto1.Job {
 	if x != nil {
 		return x.Job
 	}
@@ -343,8 +344,8 @@ type BuildRequest struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	Job        *Job `protobuf:"bytes,1,opt,name=job,proto3" json:"job,omitempty"`
-	ForceBuild bool `protobuf:"varint,2,opt,name=force_build,json=forceBuild,proto3" json:"force_build,omitempty"`
+	Job        *proto1.Job `protobuf:"bytes,1,opt,name=job,proto3" json:"job,omitempty"`
+	ForceBuild bool        `protobuf:"varint,2,opt,name=force_build,json=forceBuild,proto3" json:"force_build,omitempty"`
 }
 
 func (x *BuildRequest) Reset() {
@@ -379,7 +380,7 @@ func (*BuildRequest) Descriptor() ([]byte, []int) {
 	return file_buildserver_proto_rawDescGZIP(), []int{4}
 }
 
-func (x *BuildRequest) GetJob() *Job {
+func (x *BuildRequest) GetJob() *proto1.Job {
 	if x != nil {
 		return x.Job
 	}
@@ -436,10 +437,10 @@ type CrashRequest struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	Job     *Job   `protobuf:"bytes,1,opt,name=job,proto3" json:"job,omitempty"`
-	Crash   *Crash `protobuf:"bytes,2,opt,name=crash,proto3" json:"crash,omitempty"`
-	Version string `protobuf:"bytes,3,opt,name=version,proto3" json:"version,omitempty"`
-	Origin  string `protobuf:"bytes,4,opt,name=origin,proto3" json:"origin,omitempty"`
+	Job     *proto1.Job `protobuf:"bytes,1,opt,name=job,proto3" json:"job,omitempty"`
+	Crash   *Crash      `protobuf:"bytes,2,opt,name=crash,proto3" json:"crash,omitempty"`
+	Version string      `protobuf:"bytes,3,opt,name=version,proto3" json:"version,omitempty"`
+	Origin  string      `protobuf:"bytes,4,opt,name=origin,proto3" json:"origin,omitempty"`
 }
 
 func (x *CrashRequest) Reset() {
@@ -474,7 +475,7 @@ func (*CrashRequest) Descriptor() ([]byte, []int) {
 	return file_buildserver_proto_rawDescGZIP(), []int{6}
 }
 
-func (x *CrashRequest) GetJob() *Job {
+func (x *CrashRequest) GetJob() *proto1.Job {
 	if x != nil {
 		return x.Job
 	}
@@ -616,7 +617,10 @@ var file_buildserver_proto_rawDesc = []byte{
 	0x69, 0x6c, 0x64, 0x73, 0x65, 0x72, 0x76, 0x65, 0x72, 0x2e, 0x43, 0x72, 0x61, 0x73, 0x68, 0x52,
 	0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x1a, 0x1a, 0x2e, 0x62, 0x75, 0x69, 0x6c, 0x64, 0x73, 0x65,
 	0x72, 0x76, 0x65, 0x72, 0x2e, 0x43, 0x72, 0x61, 0x73, 0x68, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e,
-	0x73, 0x65, 0x22, 0x00, 0x62, 0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
+	0x73, 0x65, 0x22, 0x00, 0x42, 0x2b, 0x5a, 0x29, 0x67, 0x69, 0x74, 0x68, 0x75, 0x62, 0x2e, 0x63,
+	0x6f, 0x6d, 0x2f, 0x62, 0x72, 0x6f, 0x74, 0x68, 0x65, 0x72, 0x6c, 0x6f, 0x67, 0x69, 0x63, 0x2f,
+	0x62, 0x75, 0x69, 0x6c, 0x64, 0x73, 0x65, 0x72, 0x76, 0x65, 0x72, 0x2f, 0x70, 0x72, 0x6f, 0x74,
+	0x6f, 0x62, 0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
 }
 
 var (
@@ -643,7 +647,7 @@ var file_buildserver_proto_goTypes = []interface{}{
 	(*BuildResponse)(nil),   // 6: buildserver.BuildResponse
 	(*CrashRequest)(nil),    // 7: buildserver.CrashRequest
 	(*CrashResponse)(nil),   // 8: buildserver.CrashResponse
-	(*Job)(nil),             // 9: gobuildslave.Job
+	(*proto1.Job)(nil),      // 9: gobuildslave.Job
 }
 var file_buildserver_proto_depIdxs = []int32{
 	0,  // 0: buildserver.Crash.crash_type:type_name -> buildserver.Crash.CrashType
@@ -672,7 +676,6 @@ func file_buildserver_proto_init() {
 	if File_buildserver_proto != nil {
 		return
 	}
-	file_github_com_brotherlogic_gobuildslave_proto_slave_proto_init()
 	if !protoimpl.UnsafeEnabled {
 		file_buildserver_proto_msgTypes[0].Exporter = func(v interface{}, i int) interface{} {
 			switch v := v.(*Crash); i {
