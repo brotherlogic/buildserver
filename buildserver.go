@@ -579,7 +579,12 @@ func main() {
 
 	//Add monitoring
 	http.Handle("/metrics", promhttp.Handler())
-	http.ListenAndServe(":2112", nil)
+	go func() {
+		err := http.ListenAndServe(":2112", nil)
+		if err != nil {
+			log.Fatalf("Prom error: %v", err)
+		}
+	}()
 
 	fmt.Printf("%v\n", server.Serve())
 }
