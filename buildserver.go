@@ -13,7 +13,6 @@ import (
 	"github.com/brotherlogic/goserver"
 	"github.com/brotherlogic/goserver/utils"
 	"github.com/golang/protobuf/proto"
-	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"golang.org/x/net/context"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
@@ -576,15 +575,6 @@ func main() {
 	server.RegisterRepeatingTaskNonMaster(server.dequeue, "dequeue", time.Second*5)
 	//server.RegisterRepeatingTaskNonMaster(server.aligner, "aligner", time.Minute)
 	server.RegisterRepeatingTask(server.validateBuilds, "validateBuilds", time.Minute)
-
-	//Add monitoring
-	http.Handle("/metrics", promhttp.Handler())
-	go func() {
-		err := http.ListenAndServe(":2112", nil)
-		if err != nil {
-			log.Fatalf("Prom error: %v", err)
-		}
-	}()
 
 	fmt.Printf("%v\n", server.Serve())
 }
