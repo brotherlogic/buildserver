@@ -359,12 +359,10 @@ func (s *Server) GetState() []*pbg.State {
 	memoryCrashes := make(map[string]int)
 	sumv := int64(0)
 	largest := 0
-	large := &pb.Version{}
 	for _, v := range s.pathMap {
 		mCrash := 0
 		sumv += int64(proto.Size(v))
 		if proto.Size(v) > largest {
-			large = v
 			largest = proto.Size(v)
 		}
 		for _, c := range v.Crashes {
