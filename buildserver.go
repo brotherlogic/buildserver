@@ -579,7 +579,7 @@ func main() {
 	go func() {
 		for true {
 			server.dequeue()
-			time.Sleep(time.Minute)
+			time.Sleep(time.Second * 5)
 		}
 	}()
 
