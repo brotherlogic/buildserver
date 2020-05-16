@@ -359,12 +359,10 @@ func (s *Server) GetState() []*pbg.State {
 	memoryCrashes := make(map[string]int)
 	sumv := int64(0)
 	largest := 0
-	large := &pb.Version{}
 	for _, v := range s.pathMap {
 		mCrash := 0
 		sumv += int64(proto.Size(v))
 		if proto.Size(v) > largest {
-			large = v
 			largest = proto.Size(v)
 		}
 		for _, c := range v.Crashes {
@@ -390,7 +388,6 @@ func (s *Server) GetState() []*pbg.State {
 		&pbg.State{Key: "lock_time", TimeDuration: s.lockTime.Nanoseconds()},
 		&pbg.State{Key: "versions", Value: int64(len(s.pathMap))},
 		&pbg.State{Key: "version_size", Value: sumv},
-		&pbg.State{Key: "large", Text: fmt.Sprintf("%v", large)},
 		&pbg.State{Key: "memory", Text: fmt.Sprintf("%v", memoryCrashes)},
 		&pbg.State{Key: "enabled", Text: fmt.Sprintf("%v", s.runBuild)},
 		&pbg.State{Key: "buildc", Value: int64(s.buildRequest)},
