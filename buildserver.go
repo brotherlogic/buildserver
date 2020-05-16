@@ -569,16 +569,9 @@ func main() {
 
 	//server.RegisterRepeatingTask(server.backgroundBuilder, "background_builder", time.Minute*5)
 	//server.RegisterRepeatingTask(server.runCheck, "checker", time.Minute*5)
-	//server.RegisterRepeatingTaskNonMaster(server.dequeue, "dequeue", time.Second*5)
+	server.RegisterRepeatingTaskNonMaster(server.dequeue, "dequeue", time.Second*5)
 	//server.RegisterRepeatingTaskNonMaster(server.aligner, "aligner", time.Minute)
 	//server.RegisterRepeatingTask(server.validateBuilds, "validateBuilds", time.Minute)
-
-	go func() {
-		for true {
-			server.dequeue()
-			time.Sleep(time.Second * 5)
-		}
-	}()
 
 	fmt.Printf("%v\n", server.Serve())
 }
