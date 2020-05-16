@@ -53,6 +53,7 @@ func (s *Server) ReportCrash(ctx context.Context, req *pb.CrashRequest) (*pb.Cra
 
 //GetVersions gets the versions
 func (s *Server) GetVersions(ctx context.Context, req *pb.VersionRequest) (*pb.VersionResponse, error) {
+	s.Log(fmt.Sprintf("GetVersions: %v", req))
 	if req.GetJob() == nil {
 		return &pb.VersionResponse{}, fmt.Errorf("You sent an empty job for some reason")
 	}
@@ -60,14 +61,7 @@ func (s *Server) GetVersions(ctx context.Context, req *pb.VersionRequest) (*pb.V
 	s.enqueue(req.GetJob(), true)
 
 	resp := &pb.VersionResponse{}
-	latest := make(map[string]*pb.Version)
-
 	resp.Versions = append(resp.Versions, s.latest[req.GetJob().GetName()])
-
-	// Kick off an async build if we no versions
-	if len(latest) == 0 {
-		go s.Build(ctx, &pb.BuildRequest{Job: req.GetJob()})
-	}
 
 	if req.JustLatest {
 		return &pb.VersionResponse{Versions: []*pb.Version{s.latest[req.GetJob().GetName()]}}, nil
