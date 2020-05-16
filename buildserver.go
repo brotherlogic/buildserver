@@ -302,7 +302,7 @@ func Init() *Server {
 		make(map[string]*pb.Version),
 		&sync.Mutex{},
 		int64(0),
-		2,
+		4,
 		make(map[string]int),
 		&sync.Mutex{},
 		make(map[string]string),
