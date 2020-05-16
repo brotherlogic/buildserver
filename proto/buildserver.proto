@@ -34,6 +34,7 @@ message Version {
 message VersionRequest {
   bool just_latest = 1;
   gobuildslave.Job job = 2;
+  string origin = 3;
 }
 
 message VersionResponse {
