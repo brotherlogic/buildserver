@@ -169,7 +169,7 @@ func (s *Server) enqueue(job *pbgbs.Job, force bool) {
 	}
 }
 
-func (s *Server) dequeue() error {
+func (s *Server) dequeue(ctx context.Context) error {
 	s.currentBuildMutex.Lock()
 	defer s.currentBuildMutex.Unlock()
 	if len(s.buildQueue) > 0 && s.currentBuilds < s.maxBuilds {
@@ -179,7 +179,7 @@ func (s *Server) dequeue() error {
 				s.currentBuilds++
 				s.buildQueue = s.buildQueue[1:]
 				if time.Now().Sub(job.timeIn) > time.Minute*30 {
-					//s.RaiseIssue(ctx, "Long Build", fmt.Sprintf("%v took %v to get to the front of the queue (%v in the queue)", job.job.Name, time.Now().Sub(job.timeIn), job.queueSizeAtEntry), false)
+					s.RaiseIssue(ctx, "Long Build", fmt.Sprintf("%v took %v to get to the front of the queue (%v in the queue)", job.job.Name, time.Now().Sub(job.timeIn), job.queueSizeAtEntry), false)
 				}
 				_, err := s.scheduler.build(job, s.Registry.Identifier, s.latestHash[job.job.Name])
 				s.checkError = fmt.Sprintf("%v", err)
@@ -189,7 +189,7 @@ func (s *Server) dequeue() error {
 					if !ok || e.Code() != codes.AlreadyExists {
 						s.buildFails[job.job.Name]++
 						if s.buildFails[job.job.Name] > 3 {
-							//s.RaiseIssue(ctx, "Build Failure", fmt.Sprintf("Build failed for %v: %v running on %v", job.job.Name, err, s.Registry.Identifier), false)
+							s.RaiseIssue(ctx, "Build Failure", fmt.Sprintf("Build failed for %v: %v running on %v", job.job.Name, err, s.Registry.Identifier), false)
 						}
 					}
 				} else {
@@ -205,7 +205,7 @@ func (s *Server) dequeue() error {
 
 func (s *Server) drainQueue(ctx context.Context) {
 	for len(s.buildQueue) > 0 || s.currentBuilds > 0 {
-		s.dequeue()
+		s.dequeue(ctx)
 		time.Sleep(time.Second)
 	}
 }
@@ -569,16 +569,9 @@ func main() {
 
 	//server.RegisterRepeatingTask(server.backgroundBuilder, "background_builder", time.Minute*5)
 	//server.RegisterRepeatingTask(server.runCheck, "checker", time.Minute*5)
-	//server.RegisterRepeatingTaskNonMaster(server.dequeue, "dequeue", time.Second*5)
+	server.RegisterRepeatingTaskNonMaster(server.dequeue, "dequeue", time.Second*5)
 	//server.RegisterRepeatingTaskNonMaster(server.aligner, "aligner", time.Minute)
 	//server.RegisterRepeatingTask(server.validateBuilds, "validateBuilds", time.Minute)
-
-	go func() {
-		for true {
-			server.dequeue()
-			time.Sleep(time.Second * 5)
-		}
-	}()
 
 	fmt.Printf("%v\n", server.Serve())
 }
