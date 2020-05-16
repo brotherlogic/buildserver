@@ -61,8 +61,6 @@ func (s *Server) GetVersions(ctx context.Context, req *pb.VersionRequest) (*pb.V
 	s.enqueue(req.GetJob(), true)
 
 	resp := &pb.VersionResponse{}
-	latest := make(map[string]*pb.Version)
-
 	resp.Versions = append(resp.Versions, s.latest[req.GetJob().GetName()])
 
 	if req.JustLatest {
