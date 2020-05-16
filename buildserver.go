@@ -390,7 +390,6 @@ func (s *Server) GetState() []*pbg.State {
 		&pbg.State{Key: "lock_time", TimeDuration: s.lockTime.Nanoseconds()},
 		&pbg.State{Key: "versions", Value: int64(len(s.pathMap))},
 		&pbg.State{Key: "version_size", Value: sumv},
-		&pbg.State{Key: "large", Text: fmt.Sprintf("%v", large)},
 		&pbg.State{Key: "memory", Text: fmt.Sprintf("%v", memoryCrashes)},
 		&pbg.State{Key: "enabled", Text: fmt.Sprintf("%v", s.runBuild)},
 		&pbg.State{Key: "buildc", Value: int64(s.buildRequest)},
