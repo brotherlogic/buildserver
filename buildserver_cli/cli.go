@@ -15,6 +15,7 @@ import (
 
 	pb "github.com/brotherlogic/buildserver/proto"
 	pbgbs "github.com/brotherlogic/gobuildslave/proto"
+	pbgs "github.com/brotherlogic/goserver/proto"
 
 	//Needed to pull in gzip encoding init
 	_ "google.golang.org/grpc/encoding/gzip"
@@ -38,6 +39,15 @@ func main() {
 	client := pb.NewBuildServiceClient(conn)
 
 	switch os.Args[1] {
+	case "mote":
+		ctx, cancel := utils.BuildContext("buildserver-"+os.Args[1], "buildserver")
+		defer cancel()
+
+		conn, err := grpc.Dial(fmt.Sprintf("%v:%v", os.Args[2], os.Args[3]), grpc.WithInsecure())
+		client := pbgs.NewGoserverServiceClient(conn)
+		a, err := client.Mote(ctx, &pbgs.MoteRequest{Master: false})
+		fmt.Printf("%v and %v\n", a, err)
+
 	case "spbuild":
 		ctx, cancel := utils.BuildContext("buildserver-"+os.Args[1], "buildserver")
 		defer cancel()
