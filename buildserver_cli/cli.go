@@ -96,7 +96,7 @@ func main() {
 
 			client := pb.NewBuildServiceClient(conn)
 
-			res, err := client.GetVersions(ctx, &pb.VersionRequest{Job: &pbgbs.Job{Name: os.Args[2], GoPath: "github.com/brotherlogic/" + os.Args[2]}, JustLatest: true})
+			res, err := client.GetVersions(ctx, &pb.VersionRequest{Origin: "cli-alllatest", Job: &pbgbs.Job{Name: os.Args[2], GoPath: "github.com/brotherlogic/" + os.Args[2]}, JustLatest: true})
 			if err != nil {
 				log.Fatalf("Error on build: %v", err)
 			}
@@ -112,7 +112,7 @@ func main() {
 			ctx, cancel := utils.ManualContext("buildserver-"+os.Args[1], "buildserver", time.Second*10)
 			defer cancel()
 
-			res, err := client.GetVersions(ctx, &pb.VersionRequest{Job: &pbgbs.Job{Name: os.Args[2], GoPath: "github.com/brotherlogic/" + os.Args[2]}, JustLatest: true})
+			res, err := client.GetVersions(ctx, &pb.VersionRequest{Origin: "cli-latest", Job: &pbgbs.Job{Name: os.Args[2], GoPath: "github.com/brotherlogic/" + os.Args[2]}, JustLatest: true})
 			if err != nil {
 				log.Printf("Error %v", err)
 			}
