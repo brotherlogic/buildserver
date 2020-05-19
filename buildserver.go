@@ -385,7 +385,6 @@ func (s *Server) GetState() []*pbg.State {
 		&pbg.State{Key: "check_error", Text: s.checkError},
 		&pbg.State{Key: "latest_versions", Value: int64(len(s.latestVersion))},
 		&pbg.State{Key: "build_queue_length", Value: int64(len(s.buildQueue))},
-		&pbg.State{Key: "lock_time", TimeDuration: s.lockTime.Nanoseconds()},
 		&pbg.State{Key: "versions", Value: int64(len(s.pathMap))},
 		&pbg.State{Key: "version_size", Value: sumv},
 		&pbg.State{Key: "memory", Text: fmt.Sprintf("%v", memoryCrashes)},
