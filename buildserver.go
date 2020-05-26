@@ -13,6 +13,8 @@ import (
 	"github.com/brotherlogic/goserver"
 	"github.com/brotherlogic/goserver/utils"
 	"github.com/golang/protobuf/proto"
+	"github.com/prometheus/client_golang/prometheus"
+	"github.com/prometheus/client_golang/prometheus/promauto"
 	"golang.org/x/net/context"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
@@ -22,6 +24,14 @@ import (
 	pbfc "github.com/brotherlogic/filecopier/proto"
 	pbgbs "github.com/brotherlogic/gobuildslave/proto"
 	pbg "github.com/brotherlogic/goserver/proto"
+)
+
+var (
+	// queue size
+	queueSize = promauto.NewGaugeVec(prometheus.GaugeOpts{
+		Name: "buildserver_queue",
+		Help: "The size of the print queue",
+	}, []string{"type"})
 )
 
 type queueEntry struct {
@@ -167,6 +177,9 @@ func (s *Server) enqueue(job *pbgbs.Job, force bool) {
 
 		s.buildQueue = append(s.buildQueue, queueEntry{job: job, timeIn: time.Now(), queueSizeAtEntry: len(s.buildQueue), inFront: before, fullBuild: forceBuild})
 	}
+
+	queueSize.With(prometheus.Labels{"type": "reported"}).Set(float64(len(s.buildQueue)))
+	queueSize.With(prometheus.Labels{"type": "slice"}).Set(float64(cap(s.buildQueue)))
 }
 
 func (s *Server) dequeue(ctx context.Context) error {
