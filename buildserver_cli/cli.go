@@ -114,7 +114,7 @@ func main() {
 
 			res, err := client.GetVersions(ctx, &pb.VersionRequest{Origin: "cli-latest", Job: &pbgbs.Job{Name: os.Args[2], GoPath: "github.com/brotherlogic/" + os.Args[2]}, JustLatest: true})
 			if err != nil {
-				log.Printf("Error %v", err)
+				log.Printf("Error %v -> %v with %v", err, ctx, conn)
 			}
 			if err == nil {
 				fmt.Printf("%v - %v (%v)\n", res.Versions[0].Version, time.Unix(res.Versions[0].VersionDate, 0), len(res.Versions[0].Crashes))

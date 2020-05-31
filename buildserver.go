@@ -40,7 +40,6 @@ type queueEntry struct {
 	fullBuild        bool
 	queueSizeAtEntry int
 	buildTime        time.Duration
-	inFront          []queueEntry
 	pastGithubHash   string
 }
 
@@ -175,7 +174,7 @@ func (s *Server) enqueue(job *pbgbs.Job, force bool) {
 			forceBuild = forceBuild && !entry.fullBuild
 		}
 
-		s.buildQueue = append(s.buildQueue, queueEntry{job: job, timeIn: time.Now(), queueSizeAtEntry: len(s.buildQueue), inFront: before, fullBuild: forceBuild})
+		s.buildQueue = append(s.buildQueue, queueEntry{job: job, timeIn: time.Now(), queueSizeAtEntry: len(s.buildQueue), fullBuild: forceBuild})
 	}
 
 	queueSize.With(prometheus.Labels{"type": "reported"}).Set(float64(len(s.buildQueue)))
