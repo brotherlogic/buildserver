@@ -45,7 +45,7 @@ type rCommand struct {
 	err       error
 }
 
-func (s *Scheduler) saveVersionInfo(j *pbgbs.Job, path string, server string, githubHash string) {
+func (s *Scheduler) saveVersionInfo(j *pbgbs.Job, path string, server string, githubHash string) *pb.Version {
 	f, err := os.Stat(path)
 	if err == nil {
 		ver := &pb.Version{
@@ -59,7 +59,10 @@ func (s *Scheduler) saveVersionInfo(j *pbgbs.Job, path string, server string, gi
 		}
 
 		s.saveVersionFile(ver)
+		return ver
 	}
+
+	return nil
 }
 
 func (s *Scheduler) saveVersionFile(v *pb.Version) {
@@ -69,18 +72,18 @@ func (s *Scheduler) saveVersionFile(v *pb.Version) {
 	s.load(v)
 }
 
-func (s *Scheduler) build(queEnt queueEntry, server string, latestHash string) (string, error) {
+func (s *Scheduler) build(queEnt queueEntry, server string, latestHash string) (string, *pb.Version, error) {
 	s.cbuild = fmt.Sprintf("%v @ %v", queEnt.job.Name, time.Now())
 	s.lastBuildMutex.Lock()
 	if val, ok := s.lastBuild[queEnt.job.Name]; ok && time.Now().Sub(val) < s.waitTime {
 		s.lastBuildMutex.Unlock()
-		return "", status.Error(codes.AlreadyExists, fmt.Sprintf("Skipping build for %v since we have a recent one", queEnt.job.Name))
+		return "", nil, status.Error(codes.AlreadyExists, fmt.Sprintf("Skipping build for %v since we have a recent one", queEnt.job.Name))
 	}
 	s.lastBuild[queEnt.job.Name] = time.Now()
 	s.lastBuildMutex.Unlock()
 
 	if queEnt.job.Name == "" {
-		return "", fmt.Errorf("Job is not specified correctly (has no name)")
+		return "", nil, fmt.Errorf("Job is not specified correctly (has no name)")
 	}
 
 	// Prep the mutex
@@ -108,7 +111,7 @@ func (s *Scheduler) build(queEnt queueEntry, server string, latestHash string) (
 		}
 
 		if len(latestHash) > 0 && readHash == latestHash {
-			return "", status.Error(codes.AlreadyExists, fmt.Sprintf("Skipping build for %v since we have a recent hash", queEnt.job.Name))
+			return "", nil, status.Error(codes.AlreadyExists, fmt.Sprintf("Skipping build for %v since we have a recent hash", queEnt.job.Name))
 		}
 	}
 
@@ -123,7 +126,7 @@ func (s *Scheduler) build(queEnt queueEntry, server string, latestHash string) (
 
 	// If the build has failed, there will be no file output
 	if _, err := os.Stat(s.dir + "/bin/" + queEnt.job.Name); os.IsNotExist(err) && (len(buildCommand.output) > 0 || len(buildCommand.erroutput) > 0) {
-		return "", fmt.Errorf("Build failed: %v and %v -> %v", buildCommand.output, buildCommand.erroutput, buildCommand.err)
+		return "", nil, fmt.Errorf("Build failed: %v and %v -> %v", buildCommand.output, buildCommand.erroutput, buildCommand.err)
 	}
 
 	data, _ = ioutil.ReadFile(s.dir + "/bin/" + queEnt.job.Name)
@@ -133,9 +136,9 @@ func (s *Scheduler) build(queEnt queueEntry, server string, latestHash string) (
 	copyCommand := &rCommand{command: exec.Command("mv", s.dir+"/bin/"+queEnt.job.Name, s.dir+"/builds/"+queEnt.job.GoPath+"/"+queEnt.job.Name+"-"+hash)}
 	s.runAndWait(copyCommand)
 
-	s.saveVersionInfo(queEnt.job, s.dir+"/builds/"+queEnt.job.GoPath+"/"+queEnt.job.Name+"-"+hash, server, builtHash)
+	version := s.saveVersionInfo(queEnt.job, s.dir+"/builds/"+queEnt.job.GoPath+"/"+queEnt.job.Name+"-"+hash, server, builtHash)
 
-	return hash, nil
+	return hash, version, nil
 }
 
 func (s *Scheduler) runAndWait(c *rCommand) {

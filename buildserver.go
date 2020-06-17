@@ -24,6 +24,7 @@ import (
 	pbfc "github.com/brotherlogic/filecopier/proto"
 	pbgbs "github.com/brotherlogic/gobuildslave/proto"
 	pbg "github.com/brotherlogic/goserver/proto"
+	pbvt "github.com/brotherlogic/versiontracker/proto"
 )
 
 var (
@@ -72,6 +73,15 @@ type Server struct {
 	lockTime          time.Duration
 	checkError        string
 	enqueues          int64
+	queue             chan *queueEntry
+	done              chan bool
+	fanoutQueue       chan fanoutEntry
+	testing           bool
+}
+
+type fanoutEntry struct {
+	version *pb.Version
+	server  string
 }
 
 type fileDetails struct {
@@ -174,51 +184,71 @@ func (s *Server) enqueue(job *pbgbs.Job, force bool) {
 			forceBuild = forceBuild && !entry.fullBuild
 		}
 
-		s.buildQueue = append(s.buildQueue, queueEntry{job: job, timeIn: time.Now(), queueSizeAtEntry: len(s.buildQueue), fullBuild: forceBuild})
+		s.queue <- &queueEntry{job: job, timeIn: time.Now(), queueSizeAtEntry: len(s.buildQueue), fullBuild: forceBuild}
 	}
 
-	queueSize.With(prometheus.Labels{"type": "reported"}).Set(float64(len(s.buildQueue)))
-	queueSize.With(prometheus.Labels{"type": "slice"}).Set(float64(cap(s.buildQueue)))
+	queueSize.With(prometheus.Labels{"type": "reported"}).Set(float64(len(s.queue)))
 }
 
-func (s *Server) dequeue(ctx context.Context) error {
-	s.currentBuildMutex.Lock()
-	defer s.currentBuildMutex.Unlock()
-	if len(s.buildQueue) > 0 && s.currentBuilds < s.maxBuilds {
-		if s.runBuild {
-			go func() {
-				job := s.buildQueue[0]
-				s.currentBuilds++
-				s.buildQueue = s.buildQueue[1:]
-				if time.Now().Sub(job.timeIn) > time.Minute*30 {
-					s.RaiseIssue(ctx, "Long Build", fmt.Sprintf("%v took %v to get to the front of the queue (%v in the queue)", job.job.Name, time.Now().Sub(job.timeIn), job.queueSizeAtEntry), false)
-				}
-				_, err := s.scheduler.build(job, s.Registry.Identifier, s.latestHash[job.job.Name])
-				s.checkError = fmt.Sprintf("%v", err)
-				s.buildFailsMutex.Lock()
-				if err != nil {
-					e, ok := status.FromError(err)
-					if !ok || e.Code() != codes.AlreadyExists {
-						s.buildFails[job.job.Name]++
-						if s.buildFails[job.job.Name] > 3 {
-							s.RaiseIssue(ctx, "Build Failure", fmt.Sprintf("Build failed for %v: %v running on %v", job.job.Name, err, s.Registry.Identifier), false)
-						}
-					}
-				} else {
-					delete(s.buildFails, job.job.Name)
-				}
-				s.buildFailsMutex.Unlock()
-				s.currentBuilds--
-			}()
+func (s *Server) build(ctx context.Context, job *queueEntry) (*pb.Version, error) {
+	s.currentBuilds++
+	_, version, err := s.scheduler.build(*job, s.Registry.Identifier, s.latestHash[job.job.Name])
+	s.buildFailsMutex.Lock()
+	if err != nil {
+		e, ok := status.FromError(err)
+		if !ok || e.Code() != codes.AlreadyExists {
+			s.buildFails[job.job.Name]++
+			if s.buildFails[job.job.Name] > 3 {
+				s.RaiseIssue(ctx, "Build Failure", fmt.Sprintf("Build failed for %v: %v running on %v", job.job.Name, err, s.Registry.Identifier), false)
+			}
+		}
+	} else {
+		delete(s.buildFails, job.job.Name)
+	}
+	s.buildFailsMutex.Unlock()
+	s.currentBuilds--
+
+	return version, err
+}
+
+func (s *Server) dequeue() {
+	for job := range s.queue {
+		ctx, cancel := utils.ManualContext("buildserver", "buildserver", time.Minute*5, false)
+		version, _ := s.build(ctx, job)
+		if version != nil {
+			s.doFanout(ctx, version)
+		}
+		cancel()
+	}
+	s.done <- true
+}
+
+func (s *Server) doFanout(ctx context.Context, v *pb.Version) {
+	if !s.testing {
+		servers, err := s.FFind(ctx, "versiontracker")
+		if err != nil {
+			for _, server := range servers {
+				s.fanoutQueue <- fanoutEntry{version: v, server: server}
+			}
 		}
 	}
-	return nil
 }
 
-func (s *Server) drainQueue(ctx context.Context) {
-	for len(s.buildQueue) > 0 || s.currentBuilds > 0 {
-		s.dequeue(ctx)
-		time.Sleep(time.Second)
+func (s *Server) fanout() {
+	for fanout := range s.fanoutQueue {
+		ctx, cancel := utils.ManualContext("buildserver", "buildserver", time.Minute, false)
+		conn, err := s.FDial(fanout.server)
+		if err != nil {
+			s.fanoutQueue <- fanout
+		}
+
+		client := pbvt.NewVersionTrackerServiceClient(conn)
+		_, err = client.NewVersion(ctx, &pbvt.NewVersionRequest{Version: fanout.version})
+		if err != nil {
+			s.fanoutQueue <- fanout
+		}
+		conn.Close()
+		cancel()
 	}
 }
 
@@ -325,6 +355,10 @@ func Init() *Server {
 		0,
 		"",
 		int64(0),
+		make(chan *queueEntry),
+		make(chan bool),
+		make(chan fanoutEntry, 100),
+		false,
 	}
 
 	s.scheduler.log = s.log
@@ -557,6 +591,20 @@ func (s *Server) aligner(ctx context.Context) error {
 	return nil
 }
 
+func (s *Server) drainQueue(ctx context.Context) {
+	close(s.queue)
+	<-s.done
+}
+func (s *Server) drainAndRestoreQueue(ctx context.Context) {
+	close(s.queue)
+	<-s.done
+
+	s.queue = make(chan *queueEntry)
+	go func() {
+		s.dequeue()
+	}()
+}
+
 func main() {
 	var quiet = flag.Bool("quiet", false, "Show all output")
 	flag.Parse()
@@ -567,7 +615,6 @@ func main() {
 		log.SetOutput(ioutil.Discard)
 	}
 	server := Init()
-	//server.GoServer.KSclient = *keystoreclient.GetClient(server.DialMaster)
 	server.PrepServer()
 	server.Register = server
 
@@ -576,13 +623,9 @@ func main() {
 		return
 	}
 
-	//go server.serveUp(server.Registry.Port - 1)
-
-	//server.RegisterRepeatingTask(server.backgroundBuilder, "background_builder", time.Minute*5)
-	//server.RegisterRepeatingTask(server.runCheck, "checker", time.Minute*5)
-	server.RegisterRepeatingTaskNonMaster(server.dequeue, "dequeue", time.Second*5)
-	//server.RegisterRepeatingTaskNonMaster(server.aligner, "aligner", time.Minute)
-	//server.RegisterRepeatingTask(server.validateBuilds, "validateBuilds", time.Minute)
+	go func() {
+		server.dequeue()
+	}()
 
 	fmt.Printf("%v\n", server.Serve())
 }
