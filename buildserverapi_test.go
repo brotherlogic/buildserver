@@ -37,6 +37,13 @@ func CloneTestServer(f string, delete bool) *Server {
 	s.SkipLog = true
 	s.Registry = &pbd.RegistryEntry{Identifier: "blah"}
 	s.runBuild = true
+	s.testing = true
+
+	// Run background queue processing
+	go func() {
+		s.dequeue()
+	}()
+
 	return s
 }
 
@@ -82,7 +89,7 @@ func TestBuildWithMadeupSecondPull(t *testing.T) {
 		t.Fatalf("Error in get versions: %v", err)
 	}
 	time.Sleep(time.Second)
-	s.drainQueue(context.Background())
+	s.drainAndRestoreQueue(context.Background())
 
 	if len(resp.Versions) == 0 {
 		t.Errorf("Get versions did not fail first pass: %v", resp)
@@ -103,7 +110,7 @@ func TestBuildWithFailure(t *testing.T) {
 	s := InitTestServer("buildwithhour")
 
 	_, err := s.Build(context.Background(), &pb.BuildRequest{Job: &pbgbs.Job{Name: "blahblahblah", GoPath: "github.com/brotherlogic/blahblahblah"}})
-	s.drainQueue(context.Background())
+	s.drainAndRestoreQueue(context.Background())
 
 	resp, err := s.GetVersions(context.Background(), &pb.VersionRequest{Job: &pbgbs.Job{Name: "crasher", GoPath: "github.com/brotherlogic/blahblahblah"}})
 	if err != nil {
@@ -122,7 +129,7 @@ func TestList(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Error in build: %v", err)
 	}
-	s.drainQueue(context.Background())
+	s.drainAndRestoreQueue(context.Background())
 
 	resp, err := s.GetVersions(context.Background(), &pb.VersionRequest{Job: &pbgbs.Job{Name: "crasher", GoPath: "github.com/brotherlogic/crasher"}})
 	if err != nil {
@@ -136,7 +143,7 @@ func TestList(t *testing.T) {
 func TestListSingle(t *testing.T) {
 	s := InitTestServer("testlistsingle")
 	_, err := s.Build(context.Background(), &pb.BuildRequest{Job: &pbgbs.Job{Name: "crasher", GoPath: "github.com/brotherlogic/crasher"}})
-	s.drainQueue(context.Background())
+	s.drainAndRestoreQueue(context.Background())
 
 	resp, err := s.GetVersions(context.Background(), &pb.VersionRequest{Job: &pbgbs.Job{Name: "crasher", GoPath: "github.com/brotherlogic/crasher"}, JustLatest: true})
 	if err != nil {
@@ -151,9 +158,9 @@ func TestDoubleBuild(t *testing.T) {
 	s := InitTestServer("testlistsingle")
 	s.scheduler.waitTime = time.Second
 	_, err := s.Build(context.Background(), &pb.BuildRequest{Job: &pbgbs.Job{Name: "crasher", GoPath: "github.com/brotherlogic/crasher"}})
-	s.drainQueue(context.Background())
+	s.drainAndRestoreQueue(context.Background())
 	_, err = s.Build(context.Background(), &pb.BuildRequest{Job: &pbgbs.Job{Name: "crasher", GoPath: "github.com/brotherlogic/crasher"}})
-	s.drainQueue(context.Background())
+	s.drainAndRestoreQueue(context.Background())
 
 	resp, err := s.GetVersions(context.Background(), &pb.VersionRequest{Job: &pbgbs.Job{Name: "crasher", GoPath: "github.com/brotherlogic/crasher"}, JustLatest: true})
 	if err != nil {
@@ -171,18 +178,18 @@ func TestCrash(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Error in build: %v", err)
 	}
-	s.drainQueue(context.Background())
+	s.drainAndRestoreQueue(context.Background())
 
 	resp, err := s.GetVersions(context.Background(), &pb.VersionRequest{Job: &pbgbs.Job{Name: "crasher", GoPath: "github.com/brotherlogic/crasher"}})
 	if err != nil {
 		t.Errorf("Error getting versions: %v", err)
 	}
 
-	if len(resp.Versions) != 1 || len(resp.Versions[0].Crashes) != 0 {
+	if len(resp.GetVersions()) != 1 || len(resp.GetVersions()[0].GetCrashes()) != 0 {
 		t.Errorf("bad pull - not version or crashes: %v", resp)
 	}
 
-	s.ReportCrash(context.Background(), &pb.CrashRequest{Job: &pbgbs.Job{Name: "crasher"}, Version: resp.Versions[0].Version, Crash: &pb.Crash{ErrorMessage: "help"}})
+	s.ReportCrash(context.Background(), &pb.CrashRequest{Job: &pbgbs.Job{Name: "crasher"}, Version: resp.GetVersions()[0].GetVersion(), Crash: &pb.Crash{ErrorMessage: "help"}})
 
 	resp, err = s.GetVersions(context.Background(), &pb.VersionRequest{JustLatest: true, Job: &pbgbs.Job{Name: "crasher", GoPath: "github.com/brotherlogic/crasher"}})
 	if err != nil {
@@ -190,7 +197,7 @@ func TestCrash(t *testing.T) {
 	}
 
 	// Get latest should not get crashes
-	if len(resp.Versions) != 1 || len(resp.Versions[0].Crashes) != 0 {
+	if len(resp.GetVersions()) != 1 || len(resp.GetVersions()[0].GetCrashes()) != 0 {
 		t.Errorf("bad pull - not version or crashes: %v", resp)
 	}
 }

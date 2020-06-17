@@ -139,7 +139,8 @@ func TestBuidlRun(t *testing.T) {
 		int64(0),
 	}
 
-	hash, err := s.build(queueEntry{job: &pbgbs.Job{Name: "crasher", GoPath: "github.com/brotherlogic/crasher"}}, "madeup", "blah")
+	hash, _, err := s.build(queueEntry{job: &pbgbs.Job{Name: "crasher", GoPath: "github.com/brotherlogic/crasher"}}, "madeup", "blah")
+	log.Printf("%v and %v", hash, err)
 
 	f, err := os.Open(wd + "/buildtest/builds/github.com/brotherlogic/crasher/crasher-" + hash)
 	if err != nil {
@@ -177,7 +178,7 @@ func TestBuildRunError(t *testing.T) {
 	}
 	s.lastBuild["crasher"] = time.Now()
 
-	hash, err := s.build(queueEntry{job: &pbgbs.Job{Name: "crasher", GoPath: "github.com/brotherlogic/crasher"}}, "madeup", "blah")
+	hash, _, err := s.build(queueEntry{job: &pbgbs.Job{Name: "crasher", GoPath: "github.com/brotherlogic/crasher"}}, "madeup", "blah")
 	if err == nil {
 		t.Errorf("Should have errored here: %v", hash)
 	}
@@ -204,8 +205,36 @@ func TestEmptyJobName(t *testing.T) {
 		int64(0),
 		int64(0),
 	}
-	hash, err := s.build(queueEntry{job: &pbgbs.Job{GoPath: "github.com/brotherlogic/crasher"}}, "madeup", "blah")
+	hash, _, err := s.build(queueEntry{job: &pbgbs.Job{GoPath: "github.com/brotherlogic/crasher"}}, "madeup", "blah")
 	if err == nil {
 		t.Errorf("Empty job name did not fail build: %v", hash)
+	}
+}
+
+func TestSaveVersion(t *testing.T) {
+	wd, err := os.Getwd()
+	if err != nil {
+		t.Fatalf("Pah, %v", err)
+	}
+
+	s := &Scheduler{
+		wd + "/buildtest",
+		&sync.Mutex{},
+		make(map[string]*sync.Mutex),
+		LogTest,
+		"md5sum",
+		load,
+		&sync.Mutex{},
+		make(map[string]time.Time),
+		"",
+		time.Minute * 2,
+		int64(0),
+		int64(0),
+		int64(0),
+	}
+
+	v := s.saveVersionInfo(nil, "madeuppath", "blah", "blah")
+	if v != nil {
+		t.Errorf("Did not fail: %v", v)
 	}
 }
