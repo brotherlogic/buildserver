@@ -199,7 +199,7 @@ func (s *Server) build(ctx context.Context, job *queueEntry) (*pb.Version, error
 		if !ok || e.Code() != codes.AlreadyExists {
 			s.buildFails[job.job.Name]++
 			if s.buildFails[job.job.Name] > 3 {
-				s.RaiseIssue(ctx, "Build Failure", fmt.Sprintf("Build failed for %v: %v running on %v", job.job.Name, err, s.Registry.Identifier), false)
+				s.RaiseIssue("Build Failure", fmt.Sprintf("Build failed for %v: %v running on %v", job.job.Name, err, s.Registry.Identifier))
 			}
 		}
 	} else {
