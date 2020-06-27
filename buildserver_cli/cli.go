@@ -29,7 +29,7 @@ func main() {
 	ctx, cancel := utils.ManualContext("buildserver-"+os.Args[1], "buildserver", time.Second*10, true)
 	defer cancel()
 
-	conn, err := grpc.Dial("discovery:///buildserver", grpc.WithInsecure(), grpc.WithBalancerName("my_pick_first"))
+	conn, err := grpc.Dial("runner:54775", grpc.WithInsecure())
 	defer conn.Close()
 
 	if err != nil {

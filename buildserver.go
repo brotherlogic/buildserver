@@ -357,7 +357,7 @@ func Init() *Server {
 		0,
 		"",
 		int64(0),
-		make(chan *queueEntry),
+		make(chan *queueEntry, 100),
 		make(chan bool),
 		make(chan fanoutEntry, 100),
 		false,
