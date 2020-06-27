@@ -33,6 +33,11 @@ var (
 		Name: "buildserver_queue",
 		Help: "The size of the print queue",
 	}, []string{"type"})
+
+	builds = promauto.NewCounterVec(prometheus.CounterOpts{
+		Name: "buildserver_builds",
+		Help: "The number of builds made",
+	}, []string{"job"})
 )
 
 type queueEntry struct {
@@ -167,10 +172,6 @@ func (s *Server) enqueue(job *pbgbs.Job, force bool) {
 		s.buildsMutex.Lock()
 		s.builds[job.Name] = time.Now()
 		s.buildsMutex.Unlock()
-		before := []queueEntry{}
-		for _, ent := range s.buildQueue {
-			before = append(before, ent)
-		}
 
 		forceBuild := force
 		if val, ok := s.latestDate[job.Name]; ok {
@@ -191,6 +192,7 @@ func (s *Server) enqueue(job *pbgbs.Job, force bool) {
 }
 
 func (s *Server) build(ctx context.Context, job *queueEntry) (*pb.Version, error) {
+	builds.With(prometheus.Labels{"job": job.job.GetName()}).Inc()
 	s.currentBuilds++
 	_, version, err := s.scheduler.build(*job, s.Registry.Identifier, s.latestHash[job.job.Name])
 	s.buildFailsMutex.Lock()
