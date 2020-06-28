@@ -213,10 +213,18 @@ func (s *Server) build(ctx context.Context, job *queueEntry) (*pb.Version, error
 	return version, err
 }
 
+var (
+	dequeues = promauto.NewGaugeVec(prometheus.GaugeOpts{
+		Name: "buildserver_dequeue",
+		Help: "The size of the print queue",
+	}, []string{"version", "error"})
+)
+
 func (s *Server) dequeue() {
 	for job := range s.queue {
 		ctx, cancel := utils.ManualContext("buildserver", "buildserver", time.Minute*5, false)
-		version, _ := s.build(ctx, job)
+		version, err := s.build(ctx, job)
+		dequeues.With(prometheus.Labels{"version": fmt.Sprintf("%v", version), "error": fmt.Sprintf("%v", err)}).Inc()
 		if version != nil {
 			s.doFanout(ctx, version)
 		}
