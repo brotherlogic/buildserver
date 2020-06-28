@@ -108,20 +108,20 @@ func main() {
 		}
 	case "latest":
 		var err error
-		for i := 0; i < 3; i++ {
-			ctx, cancel := utils.ManualContext("buildserver-"+os.Args[1], "buildserver", time.Second*10, true)
-			defer cancel()
+		ctx, cancel := utils.ManualContext("buildserver-"+os.Args[1], "buildserver", time.Second*10, true)
+		defer cancel()
 
-			res, err := client.GetVersions(ctx, &pb.VersionRequest{Origin: "cli-latest", Job: &pbgbs.Job{Name: os.Args[2], GoPath: "github.com/brotherlogic/" + os.Args[2]}, JustLatest: true})
-			if err != nil {
-				log.Printf("Error %v -> %v with %v", err, ctx, conn)
-			}
-			if err == nil {
-				fmt.Printf("%v - %v (%v)\n", res.Versions[0].Version, time.Unix(res.Versions[0].VersionDate, 0), len(res.Versions[0].Crashes))
-				fmt.Printf("%v\n", res.Versions[0])
-				break
-			}
+		req := &pb.VersionRequest{Origin: "cli-latest", Job: &pbgbs.Job{Name: os.Args[2], GoPath: "github.com/brotherlogic/" + os.Args[2]}, JustLatest: true}
+		log.Printf("%v", req)
+		res, err := client.GetVersions(ctx, req)
+		if err != nil {
+			log.Printf("Error %v -> %v with %v", err, ctx, conn)
 		}
+		if err == nil {
+			fmt.Printf("%v - %v (%v)\n", res.Versions[0].Version, time.Unix(res.Versions[0].VersionDate, 0), len(res.Versions[0].Crashes))
+			fmt.Printf("%v\n", res.Versions[0])
+		}
+
 		if err != nil {
 			log.Fatalf("Error on build: %v", err)
 		}
