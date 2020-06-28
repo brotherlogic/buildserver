@@ -233,13 +233,23 @@ func (s *Server) dequeue() {
 	s.done <- true
 }
 
+var (
+	fanouts = promauto.NewCounterVec(prometheus.CounterOpts{
+		Name: "buildserver_fanouts",
+		Help: "The number of builds made",
+	}, []string{"version", "error", "server"})
+)
+
 func (s *Server) doFanout(ctx context.Context, v *pb.Version) {
 	if !s.testing {
 		servers, err := s.FFind(ctx, "versiontracker")
-		if err != nil {
+		if err == nil {
 			for _, server := range servers {
+				fanouts.With(prometheus.Labels{"version": fmt.Sprintf("%v", v), server: server}).Inc()
 				s.fanoutQueue <- fanoutEntry{version: v, server: server}
 			}
+		} else {
+			fanouts.With(prometheus.Labels{"error": fmt.Sprintf("%v", err)}).Inc()
 		}
 	}
 }
