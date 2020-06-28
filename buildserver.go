@@ -386,7 +386,6 @@ func (s *Server) Shutdown(ctx context.Context) error {
 
 // Mote promotes/demotes this server
 func (s *Server) Mote(ctx context.Context, master bool) error {
-	s.preloadInfo()
 	return nil
 }
 
@@ -629,5 +628,6 @@ func main() {
 		server.dequeue()
 	}()
 
+	server.preloadInfo()
 	fmt.Printf("%v\n", server.Serve())
 }
