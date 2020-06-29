@@ -264,7 +264,7 @@ func (s *Server) fanout() {
 		ctx, cancel := utils.ManualContext("buildserver", "buildserver", time.Minute, false)
 		conn, err := s.FDial(fanout.server)
 		if err != nil {
-			fproc.With(prometheus.Labels{"error": fmt.Sprintf("%v", err)}).Inc()
+			fproc.With(prometheus.Labels{"error": fmt.Sprintf("Dial %v", err)}).Inc()
 			s.fanoutQueue <- fanout
 			continue
 		}
@@ -274,7 +274,6 @@ func (s *Server) fanout() {
 		if err != nil {
 			fproc.With(prometheus.Labels{"error": fmt.Sprintf("%v", err)}).Inc()
 			s.fanoutQueue <- fanout
-			continue
 		}
 		conn.Close()
 		cancel()
