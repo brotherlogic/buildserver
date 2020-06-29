@@ -234,10 +234,8 @@ func (s *Server) dequeue() {
 }
 
 var (
-	fanouts = promauto.NewCounterVec(prometheus.CounterOpts{
-		Name: "buildserver_fanouts",
-		Help: "The number of builds made",
-	}, []string{"version", "error", "server"})
+	fanouts = promauto.NewCounterVec(prometheus.CounterOpts{Name: "buildserver_fanouts", Help: "The number of builds made"},
+		[]string{"version", "error", "server"})
 )
 
 func (s *Server) doFanout(ctx context.Context, v *pb.Version) {
@@ -254,21 +252,31 @@ func (s *Server) doFanout(ctx context.Context, v *pb.Version) {
 	}
 }
 
+var (
+	fproc = promauto.NewCounterVec(prometheus.CounterOpts{Name: "buildserver_fanoutproc", Help: "The number of builds made"},
+		[]string{"error"})
+)
+
 func (s *Server) fanout() {
 	for fanout := range s.fanoutQueue {
 		ctx, cancel := utils.ManualContext("buildserver", "buildserver", time.Minute, false)
 		conn, err := s.FDial(fanout.server)
 		if err != nil {
+			fproc.With(prometheus.Labels{"error": fmt.Sprintf("%v", err)}).Inc()
 			s.fanoutQueue <- fanout
+			continue
 		}
 
 		client := pbvt.NewVersionTrackerServiceClient(conn)
 		_, err = client.NewVersion(ctx, &pbvt.NewVersionRequest{Version: fanout.version})
 		if err != nil {
+			fproc.With(prometheus.Labels{"error": fmt.Sprintf("%v", err)}).Inc()
 			s.fanoutQueue <- fanout
+			continue
 		}
 		conn.Close()
 		cancel()
+		fproc.With(prometheus.Labels{"error": "none"}).Inc()
 	}
 }
 
