@@ -653,6 +653,9 @@ func main() {
 	go func() {
 		server.dequeue()
 	}()
+	go func() {
+		server.fanout()
+	}()
 
 	server.preloadInfo()
 	fmt.Printf("%v\n", server.Serve())
