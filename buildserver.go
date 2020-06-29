@@ -229,6 +229,8 @@ func (s *Server) dequeue() {
 			s.doFanout(ctx, version)
 		}
 		cancel()
+
+		time.Sleep(time.Second)
 	}
 	s.done <- true
 }
@@ -277,6 +279,9 @@ func (s *Server) fanout() {
 		conn.Close()
 		cancel()
 		fproc.With(prometheus.Labels{"error": "none"}).Inc()
+
+		// Slow down
+		time.Sleep(time.Second)
 	}
 }
 
