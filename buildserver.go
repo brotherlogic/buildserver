@@ -245,11 +245,11 @@ func (s *Server) doFanout(ctx context.Context, v *pb.Version) {
 		servers, err := s.FFind(ctx, "versiontracker")
 		if err == nil {
 			for _, server := range servers {
-				fanouts.With(prometheus.Labels{"version": fmt.Sprintf("%v", v), server: server}).Inc()
+				fanouts.With(prometheus.Labels{"version": fmt.Sprintf("%v", v), server: server, "error": ""}).Inc()
 				s.fanoutQueue <- fanoutEntry{version: v, server: server}
 			}
 		} else {
-			fanouts.With(prometheus.Labels{"error": fmt.Sprintf("%v", err)}).Inc()
+			fanouts.With(prometheus.Labels{"error": fmt.Sprintf("%v", err), "version": fmt.Sprintf("%v", v), "server": ""}).Inc()
 		}
 	}
 }
