@@ -256,7 +256,7 @@ func (s *Server) doFanout(ctx context.Context, v *pb.Version) {
 
 var (
 	fproc = promauto.NewCounterVec(prometheus.CounterOpts{Name: "buildserver_fanoutproc", Help: "The number of builds made"},
-		[]string{"error"})
+		[]string{"error", "written"})
 	flen = promauto.NewGauge(prometheus.GaugeOpts{Name: "buildserver_fanoutlen", Help: "Length of the fanout queue"})
 )
 
@@ -265,7 +265,7 @@ func (s *Server) fanout() {
 		ctx, cancel := utils.ManualContext("buildserver", "buildserver", time.Minute, false)
 		conn, err := s.FDial(fanout.server)
 		if err != nil {
-			fproc.With(prometheus.Labels{"error": fmt.Sprintf("Dial %v", err)}).Inc()
+			fproc.With(prometheus.Labels{"written": fanout.server, "error": fmt.Sprintf("Dial %v", err)}).Inc()
 			s.fanoutQueue <- fanout
 			continue
 		}
@@ -273,12 +273,12 @@ func (s *Server) fanout() {
 		client := pbvt.NewVersionTrackerServiceClient(conn)
 		_, err = client.NewVersion(ctx, &pbvt.NewVersionRequest{Version: fanout.version})
 		if err != nil {
-			fproc.With(prometheus.Labels{"error": fmt.Sprintf("%v", err)}).Inc()
+			fproc.With(prometheus.Labels{"written": fanout.server, "error": fmt.Sprintf("%v", err)}).Inc()
 			s.fanoutQueue <- fanout
 		}
 		conn.Close()
 		cancel()
-		fproc.With(prometheus.Labels{"error": "none"}).Inc()
+		fproc.With(prometheus.Labels{"written": fanout.server, "error": "none"}).Inc()
 
 		// Slow down
 		time.Sleep(time.Second)
