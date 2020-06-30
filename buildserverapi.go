@@ -59,8 +59,6 @@ func (s *Server) GetVersions(ctx context.Context, req *pb.VersionRequest) (*pb.V
 		return &pb.VersionResponse{}, fmt.Errorf("You sent an empty job for some reason")
 	}
 
-	s.enqueue(req.GetJob(), true)
-
 	resp := &pb.VersionResponse{}
 	resp.Versions = append(resp.Versions, s.latest[req.GetJob().GetName()])
 
