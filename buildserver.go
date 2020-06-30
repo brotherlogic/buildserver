@@ -257,6 +257,7 @@ func (s *Server) doFanout(ctx context.Context, v *pb.Version) {
 var (
 	fproc = promauto.NewCounterVec(prometheus.CounterOpts{Name: "buildserver_fanoutproc", Help: "The number of builds made"},
 		[]string{"error"})
+	flen = promauto.NewGauge(prometheus.GaugeOpts{Name: "buildserver_fanoutlen", Help: "Length of the fanout queue"})
 )
 
 func (s *Server) fanout() {
@@ -281,6 +282,7 @@ func (s *Server) fanout() {
 
 		// Slow down
 		time.Sleep(time.Second)
+		flen.Set(float64(len(s.fanoutQueue)))
 	}
 }
 
