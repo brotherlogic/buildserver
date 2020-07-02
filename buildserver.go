@@ -225,6 +225,9 @@ func (s *Server) dequeue() {
 	for job := range s.queue {
 		ctx, cancel := utils.ManualContext("buildserver", "buildserver", time.Minute*5, false)
 		version, err := s.build(ctx, job)
+		time.Sleep(time.Second)
+		s.Log(fmt.Sprintf("BUILT %v, %v", version, err))
+		time.Sleep(time.Second)
 		dequeues.With(prometheus.Labels{"version": fmt.Sprintf("%v", version), "error": fmt.Sprintf("%v", err)}).Inc()
 		if version != nil {
 			s.doFanout(ctx, version)
