@@ -22,6 +22,7 @@ func getVersion(f string) string {
 
 //Build a binary
 func (s *Server) Build(ctx context.Context, req *pb.BuildRequest) (*pb.BuildResponse, error) {
+	s.Log(fmt.Sprintf("Build request: %v", req))
 	s.buildRequest++
 
 	//Build the binary

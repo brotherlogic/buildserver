@@ -192,6 +192,7 @@ func (s *Server) enqueue(job *pbgbs.Job, force bool) {
 }
 
 func (s *Server) build(ctx context.Context, job *queueEntry) (*pb.Version, error) {
+	s.Log(fmt.Sprintf("Building: %v", job))
 	builds.With(prometheus.Labels{"job": job.job.GetName()}).Inc()
 	s.currentBuilds++
 	_, version, err := s.scheduler.build(*job, s.Registry.Identifier, s.latestHash[job.job.Name])
@@ -264,6 +265,7 @@ func (s *Server) fanout() {
 	for fanout := range s.fanoutQueue {
 		ctx, cancel := utils.ManualContext("buildserver", "buildserver", time.Minute, false)
 		conn, err := s.FDial(fanout.server)
+		s.Log(fmt.Sprintf("Fanning out to %v: %v", fanout.server, fanout.version))
 		if err != nil {
 			fproc.With(prometheus.Labels{"written": fanout.server, "error": fmt.Sprintf("Dial %v", err)}).Inc()
 			s.fanoutQueue <- fanout
