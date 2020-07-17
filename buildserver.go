@@ -235,6 +235,7 @@ func (s *Server) dequeue() {
 		cancel()
 
 		time.Sleep(time.Second)
+		queueSize.With(prometheus.Labels{"type": "reported"}).Set(float64(len(s.queue)))
 	}
 	s.done <- true
 }
