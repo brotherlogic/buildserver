@@ -40,7 +40,7 @@ func (s *Server) ReportCrash(ctx context.Context, req *pb.CrashRequest) (*pb.Cra
 	s.pathMapMutex.Lock()
 	for _, val := range s.pathMap {
 		if val.Version == req.Version && val.Job.Name == req.Job.Name {
-			s.BounceIssue(ctx, fmt.Sprintf("Crash for %v", val.Job.Name), fmt.Sprintf("on %v - %v", req.Origin, req.Crash.ErrorMessage), val.Job.Name)
+			s.BounceIssue(fmt.Sprintf("Crash for %v", val.Job.Name), fmt.Sprintf("on %v - %v", req.Origin, req.Crash.ErrorMessage), val.Job.Name)
 			val.Crashes = append(val.Crashes, req.Crash)
 			s.pathMapMutex.Unlock()
 			s.scheduler.saveVersionFile(val)
@@ -49,7 +49,7 @@ func (s *Server) ReportCrash(ctx context.Context, req *pb.CrashRequest) (*pb.Cra
 	}
 	s.pathMapMutex.Unlock()
 
-	s.BounceIssue(ctx, fmt.Sprintf("Unfound crash for %v", req.Job.Name), fmt.Sprintf("At %v on %v: %v", time.Now(), req.Origin, req.Crash.ErrorMessage), req.Job.Name)
+	s.BounceIssue(fmt.Sprintf("Unfound crash for %v", req.Job.Name), fmt.Sprintf("At %v on %v: %v", time.Now(), req.Origin, req.Crash.ErrorMessage), req.Job.Name)
 	return &pb.CrashResponse{}, status.Errorf(codes.NotFound, "Version %v/%v not found for %v (%v) -> %v", req.Job.Name, req.Version, req.Origin, req.Crash.CrashType, req.Crash.ErrorMessage)
 }
 
