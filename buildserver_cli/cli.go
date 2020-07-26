@@ -29,7 +29,7 @@ func main() {
 	ctx, cancel := utils.ManualContext("buildserver-"+os.Args[1], "buildserver", time.Second*10, true)
 	defer cancel()
 
-	conn, err := grpc.Dial("runner:54775", grpc.WithInsecure())
+	conn, err := utils.LFDialServer(ctx, "buildserver")
 	defer conn.Close()
 
 	if err != nil {
