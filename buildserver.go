@@ -670,5 +670,6 @@ func main() {
 	}()
 
 	server.preloadInfo()
+	server.DiskLog = true
 	fmt.Printf("%v\n", server.Serve())
 }
