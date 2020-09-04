@@ -10,6 +10,7 @@ import (
 	"google.golang.org/grpc/status"
 
 	pb "github.com/brotherlogic/buildserver/proto"
+	"github.com/brotherlogic/goserver/utils"
 )
 
 func getVersion(f string) string {
@@ -64,6 +65,15 @@ func (s *Server) GetVersions(ctx context.Context, req *pb.VersionRequest) (*pb.V
 	resp.Versions = append(resp.Versions, s.latest[req.GetJob().GetName()])
 
 	if req.JustLatest {
+		latest := s.latest[req.GetJob().GetName()]
+		if latest == nil || time.Now().Sub(time.Unix(s.latest[req.GetJob().GetName()].GetVersionDate(), 0)) > time.Hour {
+			go func() {
+				ctx, cancel := utils.ManualContext("bsi", "bsi", time.Minute*5, false)
+				defer cancel()
+				_, err := s.Build(ctx, &pb.BuildRequest{Job: latest.GetJob(), Origin: "internal"})
+				s.Log(fmt.Sprintf("internal build: %v", err))
+			}()
+		}
 		return &pb.VersionResponse{Versions: []*pb.Version{s.latest[req.GetJob().GetName()]}}, nil
 	}
 
