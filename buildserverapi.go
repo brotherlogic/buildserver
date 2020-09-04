@@ -66,15 +66,15 @@ func (s *Server) GetVersions(ctx context.Context, req *pb.VersionRequest) (*pb.V
 
 	if req.JustLatest {
 		latest := s.latest[req.GetJob().GetName()]
-		if latest == nil || time.Now().Sub(time.Unix(s.latest[req.GetJob().GetName()].GetVersionDate(), 0)) > time.Hour {
+		if latest == nil || time.Now().Sub(time.Unix(latest.GetVersionDate(), 0)) > time.Hour {
 			go func() {
 				ctx, cancel := utils.ManualContext("bsi", "bsi", time.Minute*5, false)
 				defer cancel()
-				_, err := s.Build(ctx, &pb.BuildRequest{Job: latest.GetJob(), Origin: "internal"})
+				_, err := s.Build(ctx, &pb.BuildRequest{Job: req.GetJob(), Origin: "internal"})
 				s.Log(fmt.Sprintf("internal build: %v", err))
 			}()
 		}
-		return &pb.VersionResponse{Versions: []*pb.Version{s.latest[req.GetJob().GetName()]}}, nil
+		return &pb.VersionResponse{Versions: []*pb.Version{latest}}, nil
 	}
 
 	return resp, nil
