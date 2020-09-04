@@ -66,7 +66,7 @@ func (s *Server) GetVersions(ctx context.Context, req *pb.VersionRequest) (*pb.V
 
 	if req.JustLatest {
 		latest := s.latest[req.GetJob().GetName()]
-		if latest == nil || time.Now().Sub(time.Unix(latest.GetVersionDate(), 0)) > time.Hour {
+		if latest == nil || time.Now().Sub(time.Unix(latest.GetVersionDate(), 0)) > time.Hour*4 {
 			go func() {
 				ctx, cancel := utils.ManualContext("bsi", "bsi", time.Minute*5, false)
 				defer cancel()
