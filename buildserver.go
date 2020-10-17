@@ -365,7 +365,7 @@ func Init() *Server {
 			&sync.Mutex{},
 			make(map[string]time.Time),
 			"",
-			time.Minute * 2,
+			time.Hour,
 			int64(0),
 			int64(0),
 			int64(0),
