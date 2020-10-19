@@ -110,6 +110,11 @@ func (s *Scheduler) build(queEnt queueEntry, server string, latestHash string) (
 		data, err := ioutil.ReadFile(s.dir + "/src/" + queEnt.job.GoPath + "/.git/refs/heads/master")
 		if err == nil {
 			readHash = strings.TrimSpace(string(data))
+		} else {
+			data, err = ioutil.ReadFile(s.dir + "/src/" + queEnt.job.GoPath + "/.git/refs/heads/main")
+			if err == nil {
+				readHash = strings.TrimSpace(string(data))
+			}
 		}
 
 		if len(latestHash) > 0 && readHash == latestHash {
@@ -123,7 +128,10 @@ func (s *Scheduler) build(queEnt queueEntry, server string, latestHash string) (
 	s.runAndWait(buildCommand)
 
 	builtHash := ""
-	data, _ := ioutil.ReadFile(s.dir + "/src/" + queEnt.job.GoPath + "/.git/refs/heads/master")
+	data, err := ioutil.ReadFile(s.dir + "/src/" + queEnt.job.GoPath + "/.git/refs/heads/master")
+	if err != nil {
+		data, _ = ioutil.ReadFile(s.dir + "/src/" + queEnt.job.GoPath + "/.git/refs/heads/main")
+	}
 	builtHash = strings.TrimSpace(string(data))
 
 	// If the build has failed, there will be no file output
