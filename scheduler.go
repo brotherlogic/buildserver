@@ -103,6 +103,8 @@ func (s *Scheduler) build(queEnt queueEntry, server string, latestHash string) (
 		s.runAndWait(fetchCommand)
 		mergeCommand := &rCommand{command: exec.Command("git", "-C", s.dir+"/src/"+queEnt.job.GoPath, "merge", "origin/master")}
 		s.runAndWait(mergeCommand)
+		mergeCommand = &rCommand{command: exec.Command("git", "-C", s.dir+"/src/"+queEnt.job.GoPath, "merge", "origin/main")}
+		s.runAndWait(mergeCommand)
 
 		readHash := ""
 		data, err := ioutil.ReadFile(s.dir + "/src/" + queEnt.job.GoPath + "/.git/refs/heads/master")
