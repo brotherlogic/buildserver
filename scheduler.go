@@ -118,7 +118,7 @@ func (s *Scheduler) build(queEnt queueEntry, server string, latestHash string) (
 		}
 
 		if len(latestHash) > 0 && readHash == latestHash {
-			return "", nil, status.Error(codes.AlreadyExists, fmt.Sprintf("Skipping build for %v since we have a recent hash", queEnt.job.Name))
+			return "", nil, status.Error(codes.AlreadyExists, fmt.Sprintf("Skipping build for %v since we have a recent hash %v from %v", queEnt.job.Name, latestHash, s.dir+"/src/"+queEnt.job.GoPath))
 		}
 	}
 
