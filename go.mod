@@ -7,6 +7,7 @@ require (
 	github.com/brotherlogic/filecopier v0.0.0-20201006222739-09abeee3f6b2
 	github.com/brotherlogic/gobuildslave v0.0.0-20210517144112-4098e8e4a598
 	github.com/brotherlogic/goserver v0.0.0-20210517140105-372f30a83363
+	github.com/brotherlogic/keymapper v0.0.0-20201116203852-f939ef86e1a2
 	github.com/brotherlogic/keystore v0.0.0-20201029130503-da423c07fd79
 	github.com/brotherlogic/versiontracker v0.0.0-20200819052316-eb624326d315
 	github.com/golang/protobuf v1.5.2

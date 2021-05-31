@@ -24,6 +24,7 @@ import (
 	pbfc "github.com/brotherlogic/filecopier/proto"
 	pbgbs "github.com/brotherlogic/gobuildslave/proto"
 	pbg "github.com/brotherlogic/goserver/proto"
+	kmpb "github.com/brotherlogic/keymapper/proto"
 	pbvt "github.com/brotherlogic/versiontracker/proto"
 )
 
@@ -82,6 +83,7 @@ type Server struct {
 	done              chan bool
 	fanoutQueue       chan fanoutEntry
 	testing           bool
+	token             string
 }
 
 type fanoutEntry struct {
@@ -399,6 +401,7 @@ func Init() *Server {
 		make(chan bool),
 		make(chan fanoutEntry, 100),
 		false,
+		"",
 	}
 
 	s.scheduler.log = s.log
@@ -661,6 +664,27 @@ func main() {
 	if err != nil {
 		return
 	}
+
+	ctx, cancel := utils.ManualContext("ghc", "ghc", time.Minute, false)
+	conn, err := server.FDialServer(ctx, "keymapper")
+	if err != nil {
+		if status.Convert(err).Code() == codes.Unknown {
+			log.Fatalf("Cannot reach keymapper: %v", err)
+		}
+		return
+	}
+	client := kmpb.NewKeymapperServiceClient(conn)
+	resp, err := client.Get(ctx, &kmpb.GetRequest{Key: "github_token"})
+	if err != nil {
+		if status.Convert(err).Code() == codes.Unknown || status.Convert(err).Code() == codes.InvalidArgument {
+			log.Fatalf("Cannot read external: %v", err)
+		}
+		return
+	}
+	server.token = resp.GetKey().GetValue()
+	cancel()
+
+	server.scheduler.runAndWait(&rCommand{command: exec.Command("git", "config", "--global", fmt.Sprintf("url.\"https://brotherlogic:%v@github.com\".insteadOf", resp.GetKey().GetValue(),"https://github.com")}})
 
 	go func() {
 		server.dequeue()
