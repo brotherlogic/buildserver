@@ -7,6 +7,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"os/exec"
 	"sync"
 	"time"
 
@@ -684,8 +685,9 @@ func main() {
 	server.token = resp.GetKey().GetValue()
 	cancel()
 
-	server.scheduler.runAndWait(&rCommand{command: exec.Command("git", "config", "--global", fmt.Sprintf("url.\"https://brotherlogic:%v@github.com\".insteadOf", resp.GetKey().GetValue(),"https://github.com")}})
-
+	rcm := &rCommand{command: exec.Command("git", "config", "--global", fmt.Sprintf("url.\"https://brotherlogic:%v@github.com\".insteadOf", resp.GetKey().GetValue()), "https://github.com")}
+	server.scheduler.runAndWait(rcm)
+	server.Log(fmt.Sprintf("Configured %v and %v (%v)", rcm.err, rcm.output, rcm.erroutput))
 	go func() {
 		server.dequeue()
 	}()
