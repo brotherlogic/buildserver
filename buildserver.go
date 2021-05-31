@@ -678,7 +678,7 @@ func main() {
 	resp, err := client.Get(ctx, &kmpb.GetRequest{Key: "github_token"})
 	if err != nil {
 		if status.Convert(err).Code() == codes.Unknown || status.Convert(err).Code() == codes.InvalidArgument {
-			log.Fatalf("Cannot read the external: %v", err)
+			log.Fatalf("Cannot read token: %v", err)
 		}
 		return
 	}
