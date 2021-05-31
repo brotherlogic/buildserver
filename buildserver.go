@@ -685,7 +685,6 @@ func main() {
 	server.token = resp.GetKey().GetValue()
 	cancel()
 
-	git config --global url.git@github.com:.insteadOf https://github.com/
 	rcm := &rCommand{command: exec.Command("git", "config", "--global", "url.git@github.com:.insteadOf", "https://github.com")}
 	server.scheduler.runAndWait(rcm)
 	server.Log(fmt.Sprintf("Configured %v and %v (%v)", rcm.err, rcm.output, rcm.erroutput))
