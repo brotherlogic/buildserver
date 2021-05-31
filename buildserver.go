@@ -685,7 +685,8 @@ func main() {
 	server.token = resp.GetKey().GetValue()
 	cancel()
 
-	rcm := &rCommand{command: exec.Command("git", "config", "--global", fmt.Sprintf("url.\"https://brotherlogic:%v@github.com\".insteadOf", resp.GetKey().GetValue()), "https://github.com")}
+	git config --global url.git@github.com:.insteadOf https://github.com/
+	rcm := &rCommand{command: exec.Command("git", "config", "--global", "url.git@github.com:.insteadOf", "https://github.com")}
 	server.scheduler.runAndWait(rcm)
 	server.Log(fmt.Sprintf("Configured %v and %v (%v)", rcm.err, rcm.output, rcm.erroutput))
 	go func() {
