@@ -226,7 +226,7 @@ var (
 
 func (s *Server) dequeue() {
 	for job := range s.queue {
-		ctx, cancel := utils.ManualContext("buildserver", "buildserver", time.Minute*5, false)
+		ctx, cancel := utils.ManualContext("buildserver", time.Minute*5)
 		version, err := s.build(ctx, job)
 		time.Sleep(time.Second)
 		s.Log(fmt.Sprintf("BUILT %v, %v", version, err))
@@ -270,7 +270,7 @@ var (
 
 func (s *Server) fanout() {
 	for fanout := range s.fanoutQueue {
-		ctx, cancel := utils.ManualContext("buildserver", "buildserver", time.Minute, false)
+		ctx, cancel := utils.ManualContext("buildserver", time.Minute)
 		conn, err := s.FDial(fanout.server)
 		if err != nil {
 			fproc.With(prometheus.Labels{"written": fanout.server, "error": fmt.Sprintf("Dial %v", err)}).Inc()
@@ -666,7 +666,7 @@ func main() {
 		return
 	}
 
-	ctx, cancel := utils.ManualContext("ghc", "ghc", time.Minute, false)
+	ctx, cancel := utils.ManualContext("ghc", time.Minute)
 	conn, err := server.FDialServer(ctx, "keymapper")
 	if err != nil {
 		if status.Convert(err).Code() == codes.Unknown {

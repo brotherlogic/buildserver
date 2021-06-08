@@ -68,7 +68,7 @@ func (s *Server) GetVersions(ctx context.Context, req *pb.VersionRequest) (*pb.V
 		latest := s.latest[req.GetJob().GetName()]
 		if latest == nil || time.Now().Sub(time.Unix(latest.GetVersionDate(), 0)) > time.Hour*4 {
 			go func() {
-				ctx, cancel := utils.ManualContext("bsi", "bsi", time.Minute*5, false)
+				ctx, cancel := utils.ManualContext("bsi", time.Minute*5)
 				defer cancel()
 				_, err := s.Build(ctx, &pb.BuildRequest{Job: req.GetJob(), Origin: "internal"})
 				s.Log(fmt.Sprintf("internal build: %v", err))
