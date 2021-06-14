@@ -124,7 +124,7 @@ func (s *Scheduler) build(queEnt queueEntry, server string, latestHash string) (
 
 	s.log(fmt.Sprintf("BUILDING %v {%v} (%v)", queEnt.job.Name, time.Now().Sub(queEnt.timeIn), queEnt.fullBuild))
 
-	buildCommand := &rCommand{command: exec.Command("go", "get", "-u", queEnt.job.GoPath)}
+	buildCommand := &rCommand{command: exec.Command("go", "get", queEnt.job.GoPath)}
 	s.runAndWait(buildCommand)
 	s.log(fmt.Sprintf("Have Ran the build: %v and %v", buildCommand.output, buildCommand.erroutput))
 
