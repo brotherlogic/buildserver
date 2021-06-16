@@ -212,6 +212,7 @@ func (s *Scheduler) run(c *rCommand) error {
 		}()
 	}
 
+	c.command.Dir = "/home/simon/gobuild/bin"
 	err := c.command.Start()
 	if err != nil {
 		return err
