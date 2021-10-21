@@ -56,26 +56,25 @@ func (s *Server) ReportCrash(ctx context.Context, req *pb.CrashRequest) (*pb.Cra
 
 //GetVersions gets the versions
 func (s *Server) GetVersions(ctx context.Context, req *pb.VersionRequest) (*pb.VersionResponse, error) {
-	s.Log(fmt.Sprintf("GetVersions: %v", req))
 	if req.GetJob() == nil {
 		return &pb.VersionResponse{}, fmt.Errorf("You sent an empty job for some reason")
 	}
 
-	resp := &pb.VersionResponse{}
-	resp.Versions = append(resp.Versions, s.latest[req.GetJob().GetName()])
-
-	if req.JustLatest {
-		latest := s.latest[req.GetJob().GetName()]
-		if latest == nil || time.Now().Sub(time.Unix(latest.GetVersionDate(), 0)) > time.Hour*4 {
-			go func() {
-				ctx, cancel := utils.ManualContext("bsi", time.Minute*5)
-				defer cancel()
-				_, err := s.Build(ctx, &pb.BuildRequest{Job: req.GetJob(), Origin: "internal"})
-				s.Log(fmt.Sprintf("internal build: %v", err))
-			}()
-		}
-		return &pb.VersionResponse{Versions: []*pb.Version{latest}}, nil
+	config, err := s.loadConfig(ctx)
+	if err != nil {
+		return nil, err
 	}
 
-	return resp, nil
+	latest := config.GetLatestVersions()[req.GetJob().GetName()]
+	if latest == nil || time.Now().Sub(time.Unix(latest.GetVersionDate(), 0)) > time.Hour*4 {
+		go func() {
+			ctx, cancel := utils.ManualContext("bsi", time.Minute*5)
+			defer cancel()
+			_, err := s.Build(ctx, &pb.BuildRequest{Job: req.GetJob(), Origin: "internal"})
+			s.Log(fmt.Sprintf("internal build: %v", err))
+		}()
+
+		return nil, fmt.Errorf("No builds found for %v", req.GetJob().GetName())
+	}
+	return &pb.VersionResponse{Versions: []*pb.Version{latest}}, nil
 }
