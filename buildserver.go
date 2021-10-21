@@ -22,11 +22,13 @@ import (
 	"google.golang.org/grpc/status"
 
 	pb "github.com/brotherlogic/buildserver/proto"
+	dspb "github.com/brotherlogic/dstore/proto"
 	pbfc "github.com/brotherlogic/filecopier/proto"
 	pbgbs "github.com/brotherlogic/gobuildslave/proto"
 	pbg "github.com/brotherlogic/goserver/proto"
 	kmpb "github.com/brotherlogic/keymapper/proto"
 	pbvt "github.com/brotherlogic/versiontracker/proto"
+	google_protobuf "github.com/golang/protobuf/ptypes/any"
 )
 
 var (
@@ -40,6 +42,15 @@ var (
 		Name: "buildserver_builds",
 		Help: "The number of builds made",
 	}, []string{"job"})
+
+	storedBuilds = promauto.NewGauge(prometheus.GaugeOpts{
+		Name: "buildserver_storedbuilds",
+		Help: "The number of builds made",
+	})
+)
+
+const (
+	CONFIG_KEY = "github.com/brotherlogic/buildserver/config"
 )
 
 type queueEntry struct {
@@ -304,6 +315,72 @@ func (s *Server) load(v *pb.Version) {
 		s.latestVersion[jobn] = v.Version
 		s.latest[jobn] = v
 	}
+
+	ctx, cancel := utils.ManualContext("buildserver-build", time.Minute)
+	defer cancel()
+
+	config, err := s.loadConfig(ctx)
+	if err != nil {
+		s.Log(fmt.Sprintf("Load error: %v", err))
+	}
+
+	if val, ok := config.GetLatestVersions()[jobn]; !ok || v.VersionDate > val.GetVersionDate() {
+		config.LatestVersions[jobn] = v
+		err = s.saveConfig(ctx, config)
+		if err != nil {
+			s.Log(fmt.Sprintf("Bad save: %v", err))
+		}
+	}
+}
+
+func (s *Server) saveConfig(ctx context.Context, config *pb.Config) error {
+	storedBuilds.Set(float64(len(config.GetLatestVersions())))
+
+	conn, err := s.FDialServer(ctx, "dstore")
+	if err != nil {
+		return err
+	}
+	defer conn.Close()
+
+	data, err := proto.Marshal(config)
+	if err != nil {
+		return err
+	}
+
+	client := dspb.NewDStoreServiceClient(conn)
+	_, err = client.Write(ctx, &dspb.WriteRequest{Key: CONFIG_KEY, Value: &google_protobuf.Any{Value: data}})
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (s *Server) loadConfig(ctx context.Context) (*pb.Config, error) {
+	conn, err := s.FDialServer(ctx, "dstore")
+	if err != nil {
+		return nil, err
+	}
+	defer conn.Close()
+
+	client := dspb.NewDStoreServiceClient(conn)
+	res, err := client.Read(ctx, &dspb.ReadRequest{Key: CONFIG_KEY})
+	if err != nil {
+		if status.Convert(err).Code() == codes.InvalidArgument {
+			return &pb.Config{
+				LatestVersions: make(map[string]*pb.Version),
+			}, nil
+		}
+		return nil, err
+	}
+
+	queue := &pb.Config{}
+	err = proto.Unmarshal(res.GetValue().GetValue(), queue)
+	if err != nil {
+		return nil, err
+	}
+
+	return queue, nil
 }
 
 func (s *Server) backgroundBuilder(ctx context.Context) error {

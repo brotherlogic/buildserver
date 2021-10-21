@@ -6,6 +6,10 @@ import "github.com/brotherlogic/gobuildslave/proto/slave.proto";
 
 option go_package = "github.com/brotherlogic/buildserver/proto";
 
+message Config {
+  map<string, Version> latest_versions = 1;
+}
+
 message Crash {
   string error_message = 1;
 

@@ -150,6 +150,8 @@ func (s *Scheduler) build(queEnt queueEntry, server string, latestHash string) (
 
 	version := s.saveVersionInfo(queEnt.job, s.dir+"/builds/"+queEnt.job.GoPath+"/"+queEnt.job.Name+"-"+hash, server, builtHash)
 
+	
+
 	return hash, version, nil
 }
 
