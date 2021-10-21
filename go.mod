@@ -4,7 +4,7 @@ go 1.13
 
 require (
 	github.com/brotherlogic/discovery v0.0.0-20210817224717-ebf146aae909
-	github.com/brotherlogic/dstore v0.0.0-20210926003830-e42420850d16
+	github.com/brotherlogic/dstore v0.0.0-20211021134550-c7b65a911d91
 	github.com/brotherlogic/filecopier v0.0.0-20211017162814-b6f08e5ce3aa
 	github.com/brotherlogic/gobuildslave v0.0.0-20211020160023-62274aaf5414
 	github.com/brotherlogic/goserver v0.0.0-20211016233716-06870779572e
@@ -17,7 +17,7 @@ require (
 	github.com/prometheus/common v0.32.1 // indirect
 	golang.org/x/net v0.0.0-20211020060615-d418f374d309
 	golang.org/x/sys v0.0.0-20211020174200-9d6173849985 // indirect
-	google.golang.org/genproto v0.0.0-20211020151524-b7c3a969101a // indirect
+	google.golang.org/genproto v0.0.0-20211021150943-2b146023228c // indirect
 	google.golang.org/grpc v1.41.0
 	google.golang.org/protobuf v1.27.1
 )
