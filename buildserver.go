@@ -376,6 +376,8 @@ func (s *Server) loadConfig(ctx context.Context) (*pb.Config, error) {
 		return nil, err
 	}
 
+	s.Log(fmt.Sprintf("Read with %v", res.GetConsensus()))
+
 	queue := &pb.Config{}
 	err = proto.Unmarshal(res.GetValue().GetValue(), queue)
 	if err != nil {
