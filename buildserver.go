@@ -320,6 +320,8 @@ func (s *Server) load(v *pb.Version) {
 	defer cancel()
 
 	config, err := s.loadConfig(ctx)
+	s.Log(fmt.Sprintf("Reached here: %v", err))
+
 	if err != nil {
 		s.Log(fmt.Sprintf("Load error: %v", err))
 	}
