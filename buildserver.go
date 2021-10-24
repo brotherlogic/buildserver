@@ -26,7 +26,6 @@ import (
 	pbfc "github.com/brotherlogic/filecopier/proto"
 	pbgbs "github.com/brotherlogic/gobuildslave/proto"
 	pbg "github.com/brotherlogic/goserver/proto"
-	kmpb "github.com/brotherlogic/keymapper/proto"
 	pbvt "github.com/brotherlogic/versiontracker/proto"
 	google_protobuf "github.com/golang/protobuf/ptypes/any"
 )
@@ -746,25 +745,6 @@ func main() {
 	if err != nil {
 		return
 	}
-
-	ctx, cancel := utils.ManualContext("ghc", time.Minute)
-	conn, err := server.FDialServer(ctx, "keymapper")
-	if err != nil {
-		if status.Convert(err).Code() == codes.Unknown {
-			log.Fatalf("Cannot reach keymapper: %v", err)
-		}
-		return
-	}
-	client := kmpb.NewKeymapperServiceClient(conn)
-	resp, err := client.Get(ctx, &kmpb.GetRequest{Key: "github_token"})
-	if err != nil {
-		if status.Convert(err).Code() == codes.Unknown || status.Convert(err).Code() == codes.InvalidArgument {
-			log.Fatalf("Cannot read token: %v", err)
-		}
-		return
-	}
-	server.token = resp.GetKey().GetValue()
-	cancel()
 
 	rcm := &rCommand{command: exec.Command("git", "config", "--global", "url.git@github.com:.insteadOf", "https://github.com")}
 	server.scheduler.runAndWait(rcm)
