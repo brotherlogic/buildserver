@@ -65,6 +65,8 @@ func (s *Server) GetVersions(ctx context.Context, req *pb.VersionRequest) (*pb.V
 		return nil, err
 	}
 
+	s.Log(fmt.Sprintf("Loaded config: %v -> %v", config, config.GetLatestVersions()[req.GetJob().GetName()]))
+
 	latest := config.GetLatestVersions()[req.GetJob().GetName()]
 	if latest == nil || time.Now().Sub(time.Unix(latest.GetVersionDate(), 0)) > time.Hour*4 {
 		go func() {
