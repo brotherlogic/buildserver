@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"os"
 	"os/exec"
+	"path/filepath"
 	"sync"
 	"time"
 
@@ -44,6 +45,11 @@ var (
 
 	storedBuilds = promauto.NewGauge(prometheus.GaugeOpts{
 		Name: "buildserver_storedbuilds",
+		Help: "The number of builds made",
+	})
+
+	buildStorage = promauto.NewGauge(prometheus.GaugeOpts{
+		Name: "buildserver_buildstorage",
 		Help: "The number of builds made",
 	})
 )
@@ -728,6 +734,28 @@ func (s *Server) drainAndRestoreQueue(ctx context.Context) {
 	}()
 }
 
+func dirSize(path string) (int64, error) {
+	var size int64
+	err := filepath.Walk(path, func(_ string, info os.FileInfo, err error) error {
+		if err != nil {
+			return err
+		}
+		if !info.IsDir() {
+			size += info.Size()
+		}
+		return err
+	})
+	return size, err
+}
+
+func (s *Server) runCleanup() {
+	size, err := dirSize(s.dir)
+	if err != nil {
+		s.Log(fmt.Sprintf("Error running cleanup: %v", err))
+	}
+	buildStorage.Set(float64(size))
+}
+
 func main() {
 	var quiet = flag.Bool("quiet", false, "Show all output")
 	flag.Parse()
@@ -762,5 +790,6 @@ func main() {
 
 	server.preloadInfo()
 	server.DiskLog = true
+	server.runCleanup()
 	fmt.Printf("%v\n", server.Serve())
 }
