@@ -748,12 +748,36 @@ func dirSize(path string) (int64, error) {
 	return size, err
 }
 
-func (s *Server) runCleanup() {
+func (s *Server) getDirSize() {
 	size, err := dirSize(s.dir)
 	if err != nil {
 		s.Log(fmt.Sprintf("Error running cleanup: %v", err))
 	}
 	buildStorage.Set(float64(size))
+}
+
+func (s *Server) runCleanup() {
+	defer s.getDirSize()
+
+	ctx, cancel := utils.ManualContext("buildserver-cleanup", time.Minute)
+	defer cancel()
+	config, err := s.loadConfig(ctx)
+	if err != nil {
+		s.Log(fmt.Sprintf("Error loading config for cleanup: %v", err))
+	}
+
+	err = filepath.Walk(s.dir, func(_ string, info os.FileInfo, err error) error {
+		if err != nil {
+			return err
+		}
+		if !info.IsDir() {
+			s.Log(fmt.Sprintf("%v/%v -> %v", s.dir, info.Name(), config.GetLatestVersions()[s.dir+"/"+info.Name()]))
+		}
+		return err
+	})
+	if err != nil {
+		s.Log(fmt.Sprintf("Error walking dir: %v", err))
+	}
 }
 
 func main() {
