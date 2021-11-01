@@ -9,6 +9,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"strings"
 	"sync"
 	"time"
 
@@ -770,7 +771,7 @@ func (s *Server) runCleanup() {
 		if err != nil {
 			return err
 		}
-		if !info.IsDir() {
+		if !info.IsDir() && !strings.HasSuffix(info.Name(), ".version") {
 			s.Log(fmt.Sprintf("%v/%v/%v -> %v", s.dir, p1, info.Name(), config.GetLatestVersions()[s.dir+"/"+p1+"/"+info.Name()]))
 		}
 		return err
