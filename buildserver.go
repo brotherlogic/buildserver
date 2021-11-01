@@ -766,12 +766,12 @@ func (s *Server) runCleanup() {
 		s.Log(fmt.Sprintf("Error loading config for cleanup: %v", err))
 	}
 
-	err = filepath.Walk(s.dir, func(_ string, info os.FileInfo, err error) error {
+	err = filepath.Walk(s.dir, func(p1 string, info os.FileInfo, err error) error {
 		if err != nil {
 			return err
 		}
 		if !info.IsDir() {
-			s.Log(fmt.Sprintf("%v/%v -> %v", s.dir, info.Name(), config.GetLatestVersions()[s.dir+"/"+info.Name()]))
+			s.Log(fmt.Sprintf("%v/%v/%v -> %v", s.dir, p1, info.Name(), config.GetLatestVersions()[s.dir+"/"+p1+"/"+info.Name()]))
 		}
 		return err
 	})
