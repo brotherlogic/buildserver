@@ -768,9 +768,6 @@ func (s *Server) runCleanup() {
 	}
 
 	err = filepath.Walk(s.dir, func(p1 string, info os.FileInfo, err error) error {
-		if err != nil {
-			return err
-		}
 		if !info.IsDir() && !strings.HasSuffix(info.Name(), ".version") && strings.Contains(p1, "brotherlogic") && !strings.Contains(p1, "pkg") {
 			elems := strings.Split(p1, "/")
 			if p1 != config.GetLatestVersions()[elems[7]].GetPath() {
@@ -779,7 +776,7 @@ func (s *Server) runCleanup() {
 				s.Log(fmt.Sprintf("Removing %v -> %v, %v", p1, err1, err2))
 			}
 		}
-		return err
+		return nil
 	})
 	if err != nil {
 		s.Log(fmt.Sprintf("Error walking dir: %v", err))
