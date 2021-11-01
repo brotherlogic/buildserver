@@ -773,7 +773,7 @@ func (s *Server) runCleanup() {
 		}
 		if !info.IsDir() && !strings.HasSuffix(info.Name(), ".version") && strings.Contains(p1, "brotherlogic") && !strings.Contains(p1, "pkg") {
 			elems := strings.Split(p1, "/")
-			s.Log(fmt.Sprintf("%v -> %v (%v)", elems[6], p1, config.GetLatestVersions()[elems[6]].GetPath()))
+			s.Log(fmt.Sprintf("%v -> %v (%v)", elems[7], p1, config.GetLatestVersions()[elems[7]].GetPath()))
 		}
 		return err
 	})
