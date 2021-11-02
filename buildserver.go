@@ -767,19 +767,27 @@ func (s *Server) runCleanup() {
 		s.Log(fmt.Sprintf("Error loading config for cleanup: %v", err))
 	}
 
+	toRemove := []string{}
 	err = filepath.Walk(s.dir, func(p1 string, info os.FileInfo, err error) error {
 		if !info.IsDir() && !strings.HasSuffix(info.Name(), ".version") && strings.Contains(p1, "brotherlogic") && !strings.Contains(p1, "pkg") {
 			elems := strings.Split(p1, "/")
 			if p1 != config.GetLatestVersions()[elems[7]].GetPath() {
-				err1 := os.Remove(p1)
-				err2 := os.Remove(p1 + ".version")
-				s.Log(fmt.Sprintf("Removing %v -> %v, %v", p1, err1, err2))
+				toRemove = append(toRemove, p1)
+				toRemove = append(toRemove, p1+".version")
+				s.Log(fmt.Sprintf("Removing %v ", p1))
 			}
 		}
-		return nil
+		return err
 	})
 	if err != nil {
 		s.Log(fmt.Sprintf("Error walking dir: %v", err))
+	}
+
+	for _, f := range toRemove {
+		err := os.Remove(f)
+		if err != nil {
+			s.Log(fmt.Sprintf("Unable to remove %v -> %v", f, err))
+		}
 	}
 }
 
