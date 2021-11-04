@@ -126,7 +126,7 @@ func (s *Scheduler) build(queEnt queueEntry, server string, latestHash string) (
 
 	buildCommand := &rCommand{command: exec.Command("go", "get", queEnt.job.GoPath)}
 	s.runAndWait(buildCommand)
-	s.log(fmt.Sprintf("Have Ran the build: %v and %v", buildCommand.output, buildCommand.erroutput))
+	s.log(fmt.Sprintf("Have Ran the build: %v and %v -> %v", buildCommand.output, buildCommand.erroutput, buildCommand.command.Env))
 
 	builtHash := ""
 	data, err := ioutil.ReadFile(s.dir + "/src/" + queEnt.job.GoPath + "/.git/refs/heads/master")
@@ -149,8 +149,6 @@ func (s *Scheduler) build(queEnt queueEntry, server string, latestHash string) (
 	s.runAndWait(copyCommand)
 
 	version := s.saveVersionInfo(queEnt.job, s.dir+"/builds/"+queEnt.job.GoPath+"/"+queEnt.job.Name+"-"+hash, server, builtHash)
-
-	
 
 	return hash, version, nil
 }
