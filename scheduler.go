@@ -124,7 +124,7 @@ func (s *Scheduler) build(queEnt queueEntry, server string, latestHash string) (
 
 	s.log(fmt.Sprintf("BUILDING %v {%v} (%v)", queEnt.job.Name, time.Now().Sub(queEnt.timeIn), queEnt.fullBuild))
 
-	buildCommand := &rCommand{command: exec.Command("go", "get", "-u", queEnt.job.GoPath)}
+	buildCommand := &rCommand{command: exec.Command("go", "get", queEnt.job.GoPath)}
 	s.runAndWait(buildCommand)
 	s.log(fmt.Sprintf("Have Ran the build (%v): %v and %v", queEnt.job.GoPath, buildCommand.output, buildCommand.erroutput))
 
@@ -137,7 +137,8 @@ func (s *Scheduler) build(queEnt queueEntry, server string, latestHash string) (
 
 	// If the build has failed, there will be no file output
 	if _, err := os.Stat(s.dir + "/bin/" + queEnt.job.Name); os.IsNotExist(err) && (len(buildCommand.output) > 0 || len(buildCommand.erroutput) > 0) {
-		return "", nil, fmt.Errorf("Build failed: %v and %v -> %v", buildCommand.output, buildCommand.erroutput, buildCommand.err)
+		outy, err := exec.Command("pwd").Output()
+		return "", nil, fmt.Errorf("Build failed: %v and %v -> %v and extra %v and %v", buildCommand.output, buildCommand.erroutput, buildCommand.err, string(outy), err)
 	}
 
 	data, _ = ioutil.ReadFile(s.dir + "/bin/" + queEnt.job.Name)
@@ -211,6 +212,7 @@ func (s *Scheduler) run(c *rCommand) error {
 		}()
 	}
 
+	c.command.Dir = "/home/simon/gobuild/bin"
 	err := c.command.Start()
 	if err != nil {
 		return err

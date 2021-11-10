@@ -26,7 +26,7 @@ func init() {
 }
 
 func main() {
-	ctx, cancel := utils.ManualContext("buildserver-"+os.Args[1], "buildserver", time.Second*10, true)
+	ctx, cancel := utils.ManualContext("buildserver-"+os.Args[1], time.Second*10)
 	defer cancel()
 
 	conn, err := utils.LFDialServer(ctx, "buildserver")
@@ -108,18 +108,13 @@ func main() {
 		}
 	case "latest":
 		var err error
-		ctx, cancel := utils.ManualContext("buildserver-"+os.Args[1], "buildserver", time.Second*10, true)
+		ctx, cancel := utils.ManualContext("buildserver-"+os.Args[1], time.Second*10)
 		defer cancel()
 
 		req := &pb.VersionRequest{Origin: "cli-latest", Job: &pbgbs.Job{Name: os.Args[2], GoPath: "github.com/brotherlogic/" + os.Args[2]}, JustLatest: true}
-		log.Printf("%v", req)
 		res, err := client.GetVersions(ctx, req)
-		if err != nil {
-			log.Printf("Error %v -> %v with %v", err, ctx, conn)
-		}
 		if err == nil {
 			fmt.Printf("%v - %v (%v)\n", res.Versions[0].Version, time.Unix(res.Versions[0].VersionDate, 0), len(res.Versions[0].Crashes))
-			fmt.Printf("%v\n", res.Versions[0])
 		}
 
 		if err != nil {

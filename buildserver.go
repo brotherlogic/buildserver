@@ -8,6 +8,8 @@ import (
 	"net/http"
 	"os"
 	"os/exec"
+	"path/filepath"
+	"strings"
 	"sync"
 	"time"
 
@@ -22,11 +24,12 @@ import (
 	"google.golang.org/grpc/status"
 
 	pb "github.com/brotherlogic/buildserver/proto"
+	dspb "github.com/brotherlogic/dstore/proto"
 	pbfc "github.com/brotherlogic/filecopier/proto"
 	pbgbs "github.com/brotherlogic/gobuildslave/proto"
 	pbg "github.com/brotherlogic/goserver/proto"
-	kmpb "github.com/brotherlogic/keymapper/proto"
 	pbvt "github.com/brotherlogic/versiontracker/proto"
+	google_protobuf "github.com/golang/protobuf/ptypes/any"
 )
 
 var (
@@ -40,6 +43,20 @@ var (
 		Name: "buildserver_builds",
 		Help: "The number of builds made",
 	}, []string{"job"})
+
+	storedBuilds = promauto.NewGauge(prometheus.GaugeOpts{
+		Name: "buildserver_storedbuilds",
+		Help: "The number of builds made",
+	})
+
+	buildStorage = promauto.NewGauge(prometheus.GaugeOpts{
+		Name: "buildserver_buildstorage",
+		Help: "The number of builds made",
+	})
+)
+
+const (
+	CONFIG_KEY = "github.com/brotherlogic/buildserver/config"
 )
 
 type queueEntry struct {
@@ -195,7 +212,7 @@ func (s *Server) enqueue(job *pbgbs.Job, force bool) {
 }
 
 func (s *Server) build(ctx context.Context, job *queueEntry) (*pb.Version, error) {
-	s.Log(fmt.Sprintf("Building: %v", job))
+	s.Log(fmt.Sprintf("Building: %+v (%v)", job, job.job.GetName()))
 	builds.With(prometheus.Labels{"job": job.job.GetName()}).Inc()
 	s.currentBuilds++
 	_, version, err := s.scheduler.build(*job, s.Registry.Identifier, s.latestHash[job.job.Name])
@@ -304,6 +321,76 @@ func (s *Server) load(v *pb.Version) {
 		s.latestVersion[jobn] = v.Version
 		s.latest[jobn] = v
 	}
+
+	ctx, cancel := utils.ManualContext("buildserver-build", time.Minute)
+	defer cancel()
+
+	config, err := s.loadConfig(ctx)
+	s.Log(fmt.Sprintf("Reached here: %v, %v", err, config))
+
+	if err != nil {
+		s.Log(fmt.Sprintf("Load error: %v", err))
+	}
+
+	if val, ok := config.GetLatestVersions()[jobn]; !ok || v.VersionDate > val.GetVersionDate() {
+		config.LatestVersions[jobn] = v
+		err = s.saveConfig(ctx, config)
+		if err != nil {
+			s.Log(fmt.Sprintf("Bad save: %v", err))
+		}
+	}
+}
+
+func (s *Server) saveConfig(ctx context.Context, config *pb.Config) error {
+	storedBuilds.Set(float64(len(config.GetLatestVersions())))
+
+	conn, err := s.FDialServer(ctx, "dstore")
+	if err != nil {
+		return err
+	}
+	defer conn.Close()
+
+	data, err := proto.Marshal(config)
+	if err != nil {
+		return err
+	}
+
+	client := dspb.NewDStoreServiceClient(conn)
+	_, err = client.Write(ctx, &dspb.WriteRequest{Key: CONFIG_KEY, Value: &google_protobuf.Any{Value: data}})
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (s *Server) loadConfig(ctx context.Context) (*pb.Config, error) {
+	conn, err := s.FDialServer(ctx, "dstore")
+	if err != nil {
+		return nil, err
+	}
+	defer conn.Close()
+
+	client := dspb.NewDStoreServiceClient(conn)
+	res, err := client.Read(ctx, &dspb.ReadRequest{Key: CONFIG_KEY})
+	if err != nil {
+		if status.Convert(err).Code() == codes.InvalidArgument {
+			return &pb.Config{
+				LatestVersions: make(map[string]*pb.Version),
+			}, nil
+		}
+		return nil, err
+	}
+
+	s.Log(fmt.Sprintf("Read with this %v", res.GetConsensus()))
+
+	queue := &pb.Config{}
+	err = proto.Unmarshal(res.GetValue().GetValue(), queue)
+	if err != nil {
+		return nil, err
+	}
+
+	return queue, nil
 }
 
 func (s *Server) backgroundBuilder(ctx context.Context) error {
@@ -648,6 +735,65 @@ func (s *Server) drainAndRestoreQueue(ctx context.Context) {
 	}()
 }
 
+func dirSize(path string) (int64, error) {
+	var size int64
+	err := filepath.Walk(path, func(_ string, info os.FileInfo, err error) error {
+		if err != nil {
+			return err
+		}
+		if !info.IsDir() {
+			size += info.Size()
+		}
+		return err
+	})
+	return size, err
+}
+
+func (s *Server) getDirSize() {
+	size, err := dirSize(s.dir)
+	if err != nil {
+		s.Log(fmt.Sprintf("Error running cleanup: %v", err))
+	}
+	buildStorage.Set(float64(size))
+}
+
+func (s *Server) runCleanup() {
+	defer s.getDirSize()
+
+	ctx, cancel := utils.ManualContext("buildserver-cleanup", time.Minute)
+	defer cancel()
+	config, err := s.loadConfig(ctx)
+	if err != nil {
+		s.Log(fmt.Sprintf("Error loading config for cleanup: %v", err))
+	}
+
+	toRemove := []string{}
+	err = filepath.Walk(s.dir, func(p1 string, info os.FileInfo, err error) error {
+		if err != nil {
+			return err
+		}
+		if !info.IsDir() && !strings.HasSuffix(info.Name(), ".version") && strings.Contains(p1, "brotherlogic") && !strings.Contains(p1, "pkg") {
+			elems := strings.Split(p1, "/")
+			if p1 != config.GetLatestVersions()[elems[7]].GetPath() {
+				toRemove = append(toRemove, p1)
+				toRemove = append(toRemove, p1+".version")
+				s.Log(fmt.Sprintf("Removing %v ", p1))
+			}
+		}
+		return err
+	})
+	if err != nil {
+		s.Log(fmt.Sprintf("Error walking dir: %v", err))
+	}
+
+	for _, f := range toRemove {
+		err := os.Remove(f)
+		if err != nil {
+			s.Log(fmt.Sprintf("Unable to remove %v -> %v", f, err))
+		}
+	}
+}
+
 func main() {
 	var quiet = flag.Bool("quiet", false, "Show all output")
 	flag.Parse()
@@ -666,28 +812,13 @@ func main() {
 		return
 	}
 
-	ctx, cancel := utils.ManualContext("ghc", time.Minute)
-	conn, err := server.FDialServer(ctx, "keymapper")
-	if err != nil {
-		if status.Convert(err).Code() == codes.Unknown {
-			log.Fatalf("Cannot reach keymapper: %v", err)
-		}
-		return
-	}
-	client := kmpb.NewKeymapperServiceClient(conn)
-	resp, err := client.Get(ctx, &kmpb.GetRequest{Key: "github_token"})
-	if err != nil {
-		if status.Convert(err).Code() == codes.Unknown || status.Convert(err).Code() == codes.InvalidArgument {
-			log.Fatalf("Cannot read token: %v", err)
-		}
-		return
-	}
-	server.token = resp.GetKey().GetValue()
-	cancel()
-
 	rcm := &rCommand{command: exec.Command("git", "config", "--global", "url.git@github.com:.insteadOf", "https://github.com")}
 	server.scheduler.runAndWait(rcm)
 	server.Log(fmt.Sprintf("Configured %v and %v (%v)", rcm.err, rcm.output, rcm.erroutput))
+	rcm2 := &rCommand{command: exec.Command("go", "env", "-w", "GOPRIVATE=github.com/brotherlogic/*")}
+	server.scheduler.runAndWait(rcm2)
+	server.Log(fmt.Sprintf("Configured %v and %v (%v)", rcm2.err, rcm2.output, rcm2.erroutput))
+
 	go func() {
 		server.dequeue()
 	}()
@@ -697,5 +828,6 @@ func main() {
 
 	server.preloadInfo()
 	server.DiskLog = true
+	server.runCleanup()
 	fmt.Printf("%v\n", server.Serve())
 }
