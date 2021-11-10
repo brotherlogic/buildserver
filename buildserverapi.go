@@ -56,8 +56,8 @@ func (s *Server) ReportCrash(ctx context.Context, req *pb.CrashRequest) (*pb.Cra
 
 //GetVersions gets the versions
 func (s *Server) GetVersions(ctx context.Context, req *pb.VersionRequest) (*pb.VersionResponse, error) {
-	if req.GetJob() == nil {
-		return &pb.VersionResponse{}, fmt.Errorf("You sent an empty job for some reason")
+	if req.GetJob() == nil || req.GetJob().GetGoPath() == "" {
+		return &pb.VersionResponse{}, fmt.Errorf("You sent an empty job for some reason, or an empty gopath: %v", req.GetJob())
 	}
 
 	config, err := s.loadConfig(ctx)
