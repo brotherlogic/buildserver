@@ -76,7 +76,7 @@ func (s *Server) GetVersions(ctx context.Context, req *pb.VersionRequest) (*pb.V
 			s.Log(fmt.Sprintf("internal build: %v", err))
 		}()
 
-		return nil, fmt.Errorf("No builds found for %v", req.GetJob().GetName())
+		return nil, status.Errorf(codes.FailedPrecondition, "No builds found for %v", req.GetJob().GetName())
 	}
 	return &pb.VersionResponse{Versions: []*pb.Version{latest}}, nil
 }
