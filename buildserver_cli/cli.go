@@ -16,6 +16,7 @@ import (
 	pb "github.com/brotherlogic/buildserver/proto"
 	pbgbs "github.com/brotherlogic/gobuildslave/proto"
 	pbgs "github.com/brotherlogic/goserver/proto"
+	vtpb "github.com/brotherlogic/versiontracker/proto"
 
 	//Needed to pull in gzip encoding init
 	_ "google.golang.org/grpc/encoding/gzip"
@@ -114,12 +115,35 @@ func main() {
 		req := &pb.VersionRequest{Origin: "cli-latest", Job: &pbgbs.Job{Name: os.Args[2], GoPath: "github.com/brotherlogic/" + os.Args[2]}, JustLatest: true}
 		res, err := client.GetVersions(ctx, req)
 		if err == nil {
+			fmt.Printf("%v - %v (%v) %v\n", res.Versions[0].Version, time.Unix(res.Versions[0].VersionDate, 0), len(res.Versions[0].Crashes),
+				res.Versions[0].Server)
+		}
+
+		if err != nil {
+			log.Fatalf("Error on build: %v", err)
+		}
+	case "trigger":
+		var err error
+		ctx, cancel := utils.ManualContext("buildserver-"+os.Args[1], time.Second*10)
+		defer cancel()
+
+		req := &pb.VersionRequest{Origin: "cli-latest", Job: &pbgbs.Job{Name: os.Args[2], GoPath: "github.com/brotherlogic/" + os.Args[2]}, JustLatest: true}
+		res, err := client.GetVersions(ctx, req)
+		if err == nil {
 			fmt.Printf("%v - %v (%v)\n", res.Versions[0].Version, time.Unix(res.Versions[0].VersionDate, 0), len(res.Versions[0].Crashes))
 		}
 
 		if err != nil {
 			log.Fatalf("Error on build: %v", err)
 		}
+
+		conn, err := utils.LFDialSpecificServer(ctx, "versiontracker", "dev")
+		if err != nil {
+			log.Fatalf("Booo: %v", err)
+		}
+		vtclient := vtpb.NewVersionTrackerServiceClient(conn)
+		a, err := vtclient.NewJob(ctx, &vtpb.NewJobRequest{Version: res.Versions[0]})
+		log.Printf("Triggered: %v, %v", a, err)
 
 	case "crash":
 		file, err := ioutil.ReadFile(os.Args[4])
