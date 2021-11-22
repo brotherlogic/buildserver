@@ -326,7 +326,6 @@ func (s *Server) load(v *pb.Version) {
 	defer cancel()
 
 	config, err := s.loadConfig(ctx)
-	s.Log(fmt.Sprintf("Reached here: %v, %v", err, config))
 
 	if err != nil {
 		s.Log(fmt.Sprintf("Load error: %v", err))
@@ -777,7 +776,7 @@ func (s *Server) runCleanup() {
 			if p1 != config.GetLatestVersions()[elems[7]].GetPath() {
 				toRemove = append(toRemove, p1)
 				toRemove = append(toRemove, p1+".version")
-				s.Log(fmt.Sprintf("Removing %v ", p1))
+				s.Log(fmt.Sprintf("Removing %v -> %v, %v", p1, config.GetLatestVersions()[elems[7]], elems))
 			}
 		}
 		return err
