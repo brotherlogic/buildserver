@@ -773,7 +773,7 @@ func (s *Server) runCleanup() {
 		}
 		if !info.IsDir() && !strings.HasSuffix(info.Name(), ".version") && strings.Contains(p1, "brotherlogic") && !strings.Contains(p1, "pkg") {
 			elems := strings.Split(p1, "/")
-			if p1 != config.GetLatestVersions()[elems[7]].GetPath() {
+			if config.GetLatestVersions()[elems[7]] != nil && p1 != config.GetLatestVersions()[elems[7]].GetPath() {
 				st, err := os.Stat(p1)
 				if err == nil && time.Since(st.ModTime()) > time.Hour*24 {
 					toRemove = append(toRemove, p1)
