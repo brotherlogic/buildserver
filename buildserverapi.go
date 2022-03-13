@@ -64,6 +64,10 @@ func (s *Server) GetVersions(ctx context.Context, req *pb.VersionRequest) (*pb.V
 		return &pb.VersionResponse{}, fmt.Errorf("You sent an empty job for some reason, or an empty gopath: %v", req.GetJob())
 	}
 
+	if req.GetBitSize() == 0 {
+		return nil, status.Errorf(codes.FailedPrecondition, "You must supply a bit size")
+	}
+
 	config, err := s.loadConfig(ctx)
 	if err != nil {
 		return nil, err
