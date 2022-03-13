@@ -389,6 +389,10 @@ func (s *Server) loadConfig(ctx context.Context) (*pb.Config, error) {
 		return nil, err
 	}
 
+	if queue.GetLatest64Versions() == nil {
+		queue.Latest64Versions = make(map[string]*pb.Version)
+	}
+
 	return queue, nil
 }
 
@@ -458,6 +462,7 @@ func Init() *Server {
 			int64(0),
 			int64(0),
 			int64(0),
+			int32(32),
 		},
 		make(map[string]time.Time),
 		&sync.Mutex{},
@@ -493,6 +498,10 @@ func Init() *Server {
 
 	s.scheduler.log = s.log
 	s.scheduler.load = s.load
+
+	if s.Bits == 64 {
+		s.scheduler.bitSize = int32(64)
+	}
 
 	return s
 }

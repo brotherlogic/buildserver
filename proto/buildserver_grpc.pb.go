@@ -11,7 +11,6 @@ import (
 
 // This is a compile-time assertion to ensure that this generated file
 // is compatible with the grpc package it is being compiled against.
-// Requires gRPC-Go v1.32.0 or later.
 const _ = grpc.SupportPackageIsVersion7
 
 // BuildServiceClient is the client API for BuildService service.
@@ -89,7 +88,7 @@ type UnsafeBuildServiceServer interface {
 }
 
 func RegisterBuildServiceServer(s grpc.ServiceRegistrar, srv BuildServiceServer) {
-	s.RegisterService(&BuildService_ServiceDesc, srv)
+	s.RegisterService(&_BuildService_serviceDesc, srv)
 }
 
 func _BuildService_Build_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
@@ -146,10 +145,7 @@ func _BuildService_ReportCrash_Handler(srv interface{}, ctx context.Context, dec
 	return interceptor(ctx, in, info, handler)
 }
 
-// BuildService_ServiceDesc is the grpc.ServiceDesc for BuildService service.
-// It's only intended for direct use with grpc.RegisterService,
-// and not to be introspected or modified (even as a copy)
-var BuildService_ServiceDesc = grpc.ServiceDesc{
+var _BuildService_serviceDesc = grpc.ServiceDesc{
 	ServiceName: "buildserver.BuildService",
 	HandlerType: (*BuildServiceServer)(nil),
 	Methods: []grpc.MethodDesc{

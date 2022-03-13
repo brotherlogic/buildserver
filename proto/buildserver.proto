@@ -8,6 +8,7 @@ option go_package = "github.com/brotherlogic/buildserver/proto";
 
 message Config {
   map<string, Version> latest_versions = 1;
+  map<string, Version> latest64_versions = 2;
 }
 
 message Crash {
@@ -33,12 +34,14 @@ message Version {
   string github_hash = 7;
 
   int64 last_build_time = 8;
+  int32 bit_size = 9;
 }
 
 message VersionRequest {
   bool just_latest = 1;
   gobuildslave.Job job = 2;
   string origin = 3;
+  int32 bit_size = 4;
 }
 
 message VersionResponse {

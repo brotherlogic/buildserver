@@ -66,17 +66,31 @@ func (s *Server) GetVersions(ctx context.Context, req *pb.VersionRequest) (*pb.V
 	}
 
 	//s.Log(fmt.Sprintf("Loaded config: %v -> %v", config, config.GetLatestVersions()[req.GetJob().GetName()]))
+	var latest *pb.Version
+	if req.GetBitSize() == 32 {
+		latest := config.GetLatestVersions()[req.GetJob().GetName()]
+		if latest == nil {
+			go func() {
+				ctx, cancel := utils.ManualContext("bsi", time.Minute*5)
+				defer cancel()
+				_, err := s.Build(ctx, &pb.BuildRequest{Job: req.GetJob(), Origin: "internal"})
+				s.Log(fmt.Sprintf("internal build: %v", err))
+			}()
 
-	latest := config.GetLatestVersions()[req.GetJob().GetName()]
-	if latest == nil {
-		go func() {
-			ctx, cancel := utils.ManualContext("bsi", time.Minute*5)
-			defer cancel()
-			_, err := s.Build(ctx, &pb.BuildRequest{Job: req.GetJob(), Origin: "internal"})
-			s.Log(fmt.Sprintf("internal build: %v", err))
-		}()
+			return nil, status.Errorf(codes.FailedPrecondition, "No builds found for %v", req.GetJob().GetName())
+		}
+	} else {
+		latest := config.GetLatest64Versions()[req.GetJob().GetName()]
+		if latest == nil {
+			go func() {
+				ctx, cancel := utils.ManualContext("bsi", time.Minute*5)
+				defer cancel()
+				_, err := s.Build(ctx, &pb.BuildRequest{Job: req.GetJob(), Origin: "internal"})
+				s.Log(fmt.Sprintf("internal build: %v", err))
+			}()
 
-		return nil, status.Errorf(codes.FailedPrecondition, "No builds found for %v", req.GetJob().GetName())
+			return nil, status.Errorf(codes.FailedPrecondition, "No builds found for %v", req.GetJob().GetName())
+		}
 	}
 	return &pb.VersionResponse{Versions: []*pb.Version{latest}}, nil
 }

@@ -34,6 +34,7 @@ type Scheduler struct {
 	runs           int64
 	cRuns          int64
 	cFins          int64
+	bitSize        int32
 }
 
 type rCommand struct {
@@ -56,6 +57,7 @@ func (s *Scheduler) saveVersionInfo(j *pbgbs.Job, path string, server string, gi
 			VersionDate:   f.ModTime().Unix(),
 			GithubHash:    githubHash,
 			LastBuildTime: time.Now().Unix(),
+			BitSize:       s.bitSize,
 		}
 
 		s.saveVersionFile(ver)
