@@ -52,6 +52,7 @@ message BuildRequest {
   gobuildslave.Job job = 1;
   bool force_build = 2;
   string origin = 3;
+  int32 bit_size = 4;
 }
 
 message BuildResponse {}
