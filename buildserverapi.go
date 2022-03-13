@@ -76,7 +76,7 @@ func (s *Server) GetVersions(ctx context.Context, req *pb.VersionRequest) (*pb.V
 	s.CtxLog(ctx, fmt.Sprintf("Loaded config: %v -> %v", config.GetLatest64Versions()[req.GetJob().GetName()], config.GetLatestVersions()[req.GetJob().GetName()]))
 	var latest *pb.Version
 	if req.GetBitSize() == 32 {
-		latest := config.GetLatestVersions()[req.GetJob().GetName()]
+		latest = config.GetLatestVersions()[req.GetJob().GetName()]
 		if latest == nil {
 			go func() {
 				ctx, cancel := utils.ManualContext("bsi", time.Minute*5)
@@ -88,7 +88,7 @@ func (s *Server) GetVersions(ctx context.Context, req *pb.VersionRequest) (*pb.V
 			return nil, status.Errorf(codes.FailedPrecondition, "No builds found for %v", req.GetJob().GetName())
 		}
 	} else {
-		latest := config.GetLatest64Versions()[req.GetJob().GetName()]
+		latest = config.GetLatest64Versions()[req.GetJob().GetName()]
 		if latest == nil {
 			go func() {
 				ctx, cancel := utils.ManualContext("bsi", time.Minute*5)
