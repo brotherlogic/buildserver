@@ -122,6 +122,7 @@ func main() {
 		if err == nil {
 			fmt.Printf("32: %v - %v (%v) %v\n", res.Versions[0].Version, time.Unix(res.Versions[0].VersionDate, 0), len(res.Versions[0].Crashes),
 				res.Versions[0].Server)
+			fmt.Printf("%v\n", res.Versions[0])
 		}
 
 		if err != nil {
@@ -133,6 +134,7 @@ func main() {
 		if err == nil {
 			fmt.Printf("64: %v - %v (%v) %v\n", res.Versions[0].Version, time.Unix(res.Versions[0].VersionDate, 0), len(res.Versions[0].Crashes),
 				res.Versions[0].Server)
+			fmt.Printf("%v\n", res.Versions[0])
 		}
 
 		if err != nil {
