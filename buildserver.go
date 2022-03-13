@@ -393,6 +393,8 @@ func (s *Server) loadConfig(ctx context.Context) (*pb.Config, error) {
 		queue.Latest64Versions = make(map[string]*pb.Version)
 	}
 
+	s.Log(fmt.Sprintf("Config: %v", queue))
+
 	return queue, nil
 }
 
