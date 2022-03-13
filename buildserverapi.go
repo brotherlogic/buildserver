@@ -26,6 +26,7 @@ func (s *Server) Build(ctx context.Context, req *pb.BuildRequest) (*pb.BuildResp
 	if req.GetBitSize() != int32(s.Bits) {
 		return nil, status.Errorf(codes.FailedPrecondition, "Unable to build for %v bits", req.GetBitSize())
 	}
+
 	s.Log(fmt.Sprintf("Build request: %v", req))
 	s.buildRequest++
 

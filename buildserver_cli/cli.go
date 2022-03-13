@@ -112,10 +112,21 @@ func main() {
 		ctx, cancel := utils.ManualContext("buildserver-"+os.Args[1], time.Second*10)
 		defer cancel()
 
-		req := &pb.VersionRequest{Origin: "cli-latest", Job: &pbgbs.Job{Name: os.Args[2], GoPath: "github.com/brotherlogic/" + os.Args[2]}, JustLatest: true}
+		req := &pb.VersionRequest{Origin: "cli-latest", Job: &pbgbs.Job{Name: os.Args[2], GoPath: "github.com/brotherlogic/" + os.Args[2]}, JustLatest: true, BitSize: 32}
 		res, err := client.GetVersions(ctx, req)
 		if err == nil {
-			fmt.Printf("%v - %v (%v) %v\n", res.Versions[0].Version, time.Unix(res.Versions[0].VersionDate, 0), len(res.Versions[0].Crashes),
+			fmt.Printf("32: %v - %v (%v) %v\n", res.Versions[0].Version, time.Unix(res.Versions[0].VersionDate, 0), len(res.Versions[0].Crashes),
+				res.Versions[0].Server)
+		}
+
+		if err != nil {
+			log.Fatalf("Error on build: %v", err)
+		}
+
+		req = &pb.VersionRequest{Origin: "cli-latest", Job: &pbgbs.Job{Name: os.Args[2], GoPath: "github.com/brotherlogic/" + os.Args[2]}, JustLatest: true, BitSize: 64}
+		res, err = client.GetVersions(ctx, req)
+		if err == nil {
+			fmt.Printf("64: %v - %v (%v) %v\n", res.Versions[0].Version, time.Unix(res.Versions[0].VersionDate, 0), len(res.Versions[0].Crashes),
 				res.Versions[0].Server)
 		}
 
