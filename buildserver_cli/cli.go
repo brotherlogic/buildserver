@@ -75,7 +75,12 @@ func main() {
 			}
 		}
 	case "build":
-		_, err := client.Build(ctx, &pb.BuildRequest{Job: &pbgbs.Job{Name: os.Args[2], GoPath: "github.com/brotherlogic/" + os.Args[2]}, ForceBuild: len(os.Args) > 3})
+		_, err := client.Build(ctx, &pb.BuildRequest{BitSize: 32, Job: &pbgbs.Job{Name: os.Args[2], GoPath: "github.com/brotherlogic/" + os.Args[2]}, ForceBuild: len(os.Args) > 3})
+		if err != nil {
+			log.Printf("Error on build: %v", err)
+		}
+	case "build64":
+		_, err := client.Build(ctx, &pb.BuildRequest{BitSize: 64, Job: &pbgbs.Job{Name: os.Args[2], GoPath: "github.com/brotherlogic/" + os.Args[2]}, ForceBuild: len(os.Args) > 3})
 		if err != nil {
 			log.Printf("Error on build: %v", err)
 		}
