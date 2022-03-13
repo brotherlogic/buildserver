@@ -69,7 +69,7 @@ func (s *Server) GetVersions(ctx context.Context, req *pb.VersionRequest) (*pb.V
 		return nil, err
 	}
 
-	//s.Log(fmt.Sprintf("Loaded config: %v -> %v", config, config.GetLatestVersions()[req.GetJob().GetName()]))
+	s.CtxLog(ctx, fmt.Sprintf("Loaded config: %v -> %v", config.GetLatest64Versions()[req.GetJob().GetName()], config.GetLatestVersions()[req.GetJob().GetName()]))
 	var latest *pb.Version
 	if req.GetBitSize() == 32 {
 		latest := config.GetLatestVersions()[req.GetJob().GetName()]
