@@ -81,7 +81,7 @@ func (s *Server) GetVersions(ctx context.Context, req *pb.VersionRequest) (*pb.V
 			go func() {
 				ctx, cancel := utils.ManualContext("bsi", time.Minute*5)
 				defer cancel()
-				_, err := s.Build(ctx, &pb.BuildRequest{Job: req.GetJob(), Origin: "internal"})
+				_, err := s.Build(ctx, &pb.BuildRequest{Job: req.GetJob(), Origin: "internal", BitSize: 32})
 				s.Log(fmt.Sprintf("internal build: %v", err))
 			}()
 
@@ -93,7 +93,7 @@ func (s *Server) GetVersions(ctx context.Context, req *pb.VersionRequest) (*pb.V
 			go func() {
 				ctx, cancel := utils.ManualContext("bsi", time.Minute*5)
 				defer cancel()
-				_, err := s.Build(ctx, &pb.BuildRequest{Job: req.GetJob(), Origin: "internal"})
+				_, err := s.Build(ctx, &pb.BuildRequest{Job: req.GetJob(), Origin: "internal", BitSize: 64})
 				s.Log(fmt.Sprintf("internal build: %v", err))
 			}()
 
