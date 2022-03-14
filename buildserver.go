@@ -318,6 +318,7 @@ func (s *Server) load(v *pb.Version) {
 		s.latestBuild[jobn] = v.VersionDate
 		s.latestHash[jobn] = v.GithubHash
 		s.latestDate[jobn] = time.Unix(v.VersionDate, 0)
+
 		s.latestVersion[jobn] = v.Version
 		s.latest[jobn] = v
 	}
@@ -331,11 +332,21 @@ func (s *Server) load(v *pb.Version) {
 		s.Log(fmt.Sprintf("Load error: %v", err))
 	}
 
-	if val, ok := config.GetLatestVersions()[jobn]; !ok || v.VersionDate > val.GetVersionDate() {
-		config.LatestVersions[jobn] = v
-		err = s.saveConfig(ctx, config)
-		if err != nil {
-			s.Log(fmt.Sprintf("Bad save: %v", err))
+	if s.Bits == 32 {
+		if val, ok := config.GetLatestVersions()[jobn]; !ok || v.VersionDate > val.GetVersionDate() {
+			config.LatestVersions[jobn] = v
+			err = s.saveConfig(ctx, config)
+			if err != nil {
+				s.Log(fmt.Sprintf("Bad save: %v", err))
+			}
+		}
+	} else {
+		if val, ok := config.GetLatest64Versions()[jobn]; !ok || v.VersionDate > val.GetVersionDate() {
+			config.Latest64Versions[jobn] = v
+			err = s.saveConfig(ctx, config)
+			if err != nil {
+				s.Log(fmt.Sprintf("Bad save: %v", err))
+			}
 		}
 	}
 }
