@@ -512,6 +512,7 @@ func Init() *Server {
 	s.scheduler.log = s.log
 	s.scheduler.load = s.load
 
+	s.PrepServer()
 	if s.Bits == 64 {
 		s.scheduler.bitSize = int32(64)
 	}
@@ -828,7 +829,6 @@ func main() {
 		log.SetOutput(ioutil.Discard)
 	}
 	server := Init()
-	server.PrepServer()
 	server.Register = server
 
 	err := server.RegisterServerV2("buildserver", false, true)
