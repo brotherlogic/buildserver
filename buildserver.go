@@ -787,6 +787,11 @@ func (s *Server) runCleanup() {
 		s.Log(fmt.Sprintf("Error loading config for cleanup: %v", err))
 	}
 
+	latestVersions := config.GetLatestVersions()
+	if s.Bits == 64 {
+		latestVersions = config.GetLatest64Versions()
+	}
+
 	toRemove := []string{}
 	err = filepath.Walk(s.dir, func(p1 string, info os.FileInfo, err error) error {
 		if err != nil {
@@ -794,7 +799,7 @@ func (s *Server) runCleanup() {
 		}
 		if !info.IsDir() && !strings.HasSuffix(info.Name(), ".version") && strings.Contains(p1, "brotherlogic") && !strings.Contains(p1, "pkg") {
 			elems := strings.Split(p1, "/")
-			if config.GetLatestVersions()[elems[7]] != nil && p1 != config.GetLatestVersions()[elems[7]].GetPath() {
+			if latestVersions[elems[7]] != nil && p1 != latestVersions[elems[7]].GetPath() {
 				st, err := os.Stat(p1)
 				if err == nil && time.Since(st.ModTime()) > time.Hour*24 {
 					toRemove = append(toRemove, p1)
