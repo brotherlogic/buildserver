@@ -216,19 +216,12 @@ func (s *Server) build(ctx context.Context, job *queueEntry) (*pb.Version, error
 	builds.With(prometheus.Labels{"job": job.job.GetName()}).Inc()
 	s.currentBuilds++
 	_, version, err := s.scheduler.build(*job, s.Registry.Identifier, s.latestHash[job.job.Name])
-	s.buildFailsMutex.Lock()
 	if err != nil {
 		e, ok := status.FromError(err)
 		if !ok || e.Code() != codes.AlreadyExists {
-			s.buildFails[job.job.Name]++
-			if s.buildFails[job.job.Name] > 3 {
-				s.BounceIssue("Build Failure", fmt.Sprintf("Build failed for %v: %v running on %v", job.job.Name, err, s.Registry.Identifier), job.job.Name)
-			}
+			s.BounceIssue("Build Failure", fmt.Sprintf("Build failed for %v: %v running on %v", job.job.Name, err, s.Registry.Identifier), job.job.Name)
 		}
-	} else {
-		delete(s.buildFails, job.job.Name)
 	}
-	s.buildFailsMutex.Unlock()
 	s.currentBuilds--
 
 	return version, err
