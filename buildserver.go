@@ -503,7 +503,6 @@ func Init() *Server {
 	s.scheduler.log = s.log
 	s.scheduler.load = s.load
 
-	s.PrepServer()
 	if s.Bits == 64 {
 		s.scheduler.bitSize = int32(64)
 	}
@@ -780,6 +779,8 @@ func (s *Server) runCleanup() {
 		s.Log(fmt.Sprintf("Error loading config for cleanup: %v", err))
 	}
 
+	os.RemoveAll("/media/scratch/buildserver/pkg")
+
 	latestVersions := config.GetLatestVersions()
 	if s.Bits == 64 {
 		latestVersions = config.GetLatest64Versions()
@@ -825,12 +826,8 @@ func main() {
 		log.SetOutput(ioutil.Discard)
 	}
 	server := Init()
+	server.PrepServer("buildserver")
 	server.Register = server
-
-	err := server.RegisterServerV2("buildserver", false, true)
-	if err != nil {
-		return
-	}
 
 	rcm := &rCommand{command: exec.Command("git", "config", "--global", "url.git@github.com:.insteadOf", "https://github.com")}
 	server.scheduler.runAndWait(rcm)
@@ -849,5 +846,11 @@ func main() {
 	server.preloadInfo()
 	server.DiskLog = true
 	server.runCleanup()
+
+	err := server.RegisterServerV2(false)
+	if err != nil {
+		return
+	}
+
 	fmt.Printf("%v\n", server.Serve())
 }
