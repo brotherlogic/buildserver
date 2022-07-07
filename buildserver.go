@@ -680,50 +680,48 @@ func (s *Server) serveUp(port int32) {
 }
 
 func (s *Server) aligner(ctx context.Context) error {
-	if !s.Registry.Master {
-		for _, job := range s.jobs {
-			entries, err := utils.ResolveAll("buildserver")
+	for _, job := range s.jobs {
+		entries, err := utils.ResolveAll("buildserver")
+		if err != nil {
+			return err
+		}
+
+		for _, e := range entries {
+			conn, err := s.DoDial(e)
+			if err != nil {
+				return err
+			}
+			defer conn.Close()
+
+			client := pb.NewBuildServiceClient(conn)
+			latest, err := client.GetVersions(ctx, &pb.VersionRequest{Job: job, JustLatest: true})
 			if err != nil {
 				return err
 			}
 
-			for _, e := range entries {
-				conn, err := s.DoDial(e)
+			if len(latest.GetVersions()) > 0 &&
+				latest.GetVersions()[0].VersionDate > s.latestBuild[job.Name] &&
+				latest.GetVersions()[0].Version != s.latestVersion[job.Name] {
+				cconn, err := s.DialMaster("filecopier")
 				if err != nil {
 					return err
 				}
-				defer conn.Close()
+				defer cconn.Close()
 
-				client := pb.NewBuildServiceClient(conn)
-				latest, err := client.GetVersions(ctx, &pb.VersionRequest{Job: job, JustLatest: true})
-				if err != nil {
-					return err
-				}
+				cclient := pbfc.NewFileCopierServiceClient(cconn)
+				cclient.QueueCopy(ctx, &pbfc.CopyRequest{
+					InputFile:    latest.GetVersions()[0].Path,
+					InputServer:  latest.GetVersions()[0].Server,
+					OutputServer: s.Registry.Identifier,
+					OutputFile:   latest.GetVersions()[0].Path,
+				})
+				cclient.QueueCopy(ctx, &pbfc.CopyRequest{
+					InputFile:    latest.GetVersions()[0].Path + ".version",
+					InputServer:  latest.GetVersions()[0].Server,
+					OutputServer: s.Registry.Identifier,
+					OutputFile:   latest.GetVersions()[0].Path + ".version",
+				})
 
-				if len(latest.GetVersions()) > 0 &&
-					latest.GetVersions()[0].VersionDate > s.latestBuild[job.Name] &&
-					latest.GetVersions()[0].Version != s.latestVersion[job.Name] {
-					cconn, err := s.DialMaster("filecopier")
-					if err != nil {
-						return err
-					}
-					defer cconn.Close()
-
-					cclient := pbfc.NewFileCopierServiceClient(cconn)
-					cclient.QueueCopy(ctx, &pbfc.CopyRequest{
-						InputFile:    latest.GetVersions()[0].Path,
-						InputServer:  latest.GetVersions()[0].Server,
-						OutputServer: s.Registry.Identifier,
-						OutputFile:   latest.GetVersions()[0].Path,
-					})
-					cclient.QueueCopy(ctx, &pbfc.CopyRequest{
-						InputFile:    latest.GetVersions()[0].Path + ".version",
-						InputServer:  latest.GetVersions()[0].Server,
-						OutputServer: s.Registry.Identifier,
-						OutputFile:   latest.GetVersions()[0].Path + ".version",
-					})
-
-				}
 			}
 		}
 	}
