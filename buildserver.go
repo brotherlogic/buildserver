@@ -215,7 +215,7 @@ func (s *Server) build(ctx context.Context, job *queueEntry) (*pb.Version, error
 	s.Log(fmt.Sprintf("Building: %+v (%v)", job, job.job.GetName()))
 	builds.With(prometheus.Labels{"job": job.job.GetName()}).Inc()
 	s.currentBuilds++
-	_, version, err := s.scheduler.build(*job, s.Registry.Identifier, s.latestHash[job.job.Name])
+	_, version, err := s.scheduler.build(ctx, *job, s.Registry.Identifier, s.latestHash[job.job.Name])
 	if err != nil {
 		e, ok := status.FromError(err)
 		if !ok || e.Code() != codes.AlreadyExists {
@@ -306,7 +306,7 @@ func (s *Server) fanout() {
 	}
 }
 
-func (s *Server) load(v *pb.Version) {
+func (s *Server) load(ctx context.Context, v *pb.Version) {
 	jobn := v.Job.Name
 	if v.VersionDate > s.latestBuild[jobn] {
 		s.latestBuild[jobn] = v.VersionDate
@@ -316,9 +316,6 @@ func (s *Server) load(v *pb.Version) {
 		s.latestVersion[jobn] = v.Version
 		s.latest[jobn] = v
 	}
-
-	ctx, cancel := utils.ManualContext("buildserver-build", time.Minute)
-	defer cancel()
 
 	config, err := s.loadConfig(ctx)
 
@@ -445,10 +442,6 @@ func (p *prodLister) listFiles(job *pbgbs.Job) ([]fileDetails, error) {
 	return vals, nil
 }
 
-func (s *Server) log(st string) {
-	s.Log(st)
-}
-
 // Init builds the server
 func Init() *Server {
 	s := &Server{
@@ -501,7 +494,7 @@ func Init() *Server {
 		"",
 	}
 
-	s.scheduler.log = s.log
+	s.scheduler.log = s.CtxLog
 	s.scheduler.load = s.load
 
 	if s.Bits == 64 {
@@ -828,12 +821,14 @@ func main() {
 	server.PrepServer("buildserver")
 	server.Register = server
 
+	ctx, cancel := utils.ManualContext("buildserver-init", time.Minute*5)
 	rcm := &rCommand{command: exec.Command("git", "config", "--global", "url.git@github.com:.insteadOf", "https://github.com")}
-	server.scheduler.runAndWait(rcm)
+	server.scheduler.runAndWait(ctx, rcm)
 	server.Log(fmt.Sprintf("Configured %v and %v (%v)", rcm.err, rcm.output, rcm.erroutput))
 	rcm2 := &rCommand{command: exec.Command("go", "env", "-w", "GOPRIVATE=github.com/brotherlogic/*")}
-	server.scheduler.runAndWait(rcm2)
+	server.scheduler.runAndWait(ctx, rcm2)
 	server.Log(fmt.Sprintf("Configured %v and %v (%v)", rcm2.err, rcm2.output, rcm2.erroutput))
+	cancel()
 
 	go func() {
 		server.dequeue()

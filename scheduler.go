@@ -12,6 +12,7 @@ import (
 	"time"
 
 	"github.com/golang/protobuf/proto"
+	"golang.org/x/net/context"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
@@ -24,9 +25,9 @@ type Scheduler struct {
 	dir            string
 	masterMutex    *sync.Mutex
 	mMap           map[string]*sync.Mutex
-	log            func(s string)
+	log            func(ctx context.Context, s string)
 	md5command     string
-	load           func(v *pb.Version)
+	load           func(ctx context.Context, v *pb.Version)
 	lastBuildMutex *sync.Mutex
 	lastBuild      map[string]time.Time
 	cbuild         string
@@ -46,7 +47,7 @@ type rCommand struct {
 	err       error
 }
 
-func (s *Scheduler) saveVersionInfo(j *pbgbs.Job, path string, server string, githubHash string) *pb.Version {
+func (s *Scheduler) saveVersionInfo(ctx context.Context, j *pbgbs.Job, path string, server string, githubHash string) *pb.Version {
 	f, err := os.Stat(path)
 	if err == nil {
 		ver := &pb.Version{
@@ -60,21 +61,21 @@ func (s *Scheduler) saveVersionInfo(j *pbgbs.Job, path string, server string, gi
 			BitSize:       s.bitSize,
 		}
 
-		s.saveVersionFile(ver)
+		s.saveVersionFile(ctx, ver)
 		return ver
 	}
 
 	return nil
 }
 
-func (s *Scheduler) saveVersionFile(v *pb.Version) {
+func (s *Scheduler) saveVersionFile(ctx context.Context, v *pb.Version) {
 	nfile := v.Path + ".version"
 	data, _ := proto.Marshal(v)
 	ioutil.WriteFile(nfile, data, 0644)
-	s.load(v)
+	s.load(ctx, v)
 }
 
-func (s *Scheduler) build(queEnt queueEntry, server string, latestHash string) (string, *pb.Version, error) {
+func (s *Scheduler) build(ctx context.Context, queEnt queueEntry, server string, latestHash string) (string, *pb.Version, error) {
 	s.cbuild = fmt.Sprintf("%v @ %v", queEnt.job.Name, time.Now())
 	s.lastBuildMutex.Lock()
 	if val, ok := s.lastBuild[queEnt.job.Name]; ok && time.Now().Sub(val) < s.waitTime {
@@ -102,11 +103,11 @@ func (s *Scheduler) build(queEnt queueEntry, server string, latestHash string) (
 	//Refresh the project
 	if !queEnt.fullBuild {
 		fetchCommand := &rCommand{command: exec.Command("git", "-C", s.dir+"/src/"+queEnt.job.GoPath, "fetch", "-p")}
-		s.runAndWait(fetchCommand)
+		s.runAndWait(ctx, fetchCommand)
 		mergeCommand := &rCommand{command: exec.Command("git", "-C", s.dir+"/src/"+queEnt.job.GoPath, "merge", "origin/master")}
-		s.runAndWait(mergeCommand)
+		s.runAndWait(ctx, mergeCommand)
 		mergeCommand = &rCommand{command: exec.Command("git", "-C", s.dir+"/src/"+queEnt.job.GoPath, "merge", "origin/main")}
-		s.runAndWait(mergeCommand)
+		s.runAndWait(ctx, mergeCommand)
 
 		readHash := ""
 		data, err := ioutil.ReadFile(s.dir + "/src/" + queEnt.job.GoPath + "/.git/refs/heads/master")
@@ -124,11 +125,11 @@ func (s *Scheduler) build(queEnt queueEntry, server string, latestHash string) (
 		}
 	}
 
-	s.log(fmt.Sprintf("BUILDING %v {%v} (%v)", queEnt.job.Name, time.Now().Sub(queEnt.timeIn), queEnt.fullBuild))
+	s.log(ctx, fmt.Sprintf("BUILDING %v {%v} (%v)", queEnt.job.Name, time.Now().Sub(queEnt.timeIn), queEnt.fullBuild))
 
 	buildCommand := &rCommand{command: exec.Command("go", "install", fmt.Sprintf("%v@latest", queEnt.job.GoPath))}
-	s.runAndWait(buildCommand)
-	s.log(fmt.Sprintf("Have Ran the build (%v): %v and %v -> %+v, %+v", queEnt.job.GoPath, buildCommand.output, buildCommand.erroutput, queEnt, queEnt.job))
+	s.runAndWait(ctx, buildCommand)
+	s.log(ctx, fmt.Sprintf("Have Ran the build (%v): %v and %v -> %+v, %+v", queEnt.job.GoPath, buildCommand.output, buildCommand.erroutput, queEnt, queEnt.job))
 
 	builtHash := ""
 	data, err := ioutil.ReadFile(s.dir + "/src/" + queEnt.job.GoPath + "/.git/refs/heads/master")
@@ -148,14 +149,14 @@ func (s *Scheduler) build(queEnt queueEntry, server string, latestHash string) (
 
 	os.MkdirAll(s.dir+"/builds/"+queEnt.job.GoPath, 0755)
 	copyCommand := &rCommand{command: exec.Command("mv", s.dir+"/bin/"+queEnt.job.Name, s.dir+"/builds/"+queEnt.job.GoPath+"/"+queEnt.job.Name+"-"+hash)}
-	s.runAndWait(copyCommand)
+	s.runAndWait(ctx, copyCommand)
 
-	version := s.saveVersionInfo(queEnt.job, s.dir+"/builds/"+queEnt.job.GoPath+"/"+queEnt.job.Name+"-"+hash, server, builtHash)
+	version := s.saveVersionInfo(ctx, queEnt.job, s.dir+"/builds/"+queEnt.job.GoPath+"/"+queEnt.job.Name+"-"+hash, server, builtHash)
 
 	return hash, version, nil
 }
 
-func (s *Scheduler) runAndWait(c *rCommand) {
+func (s *Scheduler) runAndWait(ctx context.Context, c *rCommand) {
 	s.cRuns++
 	c.err = s.run(c)
 	if c.err == nil {

@@ -48,7 +48,7 @@ func (s *Server) ReportCrash(ctx context.Context, req *pb.CrashRequest) (*pb.Cra
 			s.BounceIssue(fmt.Sprintf("Crash for %v", val.Job.Name), fmt.Sprintf("on %v - %v", req.Origin, req.Crash.ErrorMessage), val.Job.Name)
 			val.Crashes = append(val.Crashes, req.Crash)
 			s.pathMapMutex.Unlock()
-			s.scheduler.saveVersionFile(val)
+			s.scheduler.saveVersionFile(ctx, val)
 			return &pb.CrashResponse{}, nil
 		}
 	}
