@@ -500,6 +500,9 @@ func Init() *Server {
 	if s.Bits == 64 {
 		s.scheduler.bitSize = int32(64)
 	}
+	ctx, cancel := utils.ManualContext("buildserver-bit-size", time.Minute)
+	s.CtxLog(ctx, fmt.Sprintf("BITS: %v -> %v", s.Bits, s.scheduler.bitSize))
+	cancel()
 
 	return s
 }
