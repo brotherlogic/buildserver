@@ -497,10 +497,6 @@ func Init() *Server {
 	s.scheduler.log = s.CtxLog
 	s.scheduler.load = s.load
 
-	if s.Bits == 64 {
-		s.scheduler.bitSize = int32(64)
-	}
-
 	return s
 }
 
@@ -846,6 +842,9 @@ func main() {
 		return
 	}
 
+	if server.Bits == 64 {
+		server.scheduler.bitSize = int32(64)
+	}
 	server.CtxLog(ctx, fmt.Sprintf("BITS: %v -> %v", server.Bits, server.scheduler.bitSize))
 	cancel()
 
