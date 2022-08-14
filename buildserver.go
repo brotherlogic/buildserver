@@ -212,7 +212,7 @@ func (s *Server) enqueue(job *pbgbs.Job, force bool) {
 }
 
 func (s *Server) build(ctx context.Context, job *queueEntry) (*pb.Version, error) {
-	s.Log(fmt.Sprintf("Building: %+v (%v)", job, job.job.GetName()))
+	s.CtxLog(ctx, fmt.Sprintf("Building: %+v (%v)", job, job.job.GetName()))
 	builds.With(prometheus.Labels{"job": job.job.GetName()}).Inc()
 	s.currentBuilds++
 	_, version, err := s.scheduler.build(ctx, *job, s.Registry.Identifier, s.latestHash[job.job.Name])
@@ -236,7 +236,7 @@ var (
 
 func (s *Server) dequeue() {
 	for job := range s.queue {
-		ctx, cancel := utils.ManualContext("buildserver-dequeue", time.Minute*5)
+		ctx, cancel := utils.ManualContext("buildserver-dequeue", time.Minute*15)
 		s.CtxLog(ctx, fmt.Sprintf("Building: %v", job))
 		version, err := s.build(ctx, job)
 		time.Sleep(time.Second)
@@ -328,7 +328,7 @@ func (s *Server) load(ctx context.Context, v *pb.Version) {
 			config.LatestVersions[jobn] = v
 			err = s.saveConfig(ctx, config)
 			if err != nil {
-				s.Log(fmt.Sprintf("Bad save: %v", err))
+				s.CtxLog(ctx, fmt.Sprintf("Bad save: %v", err))
 			}
 		}
 	} else {
@@ -336,7 +336,7 @@ func (s *Server) load(ctx context.Context, v *pb.Version) {
 			config.Latest64Versions[jobn] = v
 			err = s.saveConfig(ctx, config)
 			if err != nil {
-				s.Log(fmt.Sprintf("Bad save: %v", err))
+				s.CtxLog(ctx, fmt.Sprintf("Bad save: %v", err))
 			}
 		}
 	}

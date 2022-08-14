@@ -153,7 +153,7 @@ func (s *Scheduler) build(ctx context.Context, queEnt queueEntry, server string,
 
 	version := s.saveVersionInfo(ctx, queEnt.job, s.dir+"/builds/"+queEnt.job.GoPath+"/"+queEnt.job.Name+"-"+hash, server, builtHash)
 
-	return hash, version, nil
+	return hash, version, err
 }
 
 func (s *Scheduler) runAndWait(ctx context.Context, c *rCommand) {
