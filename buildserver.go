@@ -48,11 +48,14 @@ var (
 		Name: "buildserver_storedbuilds",
 		Help: "The number of builds made",
 	})
-
 	buildStorage = promauto.NewGauge(prometheus.GaugeOpts{
 		Name: "buildserver_buildstorage",
 		Help: "The number of builds made",
 	})
+	buildTime = promauto.NewGaugeVec(prometheus.GaugeOpts{
+		Name: "buildserver_build_time",
+		Help: "The number of builds made",
+	}, []string{"jobs"})
 )
 
 const (
@@ -212,6 +215,10 @@ func (s *Server) enqueue(job *pbgbs.Job, force bool) {
 }
 
 func (s *Server) build(ctx context.Context, job *queueEntry) (*pb.Version, error) {
+	t := time.Now()
+	defer func() {
+		buildTime.With(prometheus.Labels{"job": job.job.GetName()}).Set(time.Since(t).Seconds())
+	}()
 	s.CtxLog(ctx, fmt.Sprintf("Building: %+v (%v)", job, job.job.GetName()))
 	builds.With(prometheus.Labels{"job": job.job.GetName()}).Inc()
 	s.currentBuilds++
