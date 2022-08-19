@@ -298,7 +298,7 @@ func (s *Server) fanout() {
 
 		client := pbvt.NewVersionTrackerServiceClient(conn)
 		_, err = client.NewVersion(ctx, &pbvt.NewVersionRequest{Version: fanout.version})
-		s.Log(fmt.Sprintf("Fanning out to %v: %v -> %v", fanout.server, fanout.version, err))
+		s.CtxLog(ctx, fmt.Sprintf("Fanning out to %v: %v -> %v", fanout.server, fanout.version, err))
 		if err != nil && status.Convert(err).Code() != codes.Unavailable {
 			fproc.With(prometheus.Labels{"written": fanout.server, "error": fmt.Sprintf("%v", err)}).Inc()
 			s.fanoutQueue <- fanout
