@@ -149,10 +149,13 @@ func (s *Scheduler) build(ctx context.Context, queEnt queueEntry, server string,
 
 	os.MkdirAll(s.dir+"/builds/"+queEnt.job.GoPath, 0755)
 	copyCommand := &rCommand{command: exec.Command("mv", s.dir+"/bin/"+queEnt.job.Name, s.dir+"/builds/"+queEnt.job.GoPath+"/"+queEnt.job.Name+"-"+hash)}
+	s.log(ctx, "Running the copy")
 	s.runAndWait(ctx, copyCommand)
 
+	s.log(ctx, "Saving version")
 	version := s.saveVersionInfo(ctx, queEnt.job, s.dir+"/builds/"+queEnt.job.GoPath+"/"+queEnt.job.Name+"-"+hash, server, builtHash)
 
+	s.log(ctx, "Finished")
 	return hash, version, err
 }
 
