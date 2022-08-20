@@ -55,7 +55,7 @@ var (
 	buildTime = promauto.NewGaugeVec(prometheus.GaugeOpts{
 		Name: "buildserver_build_time",
 		Help: "The number of builds made",
-	}, []string{"jobs"})
+	}, []string{"job"})
 )
 
 const (
