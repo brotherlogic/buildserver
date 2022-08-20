@@ -759,16 +759,16 @@ func dirSize(path string) (int64, error) {
 	return size, err
 }
 
-func (s *Server) getDirSize() {
+func (s *Server) getDirSize(ctx context.Context) {
 	size, err := dirSize(s.dir)
 	if err != nil {
-		s.Log(fmt.Sprintf("Error running cleanup: %v", err))
+		s.CtxLog(ctx, fmt.Sprintf("Error running cleanup: %v", err))
 	}
 	buildStorage.Set(float64(size))
 }
 
-func (s *Server) runCleanup() {
-	defer s.getDirSize()
+func (s *Server) runCleanup(ctx context.Context) {
+	defer s.getDirSize(ctx)
 
 	ctx, cancel := utils.ManualContext("buildserver-cleanup", time.Minute)
 	defer cancel()
@@ -843,9 +843,11 @@ func main() {
 		server.fanout()
 	}()
 
+	ctx, cancel = utils.ManualContext("buildserver-clean", time.Minute)
 	server.preloadInfo()
 	server.DiskLog = true
-	server.runCleanup()
+	server.runCleanup(ctx)
+	cancel()
 
 	err := server.RegisterServerV2(false)
 	if err != nil {
