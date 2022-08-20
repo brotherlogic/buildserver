@@ -328,7 +328,7 @@ func (s *Server) load(ctx context.Context, v *pb.Version) {
 	config, err := s.loadConfig(ctx)
 
 	if err != nil {
-		s.Log(fmt.Sprintf("Load error: %v", err))
+		s.CtxLog(ctx, fmt.Sprintf("Load error: %v", err))
 	}
 
 	if s.Bits == 32 {
@@ -391,7 +391,7 @@ func (s *Server) loadConfig(ctx context.Context) (*pb.Config, error) {
 		return nil, err
 	}
 
-	s.Log(fmt.Sprintf("Read with this %v", res.GetConsensus()))
+	s.CtxLog(ctx, fmt.Sprintf("Read with this %v", res.GetConsensus()))
 
 	queue := &pb.Config{}
 	err = proto.Unmarshal(res.GetValue().GetValue(), queue)
@@ -595,6 +595,8 @@ type properties struct {
 }
 
 func (s *Server) deliver(w http.ResponseWriter, r *http.Request) {
+	ctx, cancel := utils.ManualContext("buildserver-deliver", time.Hour)
+	defer cancel()
 	binaries := []string{}
 	for _, v := range s.pathMap {
 		found := false
@@ -614,7 +616,7 @@ func (s *Server) deliver(w http.ResponseWriter, r *http.Request) {
 	}
 	err = s.render(string(data), properties{Binaries: binaries}, w)
 	if err != nil {
-		s.Log(fmt.Sprintf("Error writing: %v", err))
+		s.CtxLog(ctx, fmt.Sprintf("Error writing: %v", err))
 	}
 }
 
