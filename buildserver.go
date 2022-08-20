@@ -223,6 +223,7 @@ func (s *Server) build(ctx context.Context, job *queueEntry) (*pb.Version, error
 	builds.With(prometheus.Labels{"job": job.job.GetName()}).Inc()
 	s.currentBuilds++
 	_, version, err := s.scheduler.build(ctx, *job, s.Registry.Identifier, s.latestHash[job.job.Name])
+	s.CtxLog(ctx, fmt.Sprintf("Complete: %v -> %v", err, version))
 	if err != nil {
 		e, ok := status.FromError(err)
 		if !ok || e.Code() != codes.AlreadyExists {
