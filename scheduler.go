@@ -136,6 +136,8 @@ func (s *Scheduler) build(ctx context.Context, queEnt queueEntry, server string,
 	if err != nil {
 		data, _ = ioutil.ReadFile(s.dir + "/src/" + queEnt.job.GoPath + "/.git/refs/heads/main")
 	}
+	//Reset error here
+	err = nil
 	builtHash = strings.TrimSpace(string(data))
 
 	// If the build has failed, there will be no file output
