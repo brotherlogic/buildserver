@@ -27,7 +27,7 @@ func (s *Server) Build(ctx context.Context, req *pb.BuildRequest) (*pb.BuildResp
 		return nil, status.Errorf(codes.FailedPrecondition, "Unable to build for %v bits", req.GetBitSize())
 	}
 
-	s.Log(fmt.Sprintf("Build request: %v", req))
+	s.CtxLog(ctx, fmt.Sprintf("Build request: %v", req))
 	s.buildRequest++
 
 	//Build the binary
@@ -82,7 +82,7 @@ func (s *Server) GetVersions(ctx context.Context, req *pb.VersionRequest) (*pb.V
 				ctx, cancel := utils.ManualContext("bsi", time.Minute*5)
 				defer cancel()
 				_, err := s.Build(ctx, &pb.BuildRequest{Job: req.GetJob(), Origin: "internal", BitSize: 32})
-				s.Log(fmt.Sprintf("internal build: %v", err))
+				s.CtxLog(ctx, fmt.Sprintf("internal build: %v", err))
 			}()
 
 			return nil, status.Errorf(codes.FailedPrecondition, "No builds found for %v", req.GetJob().GetName())
@@ -94,7 +94,7 @@ func (s *Server) GetVersions(ctx context.Context, req *pb.VersionRequest) (*pb.V
 				ctx, cancel := utils.ManualContext("bsi", time.Minute*5)
 				defer cancel()
 				_, err := s.Build(ctx, &pb.BuildRequest{Job: req.GetJob(), Origin: "internal", BitSize: 64})
-				s.Log(fmt.Sprintf("internal build: %v", err))
+				s.CtxLog(ctx, fmt.Sprintf("internal build: %v", err))
 			}()
 
 			return nil, status.Errorf(codes.FailedPrecondition, "No builds found for %v", req.GetJob().GetName())

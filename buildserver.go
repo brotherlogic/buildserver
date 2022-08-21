@@ -621,6 +621,8 @@ func (s *Server) deliver(w http.ResponseWriter, r *http.Request) {
 }
 
 func (s *Server) deliverVersion(w http.ResponseWriter, r *http.Request) {
+	ctx, cancel := utils.ManualContext("deliver_version", time.Minute)
+	defer cancel()
 	var version *pb.Version
 	ver, ok := r.URL.Query()["version"]
 
@@ -641,11 +643,14 @@ func (s *Server) deliverVersion(w http.ResponseWriter, r *http.Request) {
 	}
 	err = s.renderVersion(string(data), properties{Version: version}, w)
 	if err != nil {
-		s.Log(fmt.Sprintf("Error writing: %v", err))
+		s.CtxLog(ctx, fmt.Sprintf("Error writing: %v", err))
 	}
 }
 
 func (s *Server) deliverBinary(w http.ResponseWriter, r *http.Request) {
+	ctx, cancel := utils.ManualContext("deliver_binary", time.Minute)
+	defer cancel()
+
 	versions := []*pb.Version{}
 	binary, ok := r.URL.Query()["binary"]
 
@@ -665,7 +670,7 @@ func (s *Server) deliverBinary(w http.ResponseWriter, r *http.Request) {
 	}
 	err = s.renderBinary(string(data), properties{Versions: versions}, w)
 	if err != nil {
-		s.Log(fmt.Sprintf("Error writing: %v", err))
+		s.CtxLog(ctx, fmt.Sprintf("Error writing: %v", err))
 	}
 }
 
@@ -774,7 +779,7 @@ func (s *Server) runCleanup(ctx context.Context) {
 	defer cancel()
 	config, err := s.loadConfig(ctx)
 	if err != nil {
-		s.Log(fmt.Sprintf("Error loading config for cleanup: %v", err))
+		s.CtxLog(ctx, fmt.Sprintf("Error loading config for cleanup: %v", err))
 	}
 
 	os.RemoveAll("/media/scratch/buildserver/pkg")
@@ -796,20 +801,20 @@ func (s *Server) runCleanup(ctx context.Context) {
 				if err == nil && time.Since(st.ModTime()) > time.Hour*24 {
 					toRemove = append(toRemove, p1)
 					toRemove = append(toRemove, p1+".version")
-					s.Log(fmt.Sprintf("Removing %v -> %v, %v", p1, config.GetLatestVersions()[elems[7]], elems))
+					s.CtxLog(ctx, fmt.Sprintf("Removing %v -> %v, %v", p1, config.GetLatestVersions()[elems[7]], elems))
 				}
 			}
 		}
 		return err
 	})
 	if err != nil {
-		s.Log(fmt.Sprintf("Error walking dir: %v", err))
+		s.CtxLog(ctx, fmt.Sprintf("Error walking dir: %v", err))
 	}
 
 	for _, f := range toRemove {
 		err := os.Remove(f)
 		if err != nil {
-			s.Log(fmt.Sprintf("Unable to remove %v -> %v", f, err))
+			s.CtxLog(ctx, fmt.Sprintf("Unable to remove %v -> %v", f, err))
 		}
 	}
 }
@@ -830,10 +835,10 @@ func main() {
 	ctx, cancel := utils.ManualContext("buildserver-init", time.Minute*5)
 	rcm := &rCommand{command: exec.Command("git", "config", "--global", "url.git@github.com:.insteadOf", "https://github.com")}
 	server.scheduler.runAndWait(ctx, rcm)
-	server.Log(fmt.Sprintf("Configured %v and %v (%v)", rcm.err, rcm.output, rcm.erroutput))
+	server.CtxLog(ctx, fmt.Sprintf("Configured %v and %v (%v)", rcm.err, rcm.output, rcm.erroutput))
 	rcm2 := &rCommand{command: exec.Command("go", "env", "-w", "GOPRIVATE=github.com/brotherlogic/*")}
 	server.scheduler.runAndWait(ctx, rcm2)
-	server.Log(fmt.Sprintf("Configured %v and %v (%v)", rcm2.err, rcm2.output, rcm2.erroutput))
+	server.CtxLog(ctx, fmt.Sprintf("Configured %v and %v (%v)", rcm2.err, rcm2.output, rcm2.erroutput))
 	cancel()
 
 	go func() {
