@@ -42,7 +42,7 @@ var (
 	builds = promauto.NewCounterVec(prometheus.CounterOpts{
 		Name: "buildserver_builds",
 		Help: "The number of builds made",
-	}, []string{"job"})
+	}, []string{"job", "bits"})
 
 	storedBuilds = promauto.NewGauge(prometheus.GaugeOpts{
 		Name: "buildserver_storedbuilds",
@@ -220,7 +220,7 @@ func (s *Server) build(ctx context.Context, job *queueEntry) (*pb.Version, error
 		buildTime.With(prometheus.Labels{"job": job.job.GetName(), "bits": fmt.Sprintf("%v", s.Bits)}).Set(time.Since(t).Seconds())
 	}()
 	s.CtxLog(ctx, fmt.Sprintf("Building: %+v (%v)", job, job.job.GetName()))
-	builds.With(prometheus.Labels{"job": job.job.GetName()}).Inc()
+	builds.With(prometheus.Labels{"job": job.job.GetName(), "bits": fmt.Sprintf("%v", s.Bits)}).Inc()
 	s.currentBuilds++
 	_, version, err := s.scheduler.build(ctx, *job, s.Registry.Identifier, s.latestHash[job.job.Name])
 	s.CtxLog(ctx, fmt.Sprintf("Complete: %v -> %v", err, version))
