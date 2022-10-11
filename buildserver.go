@@ -787,6 +787,12 @@ func (s *Server) runCleanup(ctx context.Context) {
 	latestVersions := config.GetLatestVersions()
 	if s.Bits == 64 {
 		latestVersions = config.GetLatest64Versions()
+
+		for _, v := range latestVersions {
+			if v.GetBitSize() != 64 {
+				s.RaiseIssue("Bad issue pull", fmt.Sprintf("%v is the wrong bit size -> %v vs %v", v, config.GetLatest64Versions(), config.GetLatestVersions()))
+			}
+		}
 	}
 
 	toRemove := []string{}
