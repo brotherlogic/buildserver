@@ -10,7 +10,7 @@ require (
 	github.com/brotherlogic/githubcard v0.0.0-20221024150514-c05d2f9cac31
 	github.com/brotherlogic/gobuildslave v0.0.0-20221013043639-a2ec1f306ba6
 	github.com/brotherlogic/godiscogs v0.0.0-20221008131707-6944ba63cf54
-	github.com/brotherlogic/goserver v0.0.0-20221025134345-4d1b61e3c73a
+	github.com/brotherlogic/goserver v0.0.0-20221025135253-ccd4e26882d1
 	github.com/brotherlogic/keystore v0.0.0-20221019091904-d39e625424df
 	github.com/brotherlogic/logging v0.0.0-20221019154841-f91d6e60e0a3
 	github.com/brotherlogic/monitor v0.0.0-20200610021023-f01db8d3fdc3
