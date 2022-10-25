@@ -7,8 +7,9 @@ import (
 	"strings"
 	"time"
 
+	"google.golang.org/protobuf/proto"
+
 	pb "github.com/brotherlogic/buildserver/proto"
-	"github.com/golang/protobuf/proto"
 )
 
 func (s *Server) preloadInfo() error {
