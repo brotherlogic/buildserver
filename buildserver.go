@@ -22,6 +22,7 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 	"google.golang.org/protobuf/proto"
+	"google.golang.org/protobuf/types/known/anypb"
 
 	pb "github.com/brotherlogic/buildserver/proto"
 	dspb "github.com/brotherlogic/dstore/proto"
@@ -29,7 +30,6 @@ import (
 	pbgbs "github.com/brotherlogic/gobuildslave/proto"
 	pbg "github.com/brotherlogic/goserver/proto"
 	pbvt "github.com/brotherlogic/versiontracker/proto"
-	google_protobuf "github.com/golang/protobuf/ptypes/any"
 )
 
 var (
@@ -365,7 +365,7 @@ func (s *Server) saveConfig(ctx context.Context, config *pb.Config) error {
 	}
 
 	client := dspb.NewDStoreServiceClient(conn)
-	_, err = client.Write(ctx, &dspb.WriteRequest{Key: CONFIG_KEY, Value: &google_protobuf.Any{Value: data}})
+	_, err = client.Write(ctx, &dspb.WriteRequest{Key: CONFIG_KEY, Value: &anypb.Any{Value: data}})
 	if err != nil {
 		return err
 	}
