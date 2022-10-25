@@ -227,7 +227,7 @@ func (s *Server) build(ctx context.Context, job *queueEntry) (*pb.Version, error
 	if err != nil {
 		e, ok := status.FromError(err)
 		if !ok || e.Code() != codes.AlreadyExists {
-			s.BounceIssue(ctx, "Build Failure", fmt.Sprintf("Build failed for %v: %v running on %v", job.job.Name, err, s.Registry.Identifier), job.job.Name)
+			s.BounceIssue(ctx, fmt.Sprintf("Build Failure for %v", job.job.Name), fmt.Sprintf("Build failed for %v: %v running on %v", job.job.Name, err, s.Registry.Identifier), job.job.Name)
 		}
 	}
 	s.currentBuilds--
