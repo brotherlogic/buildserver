@@ -11,10 +11,10 @@ import (
 	"sync"
 	"time"
 
-	"google.golang.org/protobuf/proto"
 	"golang.org/x/net/context"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
+	"google.golang.org/protobuf/proto"
 
 	pb "github.com/brotherlogic/buildserver/proto"
 	pbgbs "github.com/brotherlogic/gobuildslave/proto"
@@ -143,6 +143,10 @@ func (s *Scheduler) build(ctx context.Context, queEnt queueEntry, server string,
 	// If the build has failed, there will be no file output
 	if _, err := os.Stat(s.dir + "/bin/" + queEnt.job.Name); os.IsNotExist(err) && (len(buildCommand.output) > 0 || len(buildCommand.erroutput) > 0) {
 		outy, err := exec.Command("pwd").Output()
+		s.lastBuildMutex.Lock()
+		// Reset last build on an error
+		s.lastBuild[queEnt.job.Name] = time.Now().Add(-time.Hour * 72)
+		s.lastBuildMutex.Unlock()
 		return "", nil, fmt.Errorf("Build failed: %v and %v -> %v and extra %v and %v", buildCommand.output, buildCommand.erroutput, buildCommand.err, string(outy), err)
 	}
 
