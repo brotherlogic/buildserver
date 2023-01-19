@@ -6,7 +6,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/brotherlogic/keystore/client"
+	dstore_client "github.com/brotherlogic/dstore/client"
+	keystoreclient "github.com/brotherlogic/keystore/client"
 
 	pb "github.com/brotherlogic/buildserver/proto"
 	pbd "github.com/brotherlogic/discovery/proto"
@@ -35,9 +36,11 @@ func CloneTestServer(f string, delete bool) *Server {
 	s.dir = wd + "/" + f
 	s.lister = &prodLister{dir: wd + "/" + f}
 	s.SkipLog = true
+	s.SkipIssue = true
 	s.Registry = &pbd.RegistryEntry{Identifier: "blah"}
 	s.runBuild = true
 	s.testing = true
+	s.dhclient = &dstore_client.DStoreClient{Test: true}
 
 	// Run background queue processing
 	go func() {
