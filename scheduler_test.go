@@ -10,13 +10,14 @@ import (
 
 	pb "github.com/brotherlogic/buildserver/proto"
 	pbgbs "github.com/brotherlogic/gobuildslave/proto"
+	"golang.org/x/net/context"
 )
 
-func LogTest(text string) {
+func LogTest(ctx context.Context, text string) {
 	log.Printf(text)
 }
 
-func load(v *pb.Version) {
+func load(ctx context.Context, v *pb.Version) {
 	//Pass
 }
 
@@ -41,6 +42,7 @@ func TestAppendRun(t *testing.T) {
 		int64(0),
 		int64(0),
 		int64(0),
+		int32(0),
 	}
 
 	rc := &rCommand{command: exec.Command("ls")}
@@ -69,6 +71,7 @@ func TestRunNoCommand(t *testing.T) {
 		int64(0),
 		int64(0),
 		int64(0),
+		int32(0),
 	}
 
 	rc := &rCommand{
@@ -101,6 +104,7 @@ func TestRunBadCommand(t *testing.T) {
 		int64(0),
 		int64(0),
 		int64(0),
+		int32(0),
 	}
 
 	rc := &rCommand{
@@ -137,9 +141,10 @@ func TestBuidlRun(t *testing.T) {
 		int64(0),
 		int64(0),
 		int64(0),
+		int32(0),
 	}
 
-	hash, _, err := s.build(queueEntry{job: &pbgbs.Job{Name: "crasher", GoPath: "github.com/brotherlogic/crasher"}}, "madeup", "blah")
+	hash, _, err := s.build(context.Background(), queueEntry{job: &pbgbs.Job{Name: "crasher", GoPath: "github.com/brotherlogic/crasher"}}, "madeup", "blah")
 	log.Printf("%v and %v", hash, err)
 
 	f, err := os.Open(wd + "/buildtest/builds/github.com/brotherlogic/crasher/crasher-" + hash)
@@ -175,10 +180,11 @@ func TestBuildRunError(t *testing.T) {
 		int64(0),
 		int64(0),
 		int64(0),
+		int32(0),
 	}
 	s.lastBuild["crasher"] = time.Now()
 
-	hash, _, err := s.build(queueEntry{job: &pbgbs.Job{Name: "crasher", GoPath: "github.com/brotherlogic/crasher"}}, "madeup", "blah")
+	hash, _, err := s.build(context.Background(), queueEntry{job: &pbgbs.Job{Name: "crasher", GoPath: "github.com/brotherlogic/crasher"}}, "madeup", "blah")
 	if err == nil {
 		t.Errorf("Should have errored here: %v", hash)
 	}
@@ -204,8 +210,9 @@ func TestEmptyJobName(t *testing.T) {
 		int64(0),
 		int64(0),
 		int64(0),
+		int32(0),
 	}
-	hash, _, err := s.build(queueEntry{job: &pbgbs.Job{GoPath: "github.com/brotherlogic/crasher"}}, "madeup", "blah")
+	hash, _, err := s.build(context.Background(), queueEntry{job: &pbgbs.Job{GoPath: "github.com/brotherlogic/crasher"}}, "madeup", "blah")
 	if err == nil {
 		t.Errorf("Empty job name did not fail build: %v", hash)
 	}
@@ -231,9 +238,10 @@ func TestSaveVersion(t *testing.T) {
 		int64(0),
 		int64(0),
 		int64(0),
+		int32(0),
 	}
 
-	v := s.saveVersionInfo(nil, "madeuppath", "blah", "blah")
+	v := s.saveVersionInfo(context.Background(), nil, "madeuppath", "blah", "blah")
 	if v != nil {
 		t.Errorf("Did not fail: %v", v)
 	}

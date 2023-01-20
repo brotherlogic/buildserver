@@ -158,7 +158,7 @@ func (s *Scheduler) build(ctx context.Context, queEnt queueEntry, server string,
 	s.log(ctx, "Running the copy")
 	s.runAndWait(ctx, copyCommand)
 
-	s.log(ctx, "Saving version")
+	s.log(ctx, fmt.Sprintf("Saving version (%v / %v / %v)", copyCommand.erroutput, copyCommand.output, copyCommand.err))
 	version := s.saveVersionInfo(ctx, queEnt.job, s.dir+"/builds/"+queEnt.job.GoPath+"/"+queEnt.job.Name+"-"+hash, server, builtHash)
 
 	s.log(ctx, "Finished")
@@ -224,7 +224,7 @@ func (s *Scheduler) run(c *rCommand) error {
 		}()
 	}
 
-	c.command.Dir = "/home/simon/gobuild/bin"
+	//c.command.Dir = "/home/simon/gobuild/bin"
 	err := c.command.Start()
 	if err != nil {
 		return err

@@ -24,6 +24,8 @@ import (
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/types/known/anypb"
 
+	dstore_client "github.com/brotherlogic/dstore/client"
+
 	pb "github.com/brotherlogic/buildserver/proto"
 	dspb "github.com/brotherlogic/dstore/proto"
 	pbfc "github.com/brotherlogic/filecopier/proto"
@@ -74,6 +76,7 @@ type queueEntry struct {
 // Server main server type
 type Server struct {
 	*goserver.GoServer
+	dhclient          *dstore_client.DStoreClient
 	scheduler         *Scheduler
 	builds            map[string]time.Time
 	buildsMutex       *sync.Mutex
@@ -353,19 +356,12 @@ func (s *Server) load(ctx context.Context, v *pb.Version) {
 func (s *Server) saveConfig(ctx context.Context, config *pb.Config) error {
 	storedBuilds.Set(float64(len(config.GetLatestVersions())))
 
-	conn, err := s.FDialServer(ctx, "dstore")
-	if err != nil {
-		return err
-	}
-	defer conn.Close()
-
 	data, err := proto.Marshal(config)
 	if err != nil {
 		return err
 	}
 
-	client := dspb.NewDStoreServiceClient(conn)
-	_, err = client.Write(ctx, &dspb.WriteRequest{Key: CONFIG_KEY, Value: &anypb.Any{Value: data}})
+	_, err = s.dhclient.Write(ctx, &dspb.WriteRequest{Key: CONFIG_KEY, Value: &anypb.Any{Value: data}})
 	if err != nil {
 		return err
 	}
@@ -374,14 +370,7 @@ func (s *Server) saveConfig(ctx context.Context, config *pb.Config) error {
 }
 
 func (s *Server) loadConfig(ctx context.Context) (*pb.Config, error) {
-	conn, err := s.FDialServer(ctx, "dstore")
-	if err != nil {
-		return nil, err
-	}
-	defer conn.Close()
-
-	client := dspb.NewDStoreServiceClient(conn)
-	res, err := client.Read(ctx, &dspb.ReadRequest{Key: CONFIG_KEY})
+	res, err := s.dhclient.Read(ctx, &dspb.ReadRequest{Key: CONFIG_KEY})
 	if err != nil {
 		if status.Convert(err).Code() == codes.InvalidArgument {
 			return &pb.Config{
@@ -454,6 +443,7 @@ func (p *prodLister) listFiles(job *pbgbs.Job) ([]fileDetails, error) {
 func Init() *Server {
 	s := &Server{
 		&goserver.GoServer{},
+		&dstore_client.DStoreClient{},
 		&Scheduler{
 			"/media/scratch/buildserver",
 			&sync.Mutex{},
@@ -504,6 +494,7 @@ func Init() *Server {
 
 	s.scheduler.log = s.CtxLog
 	s.scheduler.load = s.load
+	s.dhclient = &dstore_client.DStoreClient{Gs: s.GoServer}
 
 	return s
 }
