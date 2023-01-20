@@ -3,7 +3,7 @@ module github.com/brotherlogic/buildserver
 go 1.18
 
 require (
-	github.com/brotherlogic/discovery v0.0.0-20230105182040-04b2f40a21ed
+	github.com/brotherlogic/discovery v0.0.0-20230120085916-540725c71489
 	github.com/brotherlogic/dstore v0.0.0-20230108103035-94e9284d0601
 	github.com/brotherlogic/filecopier v0.0.0-20230118231615-b75162de2691
 	github.com/brotherlogic/gobuildslave v0.0.0-20230117181720-516784a20890
