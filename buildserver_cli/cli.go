@@ -16,9 +16,6 @@ import (
 	pb "github.com/brotherlogic/buildserver/proto"
 	pbgbs "github.com/brotherlogic/gobuildslave/proto"
 	vtpb "github.com/brotherlogic/versiontracker/proto"
-
-	//Needed to pull in gzip encoding init
-	_ "google.golang.org/grpc/encoding/gzip"
 )
 
 func init() {
