@@ -13,7 +13,7 @@ func TestLoadVersion(t *testing.T) {
 	s := InitTestServer("testloadversion")
 	s.builds["crasher"] = time.Now().AddDate(-1, 0, 0)
 
-	_, err := s.Build(context.Background(), &pb.BuildRequest{Job: &pbgbs.Job{Name: "crasher", GoPath: "github.com/brotherlogic/crasher"}})
+	_, err := s.Build(context.Background(), &pb.BuildRequest{BitSize: 32, Job: &pbgbs.Job{Name: "crasher", GoPath: "github.com/brotherlogic/crasher"}})
 
 	if err != nil {
 		t.Fatalf("Error in get versions: %v", err)
@@ -21,6 +21,7 @@ func TestLoadVersion(t *testing.T) {
 	s.drainQueue(context.Background())
 
 	s2 := CloneTestServer("testloadversion", false)
+	s2.Bits = 32
 	if len(s2.pathMap) != 0 {
 		t.Fatalf("Error in init path map: %v", s2.pathMap)
 	}

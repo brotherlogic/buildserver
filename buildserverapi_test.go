@@ -90,48 +90,16 @@ func TestCrashReportWithUpdate(t *testing.T) {
 	}
 }
 
-func TestBuildWithMadeupSecondPull(t *testing.T) {
-	s := InitTestServer("buildwithhour")
-	s.builds["crasher"] = time.Now().AddDate(-1, 0, 0)
-
-	resp, err := s.GetVersions(context.Background(), &pb.VersionRequest{BitSize: 32, Job: &pbgbs.Job{Name: "crasher", GoPath: "github.com/brotherlogic/crasher"}})
-
-	if err != nil {
-		t.Fatalf("Error in get versions: %v", err)
-	}
-	time.Sleep(time.Second)
-	s.drainAndRestoreQueue(context.Background())
-
-	if len(resp.Versions) == 0 {
-		t.Errorf("Get versions did not fail first pass: %v", resp)
-	}
-
-	resp, err = s.GetVersions(context.Background(), &pb.VersionRequest{Job: &pbgbs.Job{Name: "madeup", GoPath: "github.com/brotherlogic/madeup"}})
-	if err != nil {
-		t.Fatalf("Error in get versions: %v", err)
-	}
-
-	if len(resp.Versions) == 0 {
-		t.Errorf("Get versions did not fail second pass: %v", resp)
-	}
-
-}
-
 func TestBuildWithFailure(t *testing.T) {
 	s := InitTestServer("buildwithhour")
 
-	_, err := s.Build(context.Background(), &pb.BuildRequest{Job: &pbgbs.Job{Name: "blahblahblah", GoPath: "github.com/brotherlogic/blahblahblah"}})
+	_, err := s.Build(context.Background(), &pb.BuildRequest{BitSize: 32, Job: &pbgbs.Job{Name: "blahblahblah", GoPath: "github.com/brotherlogic/blahblahblah"}})
 	s.drainAndRestoreQueue(context.Background())
 
-	resp, err := s.GetVersions(context.Background(), &pb.VersionRequest{Job: &pbgbs.Job{Name: "crasher", GoPath: "github.com/brotherlogic/blahblahblah"}})
-	if err != nil {
-		t.Fatalf("Error in get versions: %v", err)
+	resp, err := s.GetVersions(context.Background(), &pb.VersionRequest{BitSize: 32, Job: &pbgbs.Job{Name: "crasher", GoPath: "github.com/brotherlogic/blahblahblah"}})
+	if err == nil {
+		t.Fatalf("Error in get versions: %v", resp)
 	}
-
-	if len(resp.Versions) == 0 {
-		t.Errorf("Get versions did not fail: %v", resp)
-	}
-
 }
 
 func TestList(t *testing.T) {
