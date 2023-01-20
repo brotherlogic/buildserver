@@ -5,7 +5,6 @@ import (
 	"crypto/md5"
 	"fmt"
 	"io/ioutil"
-	"log"
 	"os"
 	"os/exec"
 	"strings"
@@ -50,7 +49,6 @@ type rCommand struct {
 
 func (s *Scheduler) saveVersionInfo(ctx context.Context, j *pbgbs.Job, path string, server string, githubHash string) *pb.Version {
 	f, err := os.Stat(path)
-	log.Printf("SVE: %v", err)
 	if err == nil {
 		ver := &pb.Version{
 			Job:           j,
