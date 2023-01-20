@@ -318,6 +318,7 @@ func (s *Server) fanout() {
 }
 
 func (s *Server) load(ctx context.Context, v *pb.Version) {
+	log.Printf("LOAD with %v", v)
 	jobn := v.Job.Name
 	if v.VersionDate > s.latestBuild[jobn] {
 		s.latestBuild[jobn] = v.VersionDate
@@ -334,6 +335,7 @@ func (s *Server) load(ctx context.Context, v *pb.Version) {
 		s.CtxLog(ctx, fmt.Sprintf("Load error: %v", err))
 	}
 
+	log.Printf("LOADED: %v", config)
 	if s.Bits == 32 {
 		if val, ok := config.GetLatestVersions()[jobn]; !ok || v.VersionDate > val.GetVersionDate() {
 			config.LatestVersions[jobn] = v
@@ -354,6 +356,7 @@ func (s *Server) load(ctx context.Context, v *pb.Version) {
 }
 
 func (s *Server) saveConfig(ctx context.Context, config *pb.Config) error {
+	log.Printf("SAVING: %v", config)
 	storedBuilds.Set(float64(len(config.GetLatestVersions())))
 
 	data, err := proto.Marshal(config)

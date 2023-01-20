@@ -8,9 +8,12 @@ import (
 
 	dstore_client "github.com/brotherlogic/dstore/client"
 	keystoreclient "github.com/brotherlogic/keystore/client"
+	"google.golang.org/protobuf/proto"
+	"google.golang.org/protobuf/types/known/anypb"
 
 	pb "github.com/brotherlogic/buildserver/proto"
 	pbd "github.com/brotherlogic/discovery/proto"
+	pbds "github.com/brotherlogic/dstore/proto"
 	pbgbs "github.com/brotherlogic/gobuildslave/proto"
 )
 
@@ -41,6 +44,11 @@ func CloneTestServer(f string, delete bool) *Server {
 	s.runBuild = true
 	s.testing = true
 	s.dhclient = &dstore_client.DStoreClient{Test: true}
+	s.Bits = 32
+
+	config := &pb.Config{LatestVersions: map[string]*pb.Version{"blah": &pb.Version{}}}
+	data, _ := proto.Marshal(config)
+	s.dhclient.Write(context.Background(), &pbds.WriteRequest{Key: CONFIG_KEY, Value: &anypb.Any{Value: data}})
 
 	// Run background queue processing
 	go func() {
@@ -86,7 +94,7 @@ func TestBuildWithMadeupSecondPull(t *testing.T) {
 	s := InitTestServer("buildwithhour")
 	s.builds["crasher"] = time.Now().AddDate(-1, 0, 0)
 
-	resp, err := s.GetVersions(context.Background(), &pb.VersionRequest{Job: &pbgbs.Job{Name: "crasher", GoPath: "github.com/brotherlogic/crasher"}})
+	resp, err := s.GetVersions(context.Background(), &pb.VersionRequest{BitSize: 32, Job: &pbgbs.Job{Name: "crasher", GoPath: "github.com/brotherlogic/crasher"}})
 
 	if err != nil {
 		t.Fatalf("Error in get versions: %v", err)
@@ -177,24 +185,24 @@ func TestDoubleBuild(t *testing.T) {
 func TestCrash(t *testing.T) {
 	s := InitTestServer("testcrash")
 
-	_, err := s.Build(context.Background(), &pb.BuildRequest{Job: &pbgbs.Job{Name: "crasher", GoPath: "github.com/brotherlogic/crasher"}})
+	_, err := s.Build(context.Background(), &pb.BuildRequest{BitSize: 32, Job: &pbgbs.Job{Name: "crasher", GoPath: "github.com/brotherlogic/crasher"}})
 	if err != nil {
 		t.Fatalf("Error in build: %v", err)
 	}
 	s.drainAndRestoreQueue(context.Background())
 
-	resp, err := s.GetVersions(context.Background(), &pb.VersionRequest{Job: &pbgbs.Job{Name: "crasher", GoPath: "github.com/brotherlogic/crasher"}})
+	resp, err := s.GetVersions(context.Background(), &pb.VersionRequest{BitSize: 32, Job: &pbgbs.Job{Name: "crasher", GoPath: "github.com/brotherlogic/crasher"}})
 	if err != nil {
-		t.Errorf("Error getting versions: %v", err)
+		t.Fatalf("Error getting versions: %v", err)
 	}
 
 	if len(resp.GetVersions()) != 1 || len(resp.GetVersions()[0].GetCrashes()) != 0 {
-		t.Errorf("bad pull - not version or crashes: %v", resp)
+		t.Fatalf("bad pull - not version or crashes: %v", resp)
 	}
 
 	s.ReportCrash(context.Background(), &pb.CrashRequest{Job: &pbgbs.Job{Name: "crasher"}, Version: resp.GetVersions()[0].GetVersion(), Crash: &pb.Crash{ErrorMessage: "help"}})
 
-	resp, err = s.GetVersions(context.Background(), &pb.VersionRequest{JustLatest: true, Job: &pbgbs.Job{Name: "crasher", GoPath: "github.com/brotherlogic/crasher"}})
+	resp, err = s.GetVersions(context.Background(), &pb.VersionRequest{BitSize: 32, JustLatest: true, Job: &pbgbs.Job{Name: "crasher", GoPath: "github.com/brotherlogic/crasher"}})
 	if err != nil {
 		t.Errorf("Error getting versions: %v", err)
 	}
