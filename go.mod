@@ -3,16 +3,16 @@ module github.com/brotherlogic/buildserver
 go 1.18
 
 require (
-	github.com/brotherlogic/discovery v0.0.0-20230205183007-0f1849fee07b
-	github.com/brotherlogic/dstore v0.0.0-20230207022041-b1901699636d
-	github.com/brotherlogic/filecopier v0.0.0-20230210033444-385a5872bf95
-	github.com/brotherlogic/gobuildslave v0.0.0-20230205233639-0e016ec42031
+	github.com/brotherlogic/discovery v0.0.0-20230212183615-b1d4d3f7fc98
+	github.com/brotherlogic/dstore v0.0.0-20230214030217-c6f0f5bb942c
+	github.com/brotherlogic/filecopier v0.0.0-20230217035225-0852c6c2778d
+	github.com/brotherlogic/gobuildslave v0.0.0-20230212214632-3f507db2daea
 	github.com/brotherlogic/goserver v0.0.0-20230208171911-c95aab060a3f
-	github.com/brotherlogic/keystore v0.0.0-20230210041215-25d3636dd54b
-	github.com/brotherlogic/versiontracker v0.0.0-20230205233609-9da3d9861767
+	github.com/brotherlogic/keystore v0.0.0-20230217042242-6e6e50134c19
+	github.com/brotherlogic/versiontracker v0.0.0-20230212234458-c020c99bd36a
 	github.com/golang/protobuf v1.5.2
 	github.com/prometheus/client_golang v1.14.0
-	golang.org/x/net v0.6.0
+	golang.org/x/net v0.7.0
 	google.golang.org/grpc v1.53.0
 	google.golang.org/protobuf v1.28.1
 )
@@ -20,9 +20,9 @@ require (
 require (
 	github.com/beorn7/perks v1.0.1 // indirect
 	github.com/brotherlogic/datastore v0.0.0-20230118231105-ee668be05973 // indirect
-	github.com/brotherlogic/githubcard v0.0.0-20230204004849-4a4ddb1f39a8 // indirect
-	github.com/brotherlogic/lock v0.0.0-20230205014350-8afe1ffcd46d // indirect
-	github.com/brotherlogic/logging v0.0.0-20230208211906-bde1597aa2c4 // indirect
+	github.com/brotherlogic/githubcard v0.0.0-20230217215917-e6782e02de2a // indirect
+	github.com/brotherlogic/lock v0.0.0-20230212024202-db3d283a54e5 // indirect
+	github.com/brotherlogic/logging v0.0.0-20230215215318-301fdf8be7fb // indirect
 	github.com/brotherlogic/monitor v0.0.0-20221025152653-c10877c5f9e6 // indirect
 	github.com/brotherlogic/versionserver v0.0.0-20221025154054-c9bcd41be2f2 // indirect
 	github.com/cespare/xxhash/v2 v2.2.0 // indirect
@@ -40,5 +40,5 @@ require (
 	go.opentelemetry.io/otel/trace v1.13.0 // indirect
 	golang.org/x/sys v0.5.0 // indirect
 	golang.org/x/text v0.7.0 // indirect
-	google.golang.org/genproto v0.0.0-20230209215440-0dfe4f8abfcc // indirect
+	google.golang.org/genproto v0.0.0-20230216225411-c8e22ba71e44 // indirect
 )
