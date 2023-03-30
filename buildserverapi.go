@@ -23,7 +23,7 @@ func getVersion(f string) string {
 
 // Build a binary
 func (s *Server) Build(ctx context.Context, req *pb.BuildRequest) (*pb.BuildResponse, error) {
-	for _, b := range []string{"home"} {
+	for _, b := range []string{"home", "fleet-infra"} {
 		if req.GetJob().GetName() == b {
 			return &pb.BuildResponse{}, nil
 		}
