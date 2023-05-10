@@ -48,7 +48,7 @@ var (
 
 	storedBuilds = promauto.NewGauge(prometheus.GaugeOpts{
 		Name: "buildserver_storedbuilds",
-		Help: "The number of builds made",
+		Help: "The number of builds stored",
 	})
 	buildStorage = promauto.NewGauge(prometheus.GaugeOpts{
 		Name: "buildserver_buildstorage",
