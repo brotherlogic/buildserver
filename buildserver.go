@@ -48,7 +48,7 @@ var (
 
 	storedBuilds = promauto.NewGauge(prometheus.GaugeOpts{
 		Name: "buildserver_storedbuilds",
-		Help: "The number of builds made",
+		Help: "The number of builds stored",
 	})
 	buildStorage = promauto.NewGauge(prometheus.GaugeOpts{
 		Name: "buildserver_buildstorage",
@@ -247,7 +247,7 @@ var (
 
 func (s *Server) dequeue() {
 	for job := range s.queue {
-		ctx, cancel := utils.ManualContext("buildserver-dequeue", time.Minute*15)
+		ctx, cancel := utils.ManualContext("buildserver-dequeue", time.Minute*60)
 		s.CtxLog(ctx, fmt.Sprintf("Building: %v", job))
 		version, err := s.build(ctx, job)
 		time.Sleep(time.Second)
