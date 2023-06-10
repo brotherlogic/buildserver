@@ -4,7 +4,7 @@ go 1.18
 
 require (
 	github.com/brotherlogic/discovery v0.0.0-20230527174721-899846f80b8c
-	github.com/brotherlogic/dstore v0.0.0-20230603175306-86eb7e42ee6e
+	github.com/brotherlogic/dstore v0.0.0-20230610181820-2225c4f68d59
 	github.com/brotherlogic/filecopier v0.0.0-20230604035442-7687f0160225
 	github.com/brotherlogic/gobuildslave v0.0.0-20230604044345-1e331dee389b
 	github.com/brotherlogic/goserver v0.0.0-20230530030554-6cec644064c2
