@@ -22,7 +22,7 @@ func (s *Server) preloadInfo(ctx context.Context) error {
 			if len(data) > 0 {
 				err := proto.Unmarshal(data, val)
 				if err != nil {
-					s.CtxLog(ctx, fmt.Sprintf("Unable to read: %v", path))
+					s.CtxLog(ctx, fmt.Sprintf("Unable to read: %v (%v)", path, err))
 				}
 				jobn := val.Job.Name
 
