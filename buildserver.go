@@ -722,7 +722,7 @@ func (s *Server) aligner(ctx context.Context) error {
 		}
 	}
 
-	s.preloadInfo()
+	s.preloadInfo(ctx)
 
 	return nil
 }
@@ -846,7 +846,7 @@ func main() {
 	}()
 
 	ctx, cancel = utils.ManualContext("buildserver-clean", time.Minute)
-	server.preloadInfo()
+	server.preloadInfo(ctx)
 	server.DiskLog = true
 	server.runCleanup(ctx)
 	cancel()

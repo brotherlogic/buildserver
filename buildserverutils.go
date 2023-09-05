@@ -1,25 +1,29 @@
 package main
 
 import (
+	"fmt"
 	"io/ioutil"
 	"os"
 	"path/filepath"
 	"strings"
 	"time"
 
+	"golang.org/x/net/context"
 	"google.golang.org/protobuf/proto"
 
 	pb "github.com/brotherlogic/buildserver/proto"
 )
 
-func (s *Server) preloadInfo() error {
+func (s *Server) preloadInfo(ctx context.Context) error {
 	return filepath.Walk(s.dir, func(path string, info os.FileInfo, err error) error {
 		if strings.HasSuffix(path, ".version") {
 			data, _ := ioutil.ReadFile(path)
 			val := &pb.Version{}
 			if len(data) > 0 {
-				proto.Unmarshal(data, val)
-
+				err := proto.Unmarshal(data, val)
+				if err != nil {
+					s.CtxLog(ctx, fmt.Sprintf("Unable to read: %v", path))
+				}
 				jobn := val.Job.Name
 
 				found := false
