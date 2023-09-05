@@ -23,25 +23,26 @@ func (s *Server) preloadInfo(ctx context.Context) error {
 				err := proto.Unmarshal(data, val)
 				if err != nil {
 					s.CtxLog(ctx, fmt.Sprintf("Unable to read: %v (%v)", path, err))
-				}
-				jobn := val.Job.Name
+				} else {
+					jobn := val.Job.Name
 
-				found := false
-				for _, job := range s.jobs {
-					if job.Name == jobn {
-						found = true
+					found := false
+					for _, job := range s.jobs {
+						if job.Name == jobn {
+							found = true
+						}
 					}
-				}
-				if !found {
-					s.jobs = append(s.jobs, val.Job)
-				}
+					if !found {
+						s.jobs = append(s.jobs, val.Job)
+					}
 
-				if val.VersionDate > s.latestBuild[jobn] {
-					s.latestBuild[jobn] = val.VersionDate
-					s.latestHash[jobn] = val.GithubHash
-					s.latestDate[jobn] = time.Unix(val.VersionDate, 0)
-					s.latestVersion[jobn] = val.Version
-					s.latest[jobn] = val
+					if val.VersionDate > s.latestBuild[jobn] {
+						s.latestBuild[jobn] = val.VersionDate
+						s.latestHash[jobn] = val.GithubHash
+						s.latestDate[jobn] = time.Unix(val.VersionDate, 0)
+						s.latestVersion[jobn] = val.Version
+						s.latest[jobn] = val
+					}
 				}
 			}
 		}
