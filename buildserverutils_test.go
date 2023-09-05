@@ -25,13 +25,13 @@ func TestLoadVersion(t *testing.T) {
 	if len(s2.pathMap) != 0 {
 		t.Fatalf("Error in init path map: %v", s2.pathMap)
 	}
-	s2.preloadInfo()
+	s2.preloadInfo(context.Background())
 	if len(s2.pathMap) == 1 {
 		t.Errorf("Error in loaded path map: %v", s2.pathMap)
 	}
 
 	//Second preload to trigger job list
-	s2.preloadInfo()
+	s2.preloadInfo(context.Background())
 	if len(s2.pathMap) == 1 {
 		t.Errorf("Error in loaded path map: %v", s2.pathMap)
 	}
