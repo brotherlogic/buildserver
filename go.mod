@@ -12,7 +12,7 @@ require (
 	github.com/brotherlogic/versiontracker v0.0.0-20230929010445-ca5130f2d130
 	github.com/golang/protobuf v1.5.3
 	github.com/prometheus/client_golang v1.17.0
-	golang.org/x/net v0.15.0
+	golang.org/x/net v0.17.0
 	google.golang.org/grpc v1.58.2
 	google.golang.org/protobuf v1.31.0
 )
@@ -32,7 +32,7 @@ require (
 	github.com/prometheus/common v0.44.0 // indirect
 	github.com/prometheus/procfs v0.12.0 // indirect
 	github.com/struCoder/pidusage v0.2.1 // indirect
-	golang.org/x/sys v0.12.0 // indirect
+	golang.org/x/sys v0.13.0 // indirect
 	golang.org/x/text v0.13.0 // indirect
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20230920204549-e6e6cdab5c13 // indirect
 )
