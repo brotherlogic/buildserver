@@ -11,16 +11,11 @@ import (
 
 	"github.com/brotherlogic/goserver/utils"
 	"google.golang.org/grpc"
-	"google.golang.org/grpc/resolver"
 
 	pb "github.com/brotherlogic/buildserver/proto"
 	pbgbs "github.com/brotherlogic/gobuildslave/proto"
 	vtpb "github.com/brotherlogic/versiontracker/proto"
 )
-
-func init() {
-	resolver.Register(&utils.DiscoveryClientResolverBuilder{})
-}
 
 func main() {
 	ctx, cancel := utils.ManualContext("buildserver-"+os.Args[1], time.Second*10)
