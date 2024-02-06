@@ -44,7 +44,7 @@ func (s *Server) Build(ctx context.Context, req *pb.BuildRequest) (*pb.BuildResp
 
 // ReportCrash reports a crash
 func (s *Server) ReportCrash(ctx context.Context, req *pb.CrashRequest) (*pb.CrashResponse, error) {
-	if len(strings.TrimSpace(req.Crash.ErrorMessage)) == 0 {
+	if len(strings.TrimSpace(req.Crash.ErrorMessage)) == 0 || req.GetCrash().GetErrorMessage() == "<nil>" {
 		return nil, fmt.Errorf("Cannot submit an empty crash report")
 	}
 	s.crashes++
