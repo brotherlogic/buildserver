@@ -227,10 +227,36 @@ func (s *Server) build(ctx context.Context, job *queueEntry) (*pb.Version, error
 	s.currentBuilds++
 	_, version, err := s.scheduler.build(ctx, *job, s.Registry.Identifier, s.latestHash[job.job.Name])
 	s.CtxLog(ctx, fmt.Sprintf("Complete: %v -> %v", err, version))
+
+	config, err := s.loadConfig(ctx)
+	if err != nil {
+		return nil, err
+	}
+
 	if err != nil {
 		e, ok := status.FromError(err)
 		if !ok || e.Code() != codes.AlreadyExists {
-			s.BounceIssue(ctx, fmt.Sprintf("Build Failure for %v", job.job.Name), fmt.Sprintf("Build failed for %v: %v running on %v", job.job.Name, err, s.Registry.Identifier), job.job.Name)
+			num, err := s.BounceImmediateIssue(ctx, job.job.Name, fmt.Sprintf("Build Failure for %v", job.job.Name), fmt.Sprintf("Build failed for %v: %v running on %v", job.job.Name, err, s.Registry.Identifier), false, false)
+			if err != nil {
+				return nil, err
+			}
+			config.FailureTracker[job.job.Name] = num.GetNumber()
+			err = s.saveConfig(ctx, config)
+			if err != nil {
+				return nil, err
+			}
+		}
+	} else {
+		if val, ok := config.GetFailureTracker()[job.job.Name]; ok {
+			err = s.DeleteBounceIssue(ctx, val, job.job.Name)
+			if err != nil {
+				return nil, err
+			}
+			delete(config.FailureTracker, job.job.Name)
+			err = s.saveConfig(ctx, config)
+			if err != nil {
+				return nil, err
+			}
 		}
 	}
 	s.currentBuilds--
@@ -390,6 +416,10 @@ func (s *Server) loadConfig(ctx context.Context) (*pb.Config, error) {
 
 	if queue.GetLatest64Versions() == nil {
 		queue.Latest64Versions = make(map[string]*pb.Version)
+	}
+
+	if queue.GetFailureTracker() == nil {
+		queue.FailureTracker = make(map[string]int32)
 	}
 
 	return queue, nil
