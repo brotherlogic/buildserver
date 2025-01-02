@@ -9,6 +9,7 @@ option go_package = "github.com/brotherlogic/buildserver/proto";
 message Config {
   map<string, Version> latest_versions = 1;
   map<string, Version> latest64_versions = 2;
+  map<string, int32> failure_tracker = 3;
 }
 
 message Crash {
