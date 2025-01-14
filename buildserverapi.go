@@ -83,7 +83,7 @@ func (s *Server) GetVersions(ctx context.Context, req *pb.VersionRequest) (*pb.V
 	var latest *pb.Version
 	if req.GetBitSize() == 32 {
 		latest = config.GetLatestVersions()[req.GetJob().GetName()]
-		if latest == nil {
+		if latest == nil || time.Since(time.Unix(latest.GetLastBuildTime(), 0)) > time.Hour*24*30 {
 			go func() {
 				ctx, cancel := utils.ManualContext("bsi", time.Minute*5)
 				defer cancel()
