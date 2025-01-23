@@ -60,7 +60,7 @@ func (s *Server) ReportCrash(ctx context.Context, req *pb.CrashRequest) (*pb.Cra
 	}
 	s.pathMapMutex.Unlock()
 
-	s.BounceIssue(ctx, fmt.Sprintf("Unfound crash for %v", req.Job.Name), fmt.Sprintf("At %v on %v: %v", time.Now(), req.Origin, req.Crash.ErrorMessage), req.Job.Name)
+	s.BounceIssue(ctx, fmt.Sprintf("Unfound crash for %v", req.Job.Name), fmt.Sprintf("At %v on %v: %v", time.Now(), req.Origin, req.Crash.ErrorMessage), req.Job.Name, "code")
 	return &pb.CrashResponse{}, status.Errorf(codes.NotFound, "Version %v/%v not found for %v (%v) -> %v", req.Job.Name, req.Version, req.Origin, req.Crash.CrashType, req.Crash.ErrorMessage)
 }
 
