@@ -4,8 +4,8 @@ go 1.23.2
 
 require (
 	github.com/brotherlogic/discovery v0.0.0-20241109204028-02908558af09
-	github.com/brotherlogic/dstore v0.0.0-20250301002520-817a76991675
-	github.com/brotherlogic/filecopier v0.0.0-20250301010534-fd6e9386ce61
+	github.com/brotherlogic/dstore v0.0.0-20250301012418-3c5c99aa813f
+	github.com/brotherlogic/filecopier v0.0.0-20250301012910-c1a56ece577b
 	github.com/brotherlogic/gobuildslave v0.0.0-20250228233820-b15da7d25440
 	github.com/brotherlogic/goserver v0.0.0-20250123145056-95c6fbb2310a
 	github.com/brotherlogic/keystore v0.0.0-20240508161349-814b3200b126
