@@ -11,7 +11,7 @@ require (
 	github.com/brotherlogic/keystore v0.0.0-20240508161349-814b3200b126
 	github.com/brotherlogic/versiontracker v0.0.0-20250204221321-973d3b34a3ff
 	github.com/prometheus/client_golang v1.21.1
-	golang.org/x/net v0.36.0
+	golang.org/x/net v0.37.0
 	google.golang.org/grpc v1.71.0
 	google.golang.org/protobuf v1.36.5
 )
