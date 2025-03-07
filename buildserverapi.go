@@ -11,6 +11,7 @@ import (
 
 	pb "github.com/brotherlogic/buildserver/proto"
 	"github.com/brotherlogic/goserver/utils"
+	"github.com/prometheus/client_golang/prometheus"
 )
 
 func getVersion(f string) string {
@@ -23,6 +24,7 @@ func getVersion(f string) string {
 
 // Build a binary
 func (s *Server) Build(ctx context.Context, req *pb.BuildRequest) (*pb.BuildResponse, error) {
+	queueSize.With(prometheus.Labels{"type": "reported"}).Set(float64(len(s.queue)))
 	for _, b := range []string{"home", "fleet-infra", "gramophile", "printqueue", "discogs", "machines", "adventofcode"} {
 		if req.GetJob().GetName() == b {
 			return &pb.BuildResponse{}, nil
