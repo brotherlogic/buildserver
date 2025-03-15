@@ -4,12 +4,12 @@ go 1.23.2
 
 require (
 	github.com/brotherlogic/discovery v0.0.0-20241109204028-02908558af09
-	github.com/brotherlogic/dstore v0.0.0-20250312101339-29ac6428d464
-	github.com/brotherlogic/filecopier v0.0.0-20250312103705-27e013997e6b
-	github.com/brotherlogic/gobuildslave v0.0.0-20250312103417-eb15d50ac8fd
+	github.com/brotherlogic/dstore v0.0.0-20250315022546-d583b1693e52
+	github.com/brotherlogic/filecopier v0.0.0-20250315022510-5db41271eabf
+	github.com/brotherlogic/gobuildslave v0.0.0-20250315022612-861f2cc2dabf
 	github.com/brotherlogic/goserver v0.0.0-20250123145056-95c6fbb2310a
 	github.com/brotherlogic/keystore v0.0.0-20240508161349-814b3200b126
-	github.com/brotherlogic/versiontracker v0.0.0-20250308035503-3c19dd66cdd2
+	github.com/brotherlogic/versiontracker v0.0.0-20250315022617-2ef5d7ec54a9
 	github.com/prometheus/client_golang v1.21.1
 	golang.org/x/net v0.37.0
 	google.golang.org/grpc v1.71.0
@@ -18,11 +18,11 @@ require (
 
 require (
 	github.com/beorn7/perks v1.0.1 // indirect
-	github.com/brotherlogic/datastore v0.0.0-20250113225754-a9cab19c721e // indirect
-	github.com/brotherlogic/githubcard v0.0.0-20250312093531-f3cfc6aba41b // indirect
+	github.com/brotherlogic/datastore v0.0.0-20250313015544-917b63bdd6ff // indirect
+	github.com/brotherlogic/githubcard v0.0.0-20250315015157-b89fcdfd89ec // indirect
 	github.com/brotherlogic/githubridge v0.2849.0 // indirect
-	github.com/brotherlogic/lock v0.0.0-20250312103512-5be98d56297c // indirect
-	github.com/brotherlogic/logging v0.0.0-20250312103027-78dbee50ca4a // indirect
+	github.com/brotherlogic/lock v0.0.0-20250315021151-b59575c24a95 // indirect
+	github.com/brotherlogic/logging v0.0.0-20250315022652-28d7a34bc555 // indirect
 	github.com/brotherlogic/monitor v0.0.0-20221025152653-c10877c5f9e6 // indirect
 	github.com/brotherlogic/versionserver v0.0.0-20221025154054-c9bcd41be2f2 // indirect
 	github.com/cespare/xxhash/v2 v2.3.0 // indirect
@@ -31,10 +31,10 @@ require (
 	github.com/mitchellh/go-ps v1.0.0 // indirect
 	github.com/munnerz/goautoneg v0.0.0-20191010083416-a7dc8b61c822 // indirect
 	github.com/prometheus/client_model v0.6.1 // indirect
-	github.com/prometheus/common v0.62.0 // indirect
+	github.com/prometheus/common v0.63.0 // indirect
 	github.com/prometheus/procfs v0.15.1 // indirect
 	github.com/struCoder/pidusage v0.2.1 // indirect
 	golang.org/x/sys v0.31.0 // indirect
 	golang.org/x/text v0.23.0 // indirect
-	google.golang.org/genproto/googleapis/rpc v0.0.0-20250311190419-81fb87f6b8bf // indirect
+	google.golang.org/genproto/googleapis/rpc v0.0.0-20250313205543-e70fdf4c4cb4 // indirect
 )
