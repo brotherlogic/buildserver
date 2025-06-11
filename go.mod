@@ -5,11 +5,11 @@ go 1.23.2
 require (
 	github.com/brotherlogic/discovery v0.0.0-20250611040853-58738b9ad0c3
 	github.com/brotherlogic/dstore v0.0.0-20250611041016-4721b9d210d2
-	github.com/brotherlogic/filecopier v0.0.0-20250611040925-8fc08872c073
+	github.com/brotherlogic/filecopier v0.0.0-20250611045654-f1a4693e3b1f
 	github.com/brotherlogic/gobuildslave v0.0.0-20250611041132-063762a80ea1
 	github.com/brotherlogic/goserver v0.0.0-20250608182006-4ace595931a5
 	github.com/brotherlogic/keystore v0.0.0-20240508161349-814b3200b126
-	github.com/brotherlogic/versiontracker v0.0.0-20250611041210-db2842107d5b
+	github.com/brotherlogic/versiontracker v0.0.0-20250611043845-18736d0f3a83
 	github.com/prometheus/client_golang v1.22.0
 	golang.org/x/net v0.41.0
 	google.golang.org/grpc v1.73.0
