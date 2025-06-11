@@ -3,13 +3,13 @@ module github.com/brotherlogic/buildserver
 go 1.23.2
 
 require (
-	github.com/brotherlogic/discovery v0.0.0-20250611135510-6ee926552c7d
-	github.com/brotherlogic/dstore v0.0.0-20250611143348-134d669b8cde
-	github.com/brotherlogic/filecopier v0.0.0-20250611135528-51c1ab90b9cc
+	github.com/brotherlogic/discovery v0.0.0-20250611163418-b40ba70b11f6
+	github.com/brotherlogic/dstore v0.0.0-20250611153451-24d35ffb5f21
+	github.com/brotherlogic/filecopier v0.0.0-20250611163457-09910bed19c5
 	github.com/brotherlogic/gobuildslave v0.0.0-20250611041132-063762a80ea1
 	github.com/brotherlogic/goserver v0.0.0-20250608182006-4ace595931a5
 	github.com/brotherlogic/keystore v0.0.0-20240508161349-814b3200b126
-	github.com/brotherlogic/versiontracker v0.0.0-20250611143842-f128b87dafb2
+	github.com/brotherlogic/versiontracker v0.0.0-20250611163651-caa14cc4f7f6
 	github.com/prometheus/client_golang v1.22.0
 	golang.org/x/net v0.41.0
 	google.golang.org/grpc v1.73.0
