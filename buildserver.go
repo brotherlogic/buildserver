@@ -829,6 +829,8 @@ func (s *Server) runCleanup(ctx context.Context) {
 					toRemove = append(toRemove, p1)
 					toRemove = append(toRemove, p1+".version")
 					s.CtxLog(ctx, fmt.Sprintf("Removing %v -> %v, %v", p1, config.GetLatestVersions()[elems[7]], elems))
+				} else {
+					s.CtxLog(ctx, fmt.Sprintf("Keeping %v", p1))
 				}
 			}
 		}
