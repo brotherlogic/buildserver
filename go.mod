@@ -1,6 +1,6 @@
 module github.com/brotherlogic/buildserver
 
-go 1.24.2
+go 1.24.4
 
 require (
 	github.com/brotherlogic/discovery v0.0.0-20250613142713-1dac6d7d6bdd
