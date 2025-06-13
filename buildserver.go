@@ -817,7 +817,7 @@ func (s *Server) runCleanup(ctx context.Context) {
 	}
 
 	toRemove := []string{}
-	err = filepath.Walk(s.dir, func(p1 string, info os.FileInfo, err error) error {
+	err = filepath.Walk(s.dir+"/builds", func(p1 string, info os.FileInfo, err error) error {
 		if err != nil {
 			return err
 		}

@@ -15,7 +15,7 @@ import (
 )
 
 func (s *Server) preloadInfo(ctx context.Context) error {
-	return filepath.Walk(s.dir, func(path string, info os.FileInfo, err error) error {
+	return filepath.Walk(s.dir+"/builds", func(path string, info os.FileInfo, err error) error {
 		if strings.HasSuffix(path, ".version") {
 			s.CtxLog(ctx, fmt.Sprintf("Reading %v", path))
 			data, _ := ioutil.ReadFile(path)
