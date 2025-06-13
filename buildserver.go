@@ -632,12 +632,12 @@ func (s *Server) deliver(w http.ResponseWriter, r *http.Request) {
 	}
 	data, err := Asset("templates/main.html")
 	if err != nil {
-		fmt.Fprintf(w, fmt.Sprintf("Error: %v", err))
+		fmt.Fprintf(w, "Error: %s", err)
 		return
 	}
 	err = s.render(string(data), properties{Binaries: binaries}, w)
 	if err != nil {
-		s.CtxLog(ctx, fmt.Sprintf("Error writing: %v", err))
+		s.CtxLog(ctx, fmt.Sprintf("Error writing: %s", err))
 	}
 }
 
@@ -659,7 +659,7 @@ func (s *Server) deliverVersion(w http.ResponseWriter, r *http.Request) {
 
 	data, err := Asset("templates/version.html")
 	if err != nil {
-		fmt.Fprintf(w, fmt.Sprintf("Error: %v", err))
+		fmt.Fprintf(w, "Error: %s", err)
 		return
 	}
 	err = s.renderVersion(string(data), properties{Version: version}, w)
@@ -686,7 +686,7 @@ func (s *Server) deliverBinary(w http.ResponseWriter, r *http.Request) {
 	}
 	data, err := Asset("templates/binary.html")
 	if err != nil {
-		fmt.Fprintf(w, fmt.Sprintf("Error: %v", err))
+		fmt.Fprintf(w, "Error: %v", err)
 		return
 	}
 	err = s.renderBinary(string(data), properties{Versions: versions}, w)

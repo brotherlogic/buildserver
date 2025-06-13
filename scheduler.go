@@ -184,8 +184,8 @@ func (s *Scheduler) run(c *rCommand) error {
 	for i := range c.command.Args {
 		c.command.Args[i] = strings.Replace(c.command.Args[i], "$GOPATH", gpath, -1)
 	}
-	path := fmt.Sprintf("GOPATH=" + s.dir)
-	pathbin := fmt.Sprintf("GOBIN=" + s.dir + "/bin")
+	path := fmt.Sprintf("GOPATH=%v", s.dir)
+	pathbin := fmt.Sprintf("GOBIN=%v/bin", s.dir)
 	found := false
 	for i, blah := range env {
 		if strings.HasPrefix(blah, "GOPATH") {

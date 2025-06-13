@@ -14,7 +14,7 @@ import (
 )
 
 func LogTest(ctx context.Context, text string) {
-	log.Printf(text)
+	log.Printf("%v", text)
 }
 
 func load(ctx context.Context, v *pb.Version) {
